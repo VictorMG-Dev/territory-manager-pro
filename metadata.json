@@ -1,0 +1,8 @@
+
+{
+  "name": "Territory Manager Pro",
+  "description": "Sistema profissional de gerenciamento de territórios de pregação com integração de mapas, histórico de trabalhos e assistência por IA Gemini.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
