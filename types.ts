@@ -53,3 +53,30 @@ export interface UserProfile {
   photoURL: string;
   createdAt: any;
 }
+
+export interface DailyAllocation {
+  segunda: string[];
+  terca: string[];
+  quarta: string[];
+  quinta: string[];
+  sexta: string[];
+  sabado: string[];
+  domingo: string[];
+}
+
+export interface TerritoryGroup {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  territoryIds: string[];
+  createdAt: string;
+}
+
+export interface WeeklyPlan {
+  id: string;
+  groupId: string;
+  startDate: string; // ISO date
+  days: DailyAllocation;
+  createdAt: string;
+}

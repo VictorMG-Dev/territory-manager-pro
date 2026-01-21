@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,6 +12,13 @@ interface DataContextType {
     registerWork: (record: Omit<WorkRecord, 'id' | 'createdAt'>) => void;
     getHistory: (territoryId: string) => WorkRecord[];
     allWorkHistory: WorkRecord[];
+    weeklyPlans: WeeklyPlan[];
+    currentWeeklyPlan: WeeklyPlan | undefined;
+    saveWeeklyPlan: (groupId: string, days: DailyAllocation) => void;
+    groups: TerritoryGroup[];
+    addGroup: (group: Omit<TerritoryGroup, 'id' | 'createdAt'>) => void;
+    updateGroup: (id: string, updates: Partial<TerritoryGroup>) => void;
+    deleteGroup: (id: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -71,6 +78,16 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return saved ? JSON.parse(saved) : [];
     });
 
+    const [weeklyPlans, setWeeklyPlans] = useState<WeeklyPlan[]>(() => {
+        const saved = localStorage.getItem('weeklyPlans');
+        return saved ? JSON.parse(saved) : [];
+    });
+
+    const [groups, setGroups] = useState<TerritoryGroup[]>(() => {
+        const saved = localStorage.getItem('territoryGroups');
+        return saved ? JSON.parse(saved) : [];
+    });
+
     useEffect(() => {
         localStorage.setItem('territories', JSON.stringify(territories));
     }, [territories]);
@@ -78,6 +95,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     useEffect(() => {
         localStorage.setItem('workHistory', JSON.stringify(workHistory));
     }, [workHistory]);
+
+    useEffect(() => {
+        localStorage.setItem('weeklyPlans', JSON.stringify(weeklyPlans));
+    }, [weeklyPlans]);
+
+    useEffect(() => {
+        localStorage.setItem('territoryGroups', JSON.stringify(groups));
+    }, [groups]);
 
     const addTerritory = (territoryData: Omit<Territory, 'id' | 'createdAt' | 'updatedAt'>) => {
         const newTerritory: Territory = {
@@ -119,7 +144,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             updateTerritory(territory.id, {
                 lastWorkedDate: recordData.date,
                 lastWorkedBy: recordData.publisherName,
-                status: status, // Ideally should be Green if just worked, but using helper logic
+                status: status,
                 daysSinceWork: days
             });
         }
@@ -128,6 +153,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getHistory = (territoryId: string) => {
         return workHistory.filter(h => h.territoryId === territoryId);
     }
+
+    const saveWeeklyPlan = (groupId: string, days: DailyAllocation) => {
+        const today = new Date();
+        const newPlan: WeeklyPlan = {
+            id: uuidv4(),
+            groupId,
+            startDate: today.toISOString(),
+            days,
+            createdAt: today.toISOString()
+        };
+        // Remove old plans for this group to keep it clean (optional, but good for weekly focus)
+        setWeeklyPlans([newPlan, ...weeklyPlans.filter(p => p.groupId !== groupId)]);
+    };
+
+    const addGroup = (groupData: Omit<TerritoryGroup, 'id' | 'createdAt'>) => {
+        const newGroup: TerritoryGroup = {
+            ...groupData,
+            id: uuidv4(),
+            createdAt: new Date().toISOString()
+        };
+        setGroups([...groups, newGroup]);
+    };
+
+    const updateGroup = (id: string, updates: Partial<TerritoryGroup>) => {
+        setGroups(groups.map(g => g.id === id ? { ...g, ...updates } : g));
+    };
+
+    const deleteGroup = (id: string) => {
+        setGroups(groups.filter(g => g.id !== id));
+        // Also cleanup plans for this group
+        setWeeklyPlans(weeklyPlans.filter(p => p.groupId !== id));
+    };
+
+    const currentWeeklyPlan = weeklyPlans.length > 0 ? weeklyPlans[0] : undefined;
 
     return (
         <DataContext.Provider value={{
@@ -138,7 +197,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             getTerritory,
             registerWork,
             getHistory,
-            allWorkHistory: workHistory
+            allWorkHistory: workHistory,
+            weeklyPlans,
+            currentWeeklyPlan,
+            saveWeeklyPlan,
+            groups,
+            addGroup,
+            updateGroup,
+            deleteGroup
         }}>
             {children}
         </DataContext.Provider>

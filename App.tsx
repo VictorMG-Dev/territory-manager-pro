@@ -12,6 +12,8 @@ import {
   LogOut,
   Menu,
   X,
+  Calendar,
+  Users,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
@@ -22,6 +24,8 @@ import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import WeeklyPlanning from './pages/WeeklyPlanning';
+import Groups from './pages/Groups';
 import ChatBot from './components/ChatBot';
 
 const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
@@ -31,7 +35,9 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Layers, label: 'Territórios', path: '/territories' },
+    { icon: Users, label: 'Grupos', path: '/groups' },
     { icon: MapIcon, label: 'Mapa Global', path: '/map' },
+    { icon: Calendar, label: 'Planejamento', path: '/planning' },
     { icon: FileText, label: 'Relatórios', path: '/reports' },
     { icon: User, label: 'Perfil', path: '/profile' },
   ];
@@ -160,7 +166,9 @@ export default function App() {
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/territories" element={<ProtectedRoute><Territories /></ProtectedRoute>} />
               <Route path="/territory/:id" element={<ProtectedRoute><TerritoryDetail /></ProtectedRoute>} />
+              <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
               <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
+              <Route path="/planning" element={<ProtectedRoute><WeeklyPlanning /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             </Routes>
