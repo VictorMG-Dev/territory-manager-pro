@@ -10,7 +10,7 @@ const Profile = () => {
   const { theme, toggleTheme } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [displayName, setDisplayName] = useState(user?.displayName || '');
+  const [displayName, setDisplayName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [newPassword, setNewPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -20,7 +20,7 @@ const Profile = () => {
   const handleUpdateProfile = async () => {
     try {
       setIsSaving(true);
-      await updateProfile({ displayName, email });
+      await updateProfile({ name: displayName, email });
       if (newPassword) {
         await updatePassword(newPassword);
         setNewPassword('');
@@ -69,9 +69,9 @@ const Profile = () => {
             <div className="relative mb-6 group">
               <div className="w-32 h-32 rounded-full bg-blue-100 dark:bg-blue-900 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center text-4xl font-bold text-blue-600 dark:text-blue-400 overflow-hidden">
                 {user?.photoURL ? (
-                  <img src={user.photoURL} alt={user.displayName} className="w-full h-full object-cover" />
+                  <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
-                  user?.displayName?.substring(0, 2).toUpperCase() || 'AU'
+                  user?.name?.substring(0, 2).toUpperCase() || 'AU'
                 )}
               </div>
               <button
@@ -89,7 +89,7 @@ const Profile = () => {
                 onChange={handleImageUpload}
               />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center">{user?.displayName}</h3>
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center">{user?.name}</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{user?.email}</p>
             <div className="w-full pt-6 border-t border-gray-50 dark:border-slate-800 space-y-3">
               <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 font-medium">
@@ -104,30 +104,30 @@ const Profile = () => {
           </div>
 
           <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-            <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Preferências</h4>
+            <h4 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Preferências</h4>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Bell size={18} className="text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Notificações</span>
+                  <Bell size={18} className="text-gray-400 dark:text-slate-500" />
+                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Notificações</span>
                 </div>
                 <button
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`w-10 h-6 rounded-full relative transition-colors ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
+                  className={`w-10 h-6 rounded-full relative transition-all ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
                 >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${notificationsEnabled ? 'right-1' : 'left-1'}`} />
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${notificationsEnabled ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {theme === 'dark' ? <Moon size={18} className="text-blue-400" /> : <Sun size={18} className="text-amber-500" />}
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Modo Escuro</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Modo Escuro</span>
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className={`w-10 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
+                  className={`w-10 h-6 rounded-full relative transition-all ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
                 >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
             </div>
@@ -136,36 +136,36 @@ const Profile = () => {
 
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-8">Editar Informações</h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-8">Editar Informações</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nome Exibido</label>
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome Exibido</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800 border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-white outline-none transition-all font-medium text-sm"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">E-mail</label>
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800 border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-white outline-none transition-all font-medium text-sm"
+                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
                 />
               </div>
               <div className="space-y-2 sm:col-span-2">
-                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Nova Senha (opcional)</label>
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nova Senha (opcional)</label>
                 <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
                   <input
                     type="password"
                     placeholder="••••••••"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800 border border-transparent focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-white outline-none transition-all font-medium text-sm"
+                    className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
                   />
                 </div>
               </div>
@@ -173,7 +173,7 @@ const Profile = () => {
             <button
               onClick={handleUpdateProfile}
               disabled={isSaving}
-              className="mt-10 bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="mt-10 bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 dark:shadow-blue-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSaving ? (
                 <>

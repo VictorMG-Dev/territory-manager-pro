@@ -29,3 +29,12 @@ export const getStatusText = (status: TerritoryStatus) => {
     default: return 'Desconhecido';
   }
 };
+
+export const getSizeText = (size: string) => {
+  switch (size) {
+    case 'small': return 'Pequeno';
+    case 'medium': return 'Médio';
+    case 'large': return 'Grande';
+    default: return 'Médio';
+  }
+};

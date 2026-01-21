@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { api } from '../services/api';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface User {
     uid: string;
     email: string;
     name: string;
-    displayName?: string;
     photoURL?: string;
 }
 
@@ -34,6 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             } catch (error) {
                 console.error('Failed to parse session', error);
                 localStorage.removeItem('territory_session');
+                localStorage.removeItem('territory_token');
             }
         }
         setLoading(false);
@@ -42,26 +44,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const login = async (email: string, password: string) => {
         setLoading(true);
         try {
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const data = await api.post('/auth/login', { email, password });
 
-            const users = JSON.parse(localStorage.getItem('territory_users') || '[]');
-            const foundUser = users.find((u: any) => u.email === email && u.password === password);
+            setUser(data.user);
+            localStorage.setItem('territory_session', JSON.stringify(data.user));
+            localStorage.setItem('territory_token', data.token);
 
-            if (foundUser) {
-                const userObj = {
-                    uid: foundUser.uid,
-                    email: foundUser.email,
-                    name: foundUser.name,
-                    displayName: foundUser.displayName || foundUser.name,
-                    photoURL: foundUser.photoURL
-                };
-                setUser(userObj);
-                localStorage.setItem('territory_session', JSON.stringify(userObj));
-                toast.success(`Bem-vindo de volta, ${foundUser.name}!`);
-            } else {
-                throw new Error('Email ou senha incorretos.');
-            }
+            toast.success(`Bem-vindo de volta, ${data.user.name}!`);
         } catch (error: any) {
             console.error(error);
             toast.error(error.message || 'Erro ao realizar login');
@@ -73,34 +62,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const register = async (name: string, email: string, password: string) => {
         setLoading(true);
+        console.log('Iniciando registro para:', email);
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
+            const uid = uuidv4();
+            const data = await api.post('/auth/register', { uid, name, email, password });
+            console.log('Resposta do registro:', data);
 
-            const users = JSON.parse(localStorage.getItem('territory_users') || '[]');
-
-            if (users.some((u: any) => u.email === email)) {
-                throw new Error('Este email já está cadastrado.');
-            }
-
-            const newUser = {
-                uid: crypto.randomUUID(),
-                name,
-                email,
-                password // In a real app, never store passwords in plain text!
-            };
-
-            users.push(newUser);
-            localStorage.setItem('territory_users', JSON.stringify(users));
-
-            // Auto login after register
-            const userObj = {
-                uid: newUser.uid,
-                email: newUser.email,
-                name: newUser.name,
-                displayName: newUser.name
-            };
-            setUser(userObj);
-            localStorage.setItem('territory_session', JSON.stringify(userObj));
+            setUser(data.user);
+            localStorage.setItem('territory_session', JSON.stringify(data.user));
+            localStorage.setItem('territory_token', data.token);
 
             toast.success('Conta criada com sucesso!');
         } catch (error: any) {
@@ -115,6 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const logout = () => {
         setUser(null);
         localStorage.removeItem('territory_session');
+        localStorage.removeItem('territory_token');
         toast.success('Você saiu do sistema.');
     };
 
@@ -122,28 +93,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!user) return;
         setLoading(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            const updatedUser = { ...user, ...data };
-
-            // Sync name and displayName if one changes
-            if (data.displayName) updatedUser.name = data.displayName;
-            if (data.name) updatedUser.displayName = data.name;
+            const response = await api.put('/auth/profile', data);
+            const updatedUser = response.user;
 
             setUser(updatedUser);
             localStorage.setItem('territory_session', JSON.stringify(updatedUser));
-
-            // Update in users storage
-            const users = JSON.parse(localStorage.getItem('territory_users') || '[]');
-            const updatedUsers = users.map((u: any) =>
-                u.uid === user.uid ? { ...u, ...data, ...updatedUser } : u
-            );
-            localStorage.setItem('territory_users', JSON.stringify(updatedUsers));
-
-            // toast.success('Perfil atualizado com sucesso!'); 
-            // Commented out to avoid double toast with Profile.tsx
         } catch (error: any) {
             console.error(error);
+            toast.error(error.message || 'Erro ao atualizar perfil');
             throw error;
         } finally {
             setLoading(false);
@@ -154,17 +111,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!user) return;
         setLoading(true);
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            const users = JSON.parse(localStorage.getItem('territory_users') || '[]');
-            const updatedUsers = users.map((u: any) =>
-                u.uid === user.uid ? { ...u, password } : u
-            );
-            localStorage.setItem('territory_users', JSON.stringify(updatedUsers));
-
+            await api.put('/auth/profile', { password });
             toast.success('Senha atualizada com sucesso!');
         } catch (error: any) {
             console.error(error);
+            toast.error(error.message || 'Erro ao atualizar senha');
             throw error;
         } finally {
             setLoading(false);

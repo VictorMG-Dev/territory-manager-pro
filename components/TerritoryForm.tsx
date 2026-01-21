@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, Upload } from 'lucide-react';
-import { Territory, TerritoryStatus } from '../types';
+import { Territory, TerritoryStatus, TerritorySize } from '../types';
 
 interface TerritoryFormProps {
     initialData?: Territory;
@@ -16,6 +16,7 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
         address: '',
         observations: '',
         status: TerritoryStatus.GREEN,
+        size: TerritorySize.MEDIUM,
         images: [] as string[]
     });
 
@@ -27,6 +28,7 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
                 address: initialData.address,
                 observations: initialData.observations,
                 status: initialData.status,
+                size: initialData.size || TerritorySize.MEDIUM,
                 images: initialData.images?.map(img => img.url) || []
             });
         }
@@ -51,12 +53,12 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                    <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+            <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl dark:shadow-blue-900/20 animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-800 transition-colors">
+                <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-slate-800 transition-colors">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-slate-100">{title}</h2>
                     <button
                         onClick={onCancel}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"
+                        className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors text-gray-500 dark:text-slate-400"
                     >
                         <X size={24} />
                     </button>
@@ -65,69 +67,98 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
                 <form onSubmit={handleSubmit} className="p-8 space-y-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Nome do Território</label>
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Nome do Território</label>
                             <input
                                 type="text"
                                 name="name"
                                 value={formData.name}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 transition-all"
                                 placeholder="Ex: Centro Comercial"
                             />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-bold text-gray-700">Código</label>
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Código</label>
                             <input
                                 type="text"
                                 name="code"
                                 value={formData.code}
                                 onChange={handleChange}
                                 required
-                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 transition-all"
                                 placeholder="Ex: T-01"
                             />
                         </div>
                     </div>
 
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Tamanho do Território</label>
+                            <select
+                                name="size"
+                                value={formData.size}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
+                            >
+                                <option value={TerritorySize.SMALL}>Pequeno</option>
+                                <option value={TerritorySize.MEDIUM}>Médio</option>
+                                <option value={TerritorySize.LARGE}>Grande</option>
+                            </select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Status Inicial</label>
+                            <select
+                                name="status"
+                                value={formData.status}
+                                onChange={handleChange}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100"
+                            >
+                                <option value={TerritoryStatus.GREEN}>Em dia (Verde)</option>
+                                <option value={TerritoryStatus.YELLOW}>Atenção (Amarelo)</option>
+                                <option value={TerritoryStatus.RED}>Atrasado (Vermelho)</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700">Endereço Principal</label>
+                        <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Endereço Principal</label>
                         <input
                             type="text"
                             name="address"
                             value={formData.address}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 transition-all"
                             placeholder="Rua, Número, Bairro, Cidade"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700">Observações</label>
+                        <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Observações</label>
                         <textarea
                             name="observations"
                             value={formData.observations}
                             onChange={handleChange}
                             rows={4}
-                            className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none"
+                            className="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-slate-800 focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-slate-900 text-gray-900 dark:text-slate-100 transition-all resize-none"
                             placeholder="Notas importantes sobre o território..."
                         />
                     </div>
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label className="text-sm font-bold text-gray-700">Imagem de Capa (URL)</label>
-                            <button type="button" onClick={handleImageAdd} className="text-sm text-blue-600 font-bold hover:underline flex items-center gap-1">
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Imagem de Capa (URL)</label>
+                            <button type="button" onClick={handleImageAdd} className="text-sm text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1">
                                 <Upload size={14} /> Adicionar URL
                             </button>
                         </div>
-
                         {formData.images.length > 0 ? (
                             <div className="flex gap-4 overflow-x-auto pb-2">
                                 {formData.images.map((img, i) => (
-                                    <div key={i} className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200">
+                                    <div key={i} className="relative w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-800">
                                         <img src={img} alt="" className="w-full h-full object-cover" />
                                         <button
                                             type="button"
@@ -140,24 +171,24 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
                                 ))}
                             </div>
                         ) : (
-                            <div onClick={handleImageAdd} className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer">
+                            <div onClick={handleImageAdd} className="border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 dark:text-slate-500 hover:border-blue-300 dark:hover:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer">
                                 <Upload size={32} className="mb-2" />
                                 <span className="text-sm font-medium">Clique para adicionar URL da imagem</span>
                             </div>
                         )}
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                    <div className="pt-6 border-t border-gray-100 dark:border-slate-800 flex justify-end gap-3 transition-colors">
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-6 py-3 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all"
+                            className="px-6 py-3 rounded-xl font-bold text-gray-500 dark:text-slate-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-all"
                         >
                             Cancelar
                         </button>
                         <button
                             type="submit"
-                            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 transition-all flex items-center gap-2"
+                            className="px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all flex items-center gap-2"
                         >
                             <Save size={20} />
                             Salvar Território

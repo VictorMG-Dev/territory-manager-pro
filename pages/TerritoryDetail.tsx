@@ -15,10 +15,11 @@ import {
   Clock,
   Plus,
   PlusCircle,
-  Search
+  Search,
+  Grid
 } from 'lucide-react';
-import { TerritoryStatus } from '../types';
-import { getStatusColor, getStatusText } from '../utils/helpers';
+import { TerritoryStatus, TerritorySize } from '../types';
+import { getStatusColor, getStatusText, getSizeText } from '../utils/helpers';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -79,8 +80,8 @@ const TerritoryDetail = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between gap-4">
-        <Link to="/territories" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors group">
-          <div className="p-2 bg-white rounded-xl border border-gray-100 group-hover:border-blue-200 shadow-sm">
+        <Link to="/territories" className="flex items-center gap-2 text-gray-500 hover:text-gray-900 dark:text-slate-400 dark:hover:text-slate-100 transition-colors group">
+          <div className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 group-hover:border-blue-200 dark:group-hover:border-blue-900 shadow-sm transition-colors">
             <ArrowLeft size={20} />
           </div>
           <span className="font-semibold hidden sm:inline">Voltar para lista</span>
@@ -88,19 +89,19 @@ const TerritoryDetail = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setIsEditOpen(true)}
-            className="p-3 bg-white text-gray-500 hover:text-blue-600 rounded-xl border border-gray-100 shadow-sm transition-all"
+            className="p-3 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all"
           >
             <Edit2 size={20} />
           </button>
           <button
             onClick={handleDelete}
-            className="p-3 bg-white text-gray-500 hover:text-rose-600 rounded-xl border border-gray-100 shadow-sm transition-all"
+            className="p-3 bg-white dark:bg-slate-900 text-gray-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 rounded-xl border border-gray-100 dark:border-slate-800 shadow-sm transition-all"
           >
             <Trash2 size={20} />
           </button>
           <button
             onClick={() => setIsWorkRegisterOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+            className="flex items-center gap-2 bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 dark:shadow-blue-900/20"
           >
             <ClipboardCheck size={20} />
             Registrar Trabalho
@@ -111,7 +112,7 @@ const TerritoryDetail = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
           {/* Main Card */}
-          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
             <div className="h-64 sm:h-80 bg-gray-200 relative">
               <img src={territory.images[0] || `https://picsum.photos/seed/${territory.code}/800/600`} alt={territory.name} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
@@ -133,12 +134,12 @@ const TerritoryDetail = () => {
             </div>
 
             <div className="p-8">
-              <div className="flex gap-8 border-b border-gray-100 mb-8">
+              <div className="flex gap-8 border-b border-gray-100 dark:border-slate-800 mb-8 transition-colors">
                 {(['info', 'history', 'photos'] as const).map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActiveTab(tab)}
-                    className={`pb-4 px-2 text-sm font-bold transition-all relative ${activeTab === tab ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
+                    className={`pb-4 px-2 text-sm font-bold transition-all relative ${activeTab === tab ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300'
                       }`}
                   >
                     {tab === 'info' && 'Informações'}
@@ -153,32 +154,39 @@ const TerritoryDetail = () => {
 
               {activeTab === 'info' && (
                 <div className="space-y-8 animate-in slide-in-from-top-2 duration-300">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="p-4 bg-gray-50 rounded-2xl flex flex-col items-center text-center">
-                      <Clock className="text-blue-500 mb-2" size={24} />
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Tempo Decorrido</span>
-                      <p className="text-lg font-bold text-gray-900 mt-1">{territory.daysSinceWork} dias</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800/50 flex flex-col items-center text-center transition-colors">
+                      <Clock className="text-blue-500 dark:text-blue-400 mb-2" size={24} />
+                      <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Tempo Decorrido</span>
+                      <p className="text-lg font-bold text-gray-900 dark:text-slate-100 mt-1">{territory.daysSinceWork} dias</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl flex flex-col items-center text-center">
-                      <User className="text-blue-500 mb-2" size={24} />
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Último por</span>
-                      <p className="text-lg font-bold text-gray-900 mt-1">{territory.lastWorkedBy || '-'}</p>
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800/50 flex flex-col items-center text-center transition-colors">
+                      <User className="text-blue-500 dark:text-blue-400 mb-2" size={24} />
+                      <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Último por</span>
+                      <p className="text-lg font-bold text-gray-900 dark:text-slate-100 mt-1">{territory.lastWorkedBy || '-'}</p>
                     </div>
-                    <div className="p-4 bg-gray-50 rounded-2xl flex flex-col items-center text-center">
-                      <History className="text-blue-500 mb-2" size={24} />
-                      <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Data</span>
-                      <p className="text-lg font-bold text-gray-900 mt-1">
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800/50 flex flex-col items-center text-center transition-colors">
+                      <History className="text-blue-500 dark:text-blue-400 mb-2" size={24} />
+                      <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Data</span>
+                      <p className="text-lg font-bold text-gray-900 dark:text-slate-100 mt-1">
                         {territory.lastWorkedDate ? format(new Date(territory.lastWorkedDate), 'dd MMM, yyyy', { locale: ptBR }) : '-'}
+                      </p>
+                    </div>
+                    <div className="p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800/50 flex flex-col items-center text-center transition-colors">
+                      <Grid className="text-blue-500 dark:text-blue-400 mb-2" size={24} />
+                      <span className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest">Tamanho</span>
+                      <p className="text-lg font-bold text-gray-900 dark:text-slate-100 mt-1">
+                        {getSizeText(territory.size)}
                       </p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      <MessageSquare className="text-blue-500" size={20} />
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                      <MessageSquare className="text-blue-500 dark:text-blue-400" size={20} />
                       Observações
                     </h3>
-                    <p className="text-gray-600 leading-relaxed bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50">
+                    <p className="text-gray-600 dark:text-slate-300 leading-relaxed bg-blue-50/50 dark:bg-blue-900/10 p-5 rounded-2xl border border-blue-100/50 dark:border-blue-900/20">
                       {territory.observations || 'Nenhuma observação registrada.'}
                     </p>
                   </div>
@@ -208,17 +216,17 @@ const TerritoryDetail = () => {
                         {idx !== history.length - 1 && <div className="flex-1 w-0.5 bg-gray-100 my-2" />}
                       </div>
                       <div className="flex-1 pb-8">
-                        <div className="bg-gray-50 p-5 rounded-2xl border border-gray-100">
+                        <div className="bg-gray-50 dark:bg-slate-800/50 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 transition-colors">
                           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-                            <h4 className="font-bold text-gray-900">{record.publisherName}</h4>
-                            <span className="text-xs font-medium text-gray-500 bg-white px-3 py-1 rounded-full border border-gray-100">
+                            <h4 className="font-bold text-gray-900 dark:text-slate-100">{record.publisherName}</h4>
+                            <span className="text-xs font-medium text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900 px-3 py-1 rounded-full border border-gray-100 dark:border-slate-800 transition-colors">
                               {format(new Date(record.date), "dd 'de' MMMM, yyyy", { locale: ptBR })}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 leading-relaxed">{record.notes}</p>
+                          <p className="text-sm text-gray-600 dark:text-slate-300 leading-relaxed">{record.notes}</p>
                           {record.photos && record.photos.length > 0 && (
                             <div className="mt-4 flex gap-2">
-                              <span className="text-xs font-bold text-blue-600 flex items-center gap-1">
+                              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
                                 <ImageIcon size={14} />
                                 {record.photos.length} fotos registradas
                               </span>
@@ -266,26 +274,26 @@ const TerritoryDetail = () => {
 
         {/* Sidebar Info */}
         <div className="space-y-6">
-          <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-            <h3 className="text-lg font-bold text-gray-900 mb-6">Informações Técnicas</h3>
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-6">Informações Técnicas</h3>
             <div className="space-y-4">
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-sm text-gray-500 font-medium">Área Aproximada</span>
-                <span className="text-sm font-bold text-gray-900">{territory.geolocation?.area || 0} m²</span>
+              <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-slate-800">
+                <span className="text-sm text-gray-500 dark:text-slate-400 font-medium">Área Aproximada</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-slate-100">{territory.geolocation?.area || 0} m²</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-sm text-gray-500 font-medium">Total de Visitas</span>
-                <span className="text-sm font-bold text-gray-900">{history.length} registros</span>
+              <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-slate-800">
+                <span className="text-sm text-gray-500 dark:text-slate-400 font-medium">Total de Visitas</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-slate-100">{history.length} registros</span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-sm text-gray-500 font-medium">Cadastrado em</span>
-                <span className="text-sm font-bold text-gray-900">
+              <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-slate-800">
+                <span className="text-sm text-gray-500 dark:text-slate-400 font-medium">Cadastrado em</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-slate-100">
                   {territory.createdAt ? format(new Date(territory.createdAt), 'dd/MM/yyyy') : '-'}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-3 border-b border-gray-50">
-                <span className="text-sm text-gray-500 font-medium">Tipo</span>
-                <span className="text-sm font-bold text-gray-900">Residencial/Comercial</span>
+              <div className="flex justify-between items-center py-3 border-b border-gray-50 dark:border-slate-800">
+                <span className="text-sm text-gray-500 dark:text-slate-400 font-medium">Tipo</span>
+                <span className="text-sm font-bold text-gray-900 dark:text-slate-100">Residencial/Comercial</span>
               </div>
             </div>
           </div>
@@ -301,7 +309,7 @@ const TerritoryDetail = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div >
 
       {isEditOpen && (
         <TerritoryForm
@@ -312,15 +320,17 @@ const TerritoryDetail = () => {
         />
       )}
 
-      {isWorkRegisterOpen && (
-        <WorkRegisterModal
-          territoryId={territory.id}
-          territoryName={territory.name}
-          onSubmit={handleRegisterWork}
-          onCancel={() => setIsWorkRegisterOpen(false)}
-        />
-      )}
-    </div>
+      {
+        isWorkRegisterOpen && (
+          <WorkRegisterModal
+            territoryId={territory.id}
+            territoryName={territory.name}
+            onSubmit={handleRegisterWork}
+            onCancel={() => setIsWorkRegisterOpen(false)}
+          />
+        )
+      }
+    </div >
   );
 };
 

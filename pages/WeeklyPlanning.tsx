@@ -104,26 +104,50 @@ const WeeklyPlanning: React.FC = () => {
             toast.error('Este grupo não possui territórios vinculados.');
             return;
         }
-        const suggestions = suggestedTerritories
-            .filter(t => t.status === TerritoryStatus.RED || t.status === TerritoryStatus.YELLOW)
-            .slice(0, 7);
 
-        if (suggestions.length === 0 && suggestedTerritories.length > 0) {
-            // Fallback to any territories if none are red/yellow
-            suggestions.push(...suggestedTerritories.slice(0, 7));
-        }
+        // 1. Sort all territories by age (daysSinceWork descending)
+        const sortedByAge = [...groupTerritories].sort((a, b) => (b.daysSinceWork || 0) - (a.daysSinceWork || 0));
+
+        // 2. Identify Large territories for weekends
+        const largeTerritories = sortedByAge.filter(t => t.size === 'large');
+        const otherTerritories = sortedByAge.filter(t => t.size !== 'large');
 
         const newDays: DailyAllocation = {
             segunda: [], terca: [], quarta: [], quinta: [], sexta: [], sabado: [], domingo: []
         };
 
-        suggestions.forEach((t, index) => {
-            const dayKey = DAYS_OF_WEEK[index % 7].id;
-            newDays[dayKey].push(t.id);
+        const usedIds = new Set<string>();
+
+        // 3. Assign to Saturday and Sunday first (prefer Large)
+        ['sabado', 'domingo'].forEach(day => {
+            const dayKey = day as keyof DailyAllocation;
+            // Try to find a large territory that hasn't been used yet
+            const suggestedLarge = largeTerritories.find(t => !usedIds.has(t.id));
+            if (suggestedLarge) {
+                newDays[dayKey].push(suggestedLarge.id);
+                usedIds.add(suggestedLarge.id);
+            } else {
+                // Fallback to oldest available if no large left
+                const oldest = sortedByAge.find(t => !usedIds.has(t.id));
+                if (oldest) {
+                    newDays[dayKey].push(oldest.id);
+                    usedIds.add(oldest.id);
+                }
+            }
+        });
+
+        // 4. Fill the rest of the week with remaining oldest territories
+        ['segunda', 'terca', 'quarta', 'quinta', 'sexta'].forEach(day => {
+            const dayKey = day as keyof DailyAllocation;
+            const oldest = sortedByAge.find(t => !usedIds.has(t.id));
+            if (oldest) {
+                newDays[dayKey].push(oldest.id);
+                usedIds.add(oldest.id);
+            }
         });
 
         setDaysState(newDays);
-        toast.success('Sugestão da IA aplicada e distribuída pela semana!');
+        toast.success('Sugestão da IA aplicada! (Priorizando territórios antigos e grandes nos fins de semana)');
     };
 
     const getDayForTerritory = (id: string) => {
@@ -144,8 +168,8 @@ const WeeklyPlanning: React.FC = () => {
         <div className="space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Calendar className="text-blue-600" size={28} />
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100 flex items-center gap-2">
+                        <Calendar className="text-blue-600 dark:text-blue-400" size={28} />
                         Planejamento Individual
                     </h1>
                     <div className="flex items-center gap-2 text-sm">
@@ -183,16 +207,16 @@ const WeeklyPlanning: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 <div className="lg:col-span-5 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-4">
-                        <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 px-2">Selecione o Dia</h2>
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-4 transition-colors">
+                        <h2 className="text-sm font-bold text-gray-400 dark:text-slate-500 uppercase tracking-wider mb-4 px-2">Selecione o Dia</h2>
                         <div className="grid grid-cols-1 gap-1">
                             {DAYS_OF_WEEK.map((day) => (
                                 <button
                                     key={day.id}
                                     onClick={() => setSelectedDay(day.id)}
                                     className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all ${selectedDay === day.id
-                                            ? 'bg-blue-600 text-white shadow-md'
-                                            : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800'
+                                        ? 'bg-blue-600 text-white shadow-md'
+                                        : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-800/50'
                                         }`}
                                 >
                                     <span className="font-medium">{day.label}</span>
@@ -209,8 +233,8 @@ const WeeklyPlanning: React.FC = () => {
                     </div>
 
                     <div className="space-y-4">
-                        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                            <Clock size={20} className="text-gray-400" />
+                        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-200 flex items-center gap-2">
+                            <Clock size={20} className="text-gray-400 dark:text-slate-500" />
                             Sugestões para {DAYS_OF_WEEK.find(d => d.id === selectedDay)?.label}
                         </h2>
                         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 overflow-hidden">
@@ -228,11 +252,11 @@ const WeeklyPlanning: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <div className={`w-2 h-10 rounded-full ${getStatusColor(t.status)}`} />
                                                 <div>
-                                                    <h3 className="font-semibold text-gray-900 dark:text-white">{t.code} - {t.name}</h3>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    <h3 className="font-semibold text-gray-900 dark:text-slate-100">{t.code} - {t.name}</h3>
+                                                    <p className="text-xs text-gray-500 dark:text-slate-400">
                                                         {t.daysSinceWork} dias sem trabalho
                                                         {dayAllocated && !isCurrentDay && (
-                                                            <span className="text-blue-500 ml-2 font-medium">→ {DAYS_OF_WEEK.find(d => d.id === dayAllocated)?.label}</span>
+                                                            <span className="text-blue-500 dark:text-blue-400 ml-2 font-medium">→ {DAYS_OF_WEEK.find(d => d.id === dayAllocated)?.label}</span>
                                                         )}
                                                     </p>
                                                 </div>
@@ -240,8 +264,8 @@ const WeeklyPlanning: React.FC = () => {
                                             <button
                                                 onClick={() => toggleTerritoryForDay(t.id, selectedDay)}
                                                 className={`p-2 rounded-lg transition-all ${isCurrentDay
-                                                        ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/40'
-                                                        : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                                                    ? 'text-blue-600 bg-blue-100 dark:bg-blue-900/40'
+                                                    : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
                                                     }`}
                                             >
                                                 {isCurrentDay ? <CheckCircle size={24} /> : <Plus size={24} />}
@@ -260,9 +284,9 @@ const WeeklyPlanning: React.FC = () => {
                 </div>
 
                 <div className="lg:col-span-7 space-y-6">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-                            <Calendar className="text-emerald-500" size={24} />
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 transition-colors">
+                        <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6 flex items-center gap-2">
+                            <Calendar className="text-emerald-500 dark:text-emerald-400" size={24} />
                             Resumo da Semana ({groups.find(g => g.id === selectedGroupId)?.name})
                         </h2>
 

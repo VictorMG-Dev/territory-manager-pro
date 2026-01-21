@@ -5,6 +5,12 @@ export enum TerritoryStatus {
   RED = 'red'
 }
 
+export enum TerritorySize {
+  SMALL = 'small',
+  MEDIUM = 'medium',
+  LARGE = 'large'
+}
+
 export interface TerritoryImage {
   url: string;
   name: string;
@@ -31,6 +37,7 @@ export interface Territory {
   lastWorkedDate: any;
   lastWorkedBy: string;
   status: TerritoryStatus;
+  size: TerritorySize;
   daysSinceWork: number;
   createdAt: any;
   updatedAt: any;

@@ -113,17 +113,10 @@ const Header = ({ setSidebarOpen }: { setSidebarOpen: (v: boolean) => void }) =>
         <button onClick={() => setSidebarOpen(true)} className="p-2 lg:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
           <Menu size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 hidden sm:block">Gerenciamento de Territórios</h2>
+        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 hidden sm:block">Gerenciamento de Territórios</h2>
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="hidden sm:flex flex-col items-end">
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">{user?.name || 'Usuário'}</span>
-          <span className="text-xs text-gray-500 dark:text-gray-400">Administrador</span>
-        </div>
-        <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 border border-blue-200 dark:border-blue-800 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold overflow-hidden">
-          {user?.name?.substring(0, 2).toUpperCase() || 'AU'}
-        </div>
       </div>
     </header>
   );

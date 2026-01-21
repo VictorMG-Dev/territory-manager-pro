@@ -241,25 +241,25 @@ const Reports = () => {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Relatórios</h1>
-          <p className="text-gray-500">Exporte dados e analise o desempenho da congregação.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Relatórios</h1>
+          <p className="text-gray-500 dark:text-slate-400">Exporte dados e analise o desempenho da congregação.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {/* Resumo Geral */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-blue-900/10 transition-all group">
           <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <BarChart2 size={28} />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Resumo Geral</h3>
-          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-2">Resumo Geral</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 leading-relaxed">
             Gera um PDF completo com estatísticas de status, média de tempo e lista de territórios em dia.
           </p>
           <button
             onClick={handleGeneralSummary}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-emerald-600 hover:text-white text-emerald-600 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 hover:bg-emerald-600 dark:hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
           >
             <Download size={20} />
             {loading ? 'Gerando...' : 'Baixar PDF'}
@@ -267,18 +267,18 @@ const Reports = () => {
         </div>
 
         {/* Dados Excel */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
-          <div className="w-14 h-14 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-blue-900/10 transition-all group">
+          <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <FileDown size={28} />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Dados (Excel)</h3>
-          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-2">Dados (Excel)</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 leading-relaxed">
             Exporte todos os dados brutos dos territórios e histórico de trabalhos em formato .xlsx para análise externa.
           </p>
           <button
             onClick={handleExcelExport}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-blue-600 hover:text-white text-blue-600 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-blue-600 dark:text-blue-400 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
           >
             <Download size={20} />
             {loading ? 'Exportando...' : 'Exportar Excel'}
@@ -286,18 +286,18 @@ const Reports = () => {
         </div>
 
         {/* Territórios Atrasados */}
-        <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group">
-          <div className="w-14 h-14 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+        <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl dark:hover:shadow-blue-900/10 transition-all group">
+          <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
             <PieIcon size={28} />
           </div>
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Territórios Atrasados</h3>
-          <p className="text-sm text-gray-500 mb-8 leading-relaxed">
+          <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-2">Territórios Atrasados</h3>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-8 leading-relaxed">
             Lista específica focada nos territórios vermelhos (90+ dias) para planejamento de urgência.
           </p>
           <button
             onClick={handleOverdueReport}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-gray-50 hover:bg-amber-600 hover:text-white text-amber-600 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 hover:bg-amber-600 dark:hover:bg-amber-600 hover:text-white text-amber-600 dark:text-amber-400 py-3 rounded-2xl font-bold transition-all disabled:opacity-50"
           >
             <Download size={20} />
             {loading ? 'Gerando...' : 'Gerar Lista'}
@@ -305,20 +305,20 @@ const Reports = () => {
         </div>
       </div>
 
-      <div className="bg-white p-8 rounded-3xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
         <div className="flex items-center justify-between mb-8">
-          <h3 className="text-lg font-bold text-gray-900">Relatórios Agendados</h3>
-          <button className="text-sm font-bold text-blue-600 hover:text-blue-700">Ver todos</button>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Relatórios Agendados</h3>
+          <button className="text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Ver todos</button>
         </div>
         <div className="space-y-4">
-          <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800 transition-colors">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-white rounded-xl text-emerald-500 shadow-sm">
+              <div className="p-3 bg-white dark:bg-slate-900 rounded-xl text-emerald-500 shadow-sm transition-colors">
                 <CheckCircle2 size={20} />
               </div>
               <div>
-                <h4 className="font-bold text-gray-900 text-sm">Relatório Mensal de Campo</h4>
-                <p className="text-xs text-gray-500">Referente ao mês atual</p>
+                <h4 className="font-bold text-gray-900 dark:text-slate-100 text-sm">Relatório Mensal de Campo</h4>
+                <p className="text-xs text-gray-500 dark:text-slate-400">Referente ao mês atual</p>
               </div>
             </div>
             <button
