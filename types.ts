@@ -54,7 +54,7 @@ export interface WorkRecord {
   createdAt: any;
 }
 
-export type Role = 'publisher' | 'territory_servant' | 'service_overseer' | 'elder';
+export type Role = 'publisher' | 'territory_servant' | 'service_overseer' | 'elder' | 'admin';
 
 export interface UserProfile {
   uid: string;
@@ -103,6 +103,7 @@ export interface TerritoryGroup {
   description: string;
   color: string;
   territoryIds: string[];
+  memberIds?: string[];
   createdAt: string;
 }
 

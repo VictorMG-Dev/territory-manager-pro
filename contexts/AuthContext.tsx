@@ -10,7 +10,7 @@ export interface User {
     photoURL?: string;
     congregationId?: string;
     congregationName?: string;
-    role?: 'publisher' | 'territory_servant' | 'service_overseer' | 'elder';
+    role?: 'publisher' | 'territory_servant' | 'service_overseer' | 'elder' | 'admin';
 }
 
 interface AuthContextType {

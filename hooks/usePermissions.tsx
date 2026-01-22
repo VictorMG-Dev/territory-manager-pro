@@ -9,6 +9,8 @@ interface RolePermissions {
     canAccessPlanning: boolean;
     canAccessReports: boolean;
     canAccessProfile: boolean;
+    canManageGroups: boolean; // For create/edit groups
+    canAssignMembersToGroups: boolean;
 }
 
 const rolePermissions: Record<Role, RolePermissions> = {
@@ -20,15 +22,19 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessPlanning: false,
         canAccessReports: false,
         canAccessProfile: true,
+        canManageGroups: false,
+        canAssignMembersToGroups: false,
     },
     territory_servant: {
-        canAccessDashboard: true,
-        canAccessTerritories: true,
+        canAccessDashboard: false,
+        canAccessTerritories: false,
         canAccessGroups: true,
         canAccessMap: true,
-        canAccessPlanning: true,
-        canAccessReports: true,
+        canAccessPlanning: false,
+        canAccessReports: false,
         canAccessProfile: true,
+        canManageGroups: true,
+        canAssignMembersToGroups: false,
     },
     service_overseer: {
         canAccessDashboard: true,
@@ -38,15 +44,30 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessPlanning: true,
         canAccessReports: true,
         canAccessProfile: true,
+        canManageGroups: true,
+        canAssignMembersToGroups: true,
     },
     elder: {
         canAccessDashboard: true,
-        canAccessTerritories: true,  // Admin has full access
+        canAccessTerritories: false,
         canAccessGroups: true,
         canAccessMap: true,
-        canAccessPlanning: true,  // Admin has full access
+        canAccessPlanning: false,
         canAccessReports: true,
         canAccessProfile: true,
+        canManageGroups: true,
+        canAssignMembersToGroups: true,
+    },
+    admin: {
+        canAccessDashboard: true,
+        canAccessTerritories: true,
+        canAccessGroups: true,
+        canAccessMap: true,
+        canAccessPlanning: true,
+        canAccessReports: true,
+        canAccessProfile: true,
+        canManageGroups: true,
+        canAssignMembersToGroups: true,
     },
 };
 

@@ -163,14 +163,16 @@ const Profile = () => {
     publisher: 'Publicador',
     territory_servant: 'Servo de Territórios',
     service_overseer: 'Sup. Serviço',
-    elder: 'Ancião'
+    elder: 'Ancião',
+    admin: 'Administrador'
   };
 
   const roleColors: Record<Role, string> = {
     publisher: 'bg-gray-100 text-gray-600 dark:bg-slate-800 dark:text-gray-400',
     territory_servant: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
     service_overseer: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
-    elder: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+    elder: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    admin: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
   };
 
   // Levels for hierarchy check
@@ -178,7 +180,8 @@ const Profile = () => {
     publisher: 1,
     territory_servant: 2,
     service_overseer: 3,
-    elder: 4
+    elder: 4,
+    admin: 5
   };
 
   const canManageRole = (targetRole: Role | undefined) => {
@@ -188,12 +191,15 @@ const Profile = () => {
     // Target user level
     const targetLevel = roleLevels[targetRole || 'publisher'];
 
-    // Elder can manage anyone
-    if (user.role === 'elder') return true;
+    // Admin can manage anyone
+    if (user.role === 'admin') return true;
+
+    // Elder can manage everyone except Admin
+    if (user.role === 'elder' && targetRole !== 'admin') return true;
 
     // Others must be strictly higher rank
-    // AND must be at least level 2 (Territory Servant) to manage anyone
-    return myLevel >= 2 && myLevel > targetLevel;
+    // AND must be at least level 3 (Service Overseer) to manage anyone
+    return myLevel >= 3 && myLevel > targetLevel;
   };
 
   const getAvailableRoles = () => {
@@ -236,20 +242,24 @@ const Profile = () => {
       publisher: 1,
       territory_servant: 2,
       service_overseer: 3,
-      elder: 4
+      elder: 4,
+      admin: 5
     };
 
     const myLevel = roleLevels[user.role];
     const targetLevel = roleLevels[targetRole || 'publisher'];
 
-    // Only service overseers and elders can remove members
+    // Only service overseers, elders and admins can remove members
     if (myLevel < 3) return false;
 
-    // Service overseers cannot remove elders or other service overseers
+    // Service overseers cannot remove higher or equal ranks
     if (user.role === 'service_overseer' && targetLevel >= 3) return false;
 
-    // Elders cannot remove other elders
-    if (targetRole === 'elder' && user.role === 'elder') return false;
+    // Elders cannot remove other elders or admins
+    if (user.role === 'elder' && targetLevel >= 4) return false;
+
+    // Admins can remove anyone except other admins
+    if (user.role === 'admin' && targetRole === 'admin' && user.uid !== removingMember?.uid) return false;
 
     return true;
   };

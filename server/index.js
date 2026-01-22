@@ -91,7 +91,7 @@ app.post('/api/auth/register', async (req, res) => {
                 });
 
                 if (error) throw error;
-                role = 'elder'; // Criador vira ancião
+                role = 'admin'; // Criador vira Admin com acesso total
             }
         }
 
@@ -232,11 +232,11 @@ app.post('/api/congregations', authenticateToken, async (req, res) => {
         const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
         await supabase.from('congregations').insert({ id, name, description, invite_code: inviteCode, created_by: req.user.uid });
-        await supabase.from('users').update({ congregation_id: id, role: 'elder' }).eq('uid', req.user.uid);
+        await supabase.from('users').update({ congregation_id: id, role: 'admin' }).eq('uid', req.user.uid);
 
         // Atualizar token
-        const token = jwt.sign({ uid: req.user.uid, email: req.user.email, role: 'elder', congregationId: id }, process.env.JWT_SECRET || 'yoursecret');
-        res.status(201).json({ id, name, description, inviteCode, role: 'elder', token });
+        const token = jwt.sign({ uid: req.user.uid, email: req.user.email, role: 'admin', congregationId: id }, process.env.JWT_SECRET || 'yoursecret');
+        res.status(201).json({ id, name, description, inviteCode, role: 'admin', token });
     } catch (e) { res.status(500).json({ message: 'Erro ao criar congregação.' }); }
 });
 

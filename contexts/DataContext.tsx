@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
@@ -21,6 +21,7 @@ interface DataContextType {
     addGroup: (group: Omit<TerritoryGroup, 'id' | 'createdAt'>) => Promise<void>;
     updateGroup: (id: string, updates: Partial<TerritoryGroup>) => Promise<void>;
     deleteGroup: (id: string) => Promise<void>;
+    members: CongregationMember[];
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -39,6 +40,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [workHistory, setWorkHistory] = useState<WorkRecord[]>([]);
     const [weeklyPlans, setWeeklyPlans] = useState<WeeklyPlan[]>([]);
     const [groups, setGroups] = useState<TerritoryGroup[]>([]);
+    const [members, setMembers] = useState<CongregationMember[]>([]);
 
     useEffect(() => {
         if (user) {
@@ -52,10 +54,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 api.get('/territories'),
                 api.get('/work-history'),
                 api.get('/groups'),
-                api.get('/weekly-plans')
+                api.get('/weekly-plans'),
+                api.get('/congregations/members')
             ]);
 
-            const [tResult, hResult, gResult, pResult] = results;
+            const [tResult, hResult, gResult, pResult, mResult] = results;
 
             if (tResult.status === 'fulfilled') {
                 setTerritories(tResult.value);
@@ -80,6 +83,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 setWeeklyPlans(pResult.value);
             } else {
                 console.error('Failed to load plans:', pResult.reason);
+            }
+
+            if (mResult.status === 'fulfilled') {
+                setMembers(mResult.value);
+            } else {
+                console.error('Failed to load members:', mResult.reason);
             }
 
         } catch (error) {
@@ -260,7 +269,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             groups,
             addGroup,
             updateGroup,
-            deleteGroup
+            deleteGroup,
+            members
         }}>
             {children}
         </DataContext.Provider>
