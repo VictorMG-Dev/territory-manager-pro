@@ -63,6 +63,29 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
         }
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const files = Array.from(e.target.files);
+
+            // Limit checks if necessary
+            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+
+            files.forEach((file: File) => {
+                if (file.size > MAX_SIZE) {
+                    alert(`O arquivo ${file.name} é muito grande (Máx 5MB).`);
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const base64String = reader.result as string;
+                    setFormData(prev => ({ ...prev, images: [...prev.images, base64String] }));
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
             <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl dark:shadow-blue-900/20 animate-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-800 transition-colors">
@@ -162,10 +185,22 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Imagem de Capa (URL)</label>
-                            <button type="button" onClick={handleImageAdd} className="text-sm text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1">
-                                <Upload size={14} /> Adicionar URL
-                            </button>
+                            <label className="text-sm font-bold text-gray-700 dark:text-slate-300">Imagens</label>
+                            <div className="flex gap-4">
+                                <label className="cursor-pointer text-sm text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1">
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={handleFileChange}
+                                    />
+                                    <Upload size={14} /> Carregar da Galeria
+                                </label>
+                                <button type="button" onClick={handleImageAdd} className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold hover:underline flex items-center gap-1">
+                                    <Upload size={14} /> Adicionar URL
+                                </button>
+                            </div>
                         </div>
                         {formData.images.length > 0 ? (
                             <div className="flex gap-4 overflow-x-auto pb-2">
@@ -183,9 +218,9 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
                                 ))}
                             </div>
                         ) : (
-                            <div onClick={handleImageAdd} className="border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 dark:text-slate-500 hover:border-blue-300 dark:hover:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer">
+                            <div onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()} className="border-2 border-dashed border-gray-200 dark:border-slate-800 rounded-xl p-8 flex flex-col items-center justify-center text-gray-400 dark:text-slate-500 hover:border-blue-300 dark:hover:border-blue-900 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all cursor-pointer">
                                 <Upload size={32} className="mb-2" />
-                                <span className="text-sm font-medium">Clique para adicionar URL da imagem</span>
+                                <span className="text-sm font-medium">Clique para adicionar imagens</span>
                             </div>
                         )}
                     </div>

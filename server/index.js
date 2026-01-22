@@ -7,8 +7,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // CORS settings - Local dev needs to be permissive
 app.use(cors({
@@ -305,6 +305,46 @@ app.delete('/api/congregations/leave', authenticateToken, async (req, res) => {
     } catch (e) { res.status(500).json({ message: 'Erro.' }); }
 });
 
+// --- HELPER FUNCTIONS ---
+
+const uploadImageToStorage = async (base64Data, userId) => {
+    try {
+        // Check if it's already a URL
+        if (base64Data.startsWith('http')) return base64Data;
+        if (!base64Data.startsWith('data:image')) return base64Data; // Or throw error?
+
+        const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3) return null;
+
+        const type = matches[1];
+        const buffer = Buffer.from(matches[2], 'base64');
+        const extension = type.split('/')[1];
+        const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${extension}`;
+
+        const { data, error } = await supabase.storage
+            .from('territory-images')
+            .upload(fileName, buffer, {
+                contentType: type,
+                upsert: true
+            });
+
+        if (error) {
+            // Se o bucket não existir, tentar criar (opcional, pode falhar dependendo das permissões)
+            console.error('Erro upload:', error);
+            throw error;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('territory-images')
+            .getPublicUrl(fileName);
+
+        return publicUrl;
+    } catch (error) {
+        console.error('Erro ao processar imagem:', error);
+        return null; // Falha silenciosa ou tratar
+    }
+};
+
 // --- TERRITORY ROUTES ---
 
 app.get('/api/territories', authenticateToken, async (req, res) => {
@@ -360,8 +400,19 @@ app.post('/api/territories', authenticateToken, requireRole(['elder', 'service_o
             status: t.status || 'green',
             size: t.size || 'medium',
             geolocation: t.geolocation,
-            images: t.images || []
+            geolocation: t.geolocation,
+            images: []
         };
+
+        // Processar imagens
+        if (t.images && Array.isArray(t.images)) {
+            const uploadedImages = [];
+            for (const img of t.images) {
+                const url = await uploadImageToStorage(img, req.user.uid);
+                if (url) uploadedImages.push(url);
+            }
+            newTerritory.images = uploadedImages;
+        }
 
         const { error } = await supabase.from('territories').insert(newTerritory);
         if (error) throw error;
@@ -391,7 +442,18 @@ app.put('/api/territories/:id', authenticateToken, requireRole(['elder', 'servic
         if (u.daysSinceWork !== undefined) dbU.days_since_work = u.daysSinceWork;
 
         if (u.geolocation) dbU.geolocation = u.geolocation;
-        if (u.images) dbU.images = u.images;
+        if (u.geolocation) dbU.geolocation = u.geolocation;
+
+        if (u.images) {
+            const uploadedImages = [];
+            for (const img of u.images) {
+                // Se for objeto {url: ...}, extrair url. O frontend manda array de strings, mas previnir.
+                const imgStr = typeof img === 'string' ? img : img.url;
+                const url = await uploadImageToStorage(imgStr, req.user.uid);
+                if (url) uploadedImages.push(url);
+            }
+            dbU.images = uploadedImages;
+        }
 
         // Handle assignment
         if (u.userId !== undefined) dbU.user_id = u.userId; // Pode ser null para "devolver"

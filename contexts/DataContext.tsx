@@ -48,18 +48,42 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const loadData = async () => {
         try {
-            const [tData, hData, gData, pData] = await Promise.all([
+            const results = await Promise.allSettled([
                 api.get('/territories'),
                 api.get('/work-history'),
                 api.get('/groups'),
                 api.get('/weekly-plans')
             ]);
-            setTerritories(tData);
-            setWorkHistory(hData);
-            setGroups(gData);
-            setWeeklyPlans(pData);
+
+            const [tResult, hResult, gResult, pResult] = results;
+
+            if (tResult.status === 'fulfilled') {
+                setTerritories(tResult.value);
+            } else {
+                console.error('Failed to load territories:', tResult.reason);
+                // toast.error('Erro ao carregar territórios');
+            }
+
+            if (hResult.status === 'fulfilled') {
+                setWorkHistory(hResult.value);
+            } else {
+                console.error('Failed to load history:', hResult.reason);
+            }
+
+            if (gResult.status === 'fulfilled') {
+                setGroups(gResult.value);
+            } else {
+                console.error('Failed to load groups:', gResult.reason);
+            }
+
+            if (pResult.status === 'fulfilled') {
+                setWeeklyPlans(pResult.value);
+            } else {
+                console.error('Failed to load plans:', pResult.reason);
+            }
+
         } catch (error) {
-            console.error('Erro ao carregar dados:', error);
+            console.error('Erro crítico ao carregar dados:', error);
         }
     };
 

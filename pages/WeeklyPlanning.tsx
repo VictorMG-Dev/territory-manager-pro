@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useAuth } from '../contexts/AuthContext';
+
 import { Territory, TerritoryStatus, DailyAllocation } from '../types';
-import { getStatusColor, getStatusText } from '../utils/helpers';
+import { getStatusColor, getStatusText, calculateStatus } from '../utils/helpers';
+
 import {
     Calendar,
     Brain,
@@ -29,6 +32,8 @@ const DAYS_OF_WEEK: { id: keyof DailyAllocation; label: string }[] = [
 
 const WeeklyPlanning: React.FC = () => {
     const { territories, weeklyPlans, saveWeeklyPlan, groups } = useData();
+    const { user } = useAuth();
+
 
     const [selectedGroupId, setSelectedGroupId] = useState<string>(groups[0]?.id || '');
 
@@ -43,6 +48,20 @@ const WeeklyPlanning: React.FC = () => {
 
     const [selectedDay, setSelectedDay] = useState<keyof DailyAllocation>('segunda');
 
+    // Effect to ensure a valid selection
+    React.useEffect(() => {
+        const isMyTerritories = selectedGroupId === 'my_territories';
+        const isGroup = groups.some(g => g.id === selectedGroupId);
+
+        if (isMyTerritories || isGroup) return;
+
+        if (groups.length > 0) {
+            setSelectedGroupId(groups[0].id);
+        } else if (territories.some(t => t.userId === user?.uid)) {
+            setSelectedGroupId('my_territories');
+        }
+    }, [groups, territories, user, selectedGroupId]);
+
     // Update daysState when group selection changes or planning updates
     React.useEffect(() => {
         if (currentGroupPlanning) {
@@ -55,15 +74,18 @@ const WeeklyPlanning: React.FC = () => {
     }, [selectedGroupId, currentGroupPlanning]);
 
     const groupTerritories = useMemo(() => {
+        if (selectedGroupId === 'my_territories') {
+            return territories.filter(t => t.userId === user?.uid);
+        }
         const group = groups.find(g => g.id === selectedGroupId);
         if (!group) return [];
         return territories.filter(t => group.territoryIds.includes(t.id));
-    }, [territories, groups, selectedGroupId]);
+    }, [territories, groups, selectedGroupId, user]);
 
     const suggestedTerritories = useMemo(() => {
         return [...groupTerritories].sort((a, b) => {
-            const daysA = a.daysSinceWork || 0;
-            const daysB = b.daysSinceWork || 0;
+            const daysA = calculateStatus(a.lastWorkedDate ? new Date(a.lastWorkedDate) : null).days;
+            const daysB = calculateStatus(b.lastWorkedDate ? new Date(b.lastWorkedDate) : null).days;
             return daysB - daysA;
         });
     }, [groupTerritories]);
@@ -106,7 +128,11 @@ const WeeklyPlanning: React.FC = () => {
         }
 
         // 1. Sort all territories by age (daysSinceWork descending)
-        const sortedByAge = [...groupTerritories].sort((a, b) => (b.daysSinceWork || 0) - (a.daysSinceWork || 0));
+        const sortedByAge = [...groupTerritories].sort((a, b) => {
+            const daysA = calculateStatus(a.lastWorkedDate ? new Date(a.lastWorkedDate) : null).days;
+            const daysB = calculateStatus(b.lastWorkedDate ? new Date(b.lastWorkedDate) : null).days;
+            return daysB - daysA;
+        });
 
         // 2. Identify Large territories for weekends
         const largeTerritories = sortedByAge.filter(t => t.size === 'large');
@@ -154,12 +180,12 @@ const WeeklyPlanning: React.FC = () => {
         return Object.keys(daysState).find(day => (daysState[day as keyof DailyAllocation] as string[]).includes(id));
     };
 
-    if (groups.length === 0) {
+    if (groups.length === 0 && territories.filter(t => t.userId === user?.uid).length === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-gray-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
                 <Users className="text-gray-300 dark:text-slate-700 mb-4" size={64} />
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nenhum grupo encontrado</h2>
-                <p className="text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">Você precisa criar grupos na sessão "Grupos" antes de fazer um planejamento individual.</p>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Nenhum território disponível</h2>
+                <p className="text-gray-500 dark:text-gray-400 mb-6 text-center max-w-md">Você não tem grupos criados e nem territórios designados a você.</p>
             </div>
         );
     }
@@ -184,6 +210,9 @@ const WeeklyPlanning: React.FC = () => {
                                     {g.name}
                                 </option>
                             ))}
+                            <option value="my_territories" className="bg-white dark:bg-slate-900 text-gray-900 dark:text-white font-bold text-purple-600">
+                                Meus Territórios
+                            </option>
                         </select>
                     </div>
                 </div>
@@ -254,7 +283,7 @@ const WeeklyPlanning: React.FC = () => {
                                                 <div>
                                                     <h3 className="font-semibold text-gray-900 dark:text-slate-100">{t.code} - {t.name}</h3>
                                                     <p className="text-xs text-gray-500 dark:text-slate-400">
-                                                        {t.daysSinceWork} dias sem trabalho
+                                                        {calculateStatus(t.lastWorkedDate ? new Date(t.lastWorkedDate) : null).days} dias sem trabalho
                                                         {dayAllocated && !isCurrentDay && (
                                                             <span className="text-blue-500 dark:text-blue-400 ml-2 font-medium">→ {DAYS_OF_WEEK.find(d => d.id === dayAllocated)?.label}</span>
                                                         )}
@@ -287,7 +316,7 @@ const WeeklyPlanning: React.FC = () => {
                     <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 transition-colors">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6 flex items-center gap-2">
                             <Calendar className="text-emerald-500 dark:text-emerald-400" size={24} />
-                            Resumo da Semana ({groups.find(g => g.id === selectedGroupId)?.name})
+                            Resumo da Semana ({selectedGroupId === 'my_territories' ? 'Meus Territórios' : groups.find(g => g.id === selectedGroupId)?.name})
                         </h2>
 
                         <div className="space-y-4">
