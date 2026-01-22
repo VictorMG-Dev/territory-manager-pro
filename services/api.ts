@@ -68,5 +68,24 @@ export const api = {
             console.error('API Put Error:', error);
             throw new Error(error.message);
         }
+    },
+
+    async delete(endpoint: string) {
+        try {
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || `Erro do servidor: ${response.status}`);
+            }
+            return data;
+        } catch (error: any) {
+            console.error('API Delete Error:', error);
+            throw new Error(error.message);
+        }
     }
 };

@@ -41,7 +41,19 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onSubmit(formData);
+
+        // Convert image URLs to TerritoryImage objects
+        const formattedImages = formData.images.map((url, index) => ({
+            url,
+            name: `image-${index}`,
+            isPrimary: index === 0,
+            uploadedAt: new Date().toISOString()
+        }));
+
+        onSubmit({
+            ...formData,
+            images: formattedImages
+        });
     };
 
     const handleImageAdd = () => {

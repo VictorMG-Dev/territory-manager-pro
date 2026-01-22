@@ -88,7 +88,7 @@ const Territories = () => {
         </div>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+          className="bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold flex items-center gap-2 hover:bg-blue-700 transition-all"
         >
           <Plus size={20} />
           Novo Território

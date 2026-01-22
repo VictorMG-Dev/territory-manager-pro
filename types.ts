@@ -28,6 +28,7 @@ export interface GeolocationData {
 export interface Territory {
   id: string;
   userId: string;
+  congregationId: string;
   code: string;
   name: string;
   address: string;
@@ -53,12 +54,36 @@ export interface WorkRecord {
   createdAt: any;
 }
 
+export type Role = 'publisher' | 'territory_servant' | 'service_overseer' | 'elder';
+
 export interface UserProfile {
   uid: string;
   email: string;
   displayName: string;
   photoURL: string;
+  congregationId?: string;
+  congregationName?: string;
+  role?: Role;
   createdAt: any;
+}
+
+export interface Congregation {
+  id: string;
+  name: string;
+  description: string;
+  inviteCode: string;
+  createdBy: string;
+  createdAt: any;
+  memberCount?: number;
+}
+
+export interface CongregationMember {
+  uid: string;
+  name: string;
+  email: string;
+  photoURL?: string;
+  role?: Role;
+  joinedAt: any;
 }
 
 export interface DailyAllocation {
@@ -73,6 +98,7 @@ export interface DailyAllocation {
 
 export interface TerritoryGroup {
   id: string;
+  congregationId: string;
   name: string;
   description: string;
   color: string;

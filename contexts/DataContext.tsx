@@ -64,12 +64,32 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     const addTerritory = async (territoryData: Omit<Territory, 'id' | 'createdAt' | 'updatedAt'>) => {
+        if (!user) {
+            throw new Error('User must be authenticated to add territory');
+        }
+
         const id = uuidv4();
+        const now = new Date().toISOString();
+
         const newTerritory: Territory = {
             ...territoryData,
             id,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
+            userId: user.uid,
+            // Initialize images array if not provided
+            images: territoryData.images || [],
+            // Initialize geolocation with empty data if not provided
+            geolocation: territoryData.geolocation || {
+                type: 'Polygon',
+                coordinates: [],
+                area: 0,
+                center: { lat: 0, lng: 0 }
+            },
+            // Initialize work tracking fields
+            lastWorkedDate: territoryData.lastWorkedDate || null,
+            lastWorkedBy: territoryData.lastWorkedBy || '',
+            daysSinceWork: territoryData.daysSinceWork || 999,
+            createdAt: now,
+            updatedAt: now,
         };
 
         try {

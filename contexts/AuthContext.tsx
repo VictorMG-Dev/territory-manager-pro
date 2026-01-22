@@ -8,16 +8,21 @@ export interface User {
     email: string;
     name: string;
     photoURL?: string;
+    congregationId?: string;
+    congregationName?: string;
+    role?: 'publisher' | 'territory_servant' | 'service_overseer' | 'elder';
 }
 
 interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
-    register: (name: string, email: string, password: string) => Promise<void>;
+    register: (name: string, email: string, password: string, congregationData?: { name?: string; description?: string; inviteCode?: string }) => Promise<void>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
     updatePassword: (password: string) => Promise<void>;
+    createCongregation: (name: string, description?: string) => Promise<any>;
+    joinCongregation: (inviteCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -60,12 +65,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const register = async (name: string, email: string, password: string) => {
+    const register = async (name: string, email: string, password: string, congregationData?: { name?: string; description?: string; inviteCode?: string }) => {
         setLoading(true);
         console.log('Iniciando registro para:', email);
         try {
             const uid = uuidv4();
-            const data = await api.post('/auth/register', { uid, name, email, password });
+            const data = await api.post('/auth/register', { uid, name, email, password, congregationData });
             console.log('Resposta do registro:', data);
 
             setUser(data.user);
@@ -122,8 +127,62 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const createCongregation = async (name: string, description?: string) => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const congregation = await api.post('/congregations', { name, description });
+
+            // Update user with congregation info and new token
+            const updatedUser = { ...user, congregationId: congregation.id, congregationName: name, role: 'elder' };
+            setUser(updatedUser);
+            localStorage.setItem('territory_session', JSON.stringify(updatedUser));
+
+            // Update token if returned
+            if (congregation.token) {
+                localStorage.setItem('territory_token', congregation.token);
+            }
+
+            toast.success('Congregação criada com sucesso!');
+            return congregation;
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Erro ao criar congregação');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const joinCongregation = async (inviteCode: string) => {
+        if (!user) return;
+        setLoading(true);
+        try {
+            const joinResponse = await api.post('/congregations/join', { inviteCode });
+
+            // Refresh user data
+            const response = await api.get('/congregations/my');
+            const updatedUser = { ...user, congregationId: response.id, congregationName: response.name };
+            setUser(updatedUser);
+            localStorage.setItem('territory_session', JSON.stringify(updatedUser));
+
+            // Update token if returned
+            if (joinResponse.token) {
+                localStorage.setItem('territory_token', joinResponse.token);
+            }
+
+            toast.success('Você entrou na congregação!');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Erro ao entrar na congregação');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updatePassword }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updatePassword, createCongregation, joinCongregation }}>
             {children}
         </AuthContext.Provider>
     );

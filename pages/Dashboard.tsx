@@ -149,7 +149,7 @@ const Dashboard = () => {
         <button
           onClick={handleGenerateReport}
           disabled={generating}
-          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 disabled:opacity-70"
+          className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold flex items-center gap-2 hover:bg-blue-700 transition-all disabled:opacity-70"
         >
           {generating ? <Loader2 size={18} className="animate-spin" /> : <TrendingUp size={18} />}
           {generating ? 'Gerando...' : 'Gerar Relatório'}
