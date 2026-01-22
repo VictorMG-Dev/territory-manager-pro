@@ -850,6 +850,64 @@ app.put('/api/tracking/sessions/:id/reject', authenticateToken, requireRole(['el
     }
 });
 
+app.get('/api/tracking/sessions/:id', authenticateToken, async (req, res) => {
+    try {
+        // 1. Get Session Details
+        const { data: session, error: sessionError } = await supabase
+            .from('tracking_sessions')
+            .select('*')
+            .eq('id', req.params.id)
+            .single();
+
+        if (sessionError || !session) return res.status(404).json({ message: 'Sessão não encontrada.' });
+
+        // Security: Check if user owns session or is admin/elder of same congregation
+        const isOwner = session.user_id === req.user.uid;
+        const isAdminConfig = ['admin', 'elder', 'service_overseer'].includes(req.user.role)
+            && session.congregation_id === req.user.congregationId;
+
+        if (!isOwner && !isAdminConfig) {
+            return res.status(403).json({ message: 'Acesso negado.' });
+        }
+
+        // 2. Get Points
+        const { data: points } = await supabase
+            .from('tracking_points')
+            .select('*')
+            .eq('session_id', req.params.id)
+            .order('timestamp', { ascending: true });
+
+        // Map response
+        const response = {
+            id: session.id,
+            userId: session.user_id,
+            congregationId: session.congregation_id,
+            startTime: session.start_time,
+            endTime: session.end_time,
+            status: session.status,
+            distanceMeters: session.distance_meters,
+            durationSeconds: session.duration_seconds,
+            observations: session.observations,
+            notes: session.notes,
+            createdAt: session.created_at,
+            points: (points || []).map(p => ({
+                id: p.id,
+                sessionId: p.session_id,
+                latitude: p.latitude,
+                longitude: p.longitude,
+                accuracy: p.accuracy,
+                timestamp: p.timestamp
+            }))
+        };
+
+        res.json(response);
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar detalhes da sessão.' });
+    }
+});
+
 
 // Export app for Vercel
 module.exports = app;

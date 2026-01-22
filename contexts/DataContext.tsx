@@ -28,6 +28,7 @@ interface DataContextType {
     getPendingReports: () => Promise<TrackingSession[]>;
     approveReport: (id: string) => Promise<void>;
     rejectReport: (id: string) => Promise<void>;
+    getTrackingSessionDetails: (id: string) => Promise<TrackingSession>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -280,6 +281,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await api.put(`/tracking/sessions/${id}/reject`, {});
     };
 
+    const getTrackingSessionDetails = async (id: string) => {
+        return await api.get(`/tracking/sessions/${id}`);
+    };
+
     return (
         <DataContext.Provider value={{
             territories,
@@ -303,7 +308,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             getTrackingHistory,
             getPendingReports,
             approveReport,
-            rejectReport
+            rejectReport,
+            getTrackingSessionDetails
         }}>
             {children}
         </DataContext.Provider>
