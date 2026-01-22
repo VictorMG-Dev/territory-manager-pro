@@ -41,10 +41,10 @@ const rolePermissions: Record<Role, RolePermissions> = {
     },
     elder: {
         canAccessDashboard: true,
-        canAccessTerritories: false,
+        canAccessTerritories: true,  // Admin has full access
         canAccessGroups: true,
         canAccessMap: true,
-        canAccessPlanning: false,
+        canAccessPlanning: true,  // Admin has full access
         canAccessReports: true,
         canAccessProfile: true,
     },
