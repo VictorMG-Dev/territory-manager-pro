@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { DataProvider } from './contexts/DataContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import { HashRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Map as MapIcon,
@@ -154,7 +154,7 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <DataProvider>
-          <HashRouter>
+          <BrowserRouter>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -169,7 +169,7 @@ export default function App() {
               <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
               <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             </Routes>
-          </HashRouter>
+          </BrowserRouter>
         </DataProvider>
       </AuthProvider>
     </ThemeProvider>
