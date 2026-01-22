@@ -28,21 +28,29 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import WeeklyPlanning from './pages/WeeklyPlanning';
 import Groups from './pages/Groups';
+import AccessDenied from './pages/AccessDenied';
 import ChatBot from './components/ChatBot';
+import { usePermissions } from './hooks/usePermissions';
 
 const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { permissions } = usePermissions();
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Layers, label: 'Territórios', path: '/territories' },
-    { icon: Users, label: 'Grupos', path: '/groups' },
-    { icon: MapIcon, label: 'Mapa Global', path: '/map' },
-    { icon: Calendar, label: 'Planejamento', path: '/planning' },
-    { icon: FileText, label: 'Relatórios', path: '/reports' },
-    { icon: User, label: 'Perfil', path: '/profile' },
+  const allMenuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/', permission: 'canAccessDashboard' },
+    { icon: Layers, label: 'Territórios', path: '/territories', permission: 'canAccessTerritories' },
+    { icon: Users, label: 'Grupos', path: '/groups', permission: 'canAccessGroups' },
+    { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
+    { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
+    { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
+    { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
+
+  // Filter menu items based on user permissions
+  const menuItems = allMenuItems.filter(item =>
+    permissions[item.permission as keyof typeof permissions]
+  );
 
   return (
     <>
@@ -153,6 +161,20 @@ const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
   return <Layout>{children}</Layout>;
 };
 
+const RoleProtectedRoute = ({ children, requiredPermission }: { children?: React.ReactNode, requiredPermission: string }) => {
+  const { user, loading } = useAuth();
+  const { canAccess } = usePermissions();
+
+  if (loading) return <div>Carregando...</div>;
+  if (!user) return <Navigate to="/login" />;
+
+  if (!canAccess(requiredPermission as any)) {
+    return <Navigate to="/access-denied" />;
+  }
+
+  return <Layout>{children}</Layout>;
+};
+
 export default function App() {
   return (
     <ThemeProvider>
@@ -164,14 +186,15 @@ export default function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-              <Route path="/territories" element={<ProtectedRoute><Territories /></ProtectedRoute>} />
-              <Route path="/territory/:id" element={<ProtectedRoute><TerritoryDetail /></ProtectedRoute>} />
-              <Route path="/groups" element={<ProtectedRoute><Groups /></ProtectedRoute>} />
-              <Route path="/map" element={<ProtectedRoute><MapPage /></ProtectedRoute>} />
-              <Route path="/planning" element={<ProtectedRoute><WeeklyPlanning /></ProtectedRoute>} />
-              <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+              <Route path="/access-denied" element={<ProtectedRoute><AccessDenied /></ProtectedRoute>} />
+              <Route path="/" element={<RoleProtectedRoute requiredPermission="canAccessDashboard"><Dashboard /></RoleProtectedRoute>} />
+              <Route path="/territories" element={<RoleProtectedRoute requiredPermission="canAccessTerritories"><Territories /></RoleProtectedRoute>} />
+              <Route path="/territory/:id" element={<RoleProtectedRoute requiredPermission="canAccessTerritories"><TerritoryDetail /></RoleProtectedRoute>} />
+              <Route path="/groups" element={<RoleProtectedRoute requiredPermission="canAccessGroups"><Groups /></RoleProtectedRoute>} />
+              <Route path="/map" element={<RoleProtectedRoute requiredPermission="canAccessMap"><MapPage /></RoleProtectedRoute>} />
+              <Route path="/planning" element={<RoleProtectedRoute requiredPermission="canAccessPlanning"><WeeklyPlanning /></RoleProtectedRoute>} />
+              <Route path="/reports" element={<RoleProtectedRoute requiredPermission="canAccessReports"><Reports /></RoleProtectedRoute>} />
+              <Route path="/profile" element={<RoleProtectedRoute requiredPermission="canAccessProfile"><Profile /></RoleProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </DataProvider>

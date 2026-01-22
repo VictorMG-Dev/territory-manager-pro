@@ -327,6 +327,119 @@ app.delete('/api/congregations/members/:uid', authenticateToken, requireRole(['e
     } catch (e) { res.status(500).json({ message: 'Erro.' }); }
 });
 
+// DELETE CONGREGATION (Admin/Creator Only)
+app.delete('/api/congregations/:id', authenticateToken, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Get congregation to verify creator
+        const { data: cong, error: congError } = await supabase
+            .from('congregations')
+            .select('created_by')
+            .eq('id', id)
+            .single();
+
+        if (congError || !cong) {
+            return res.status(404).json({ message: 'Congregação não encontrada.' });
+        }
+
+        // Only creator can delete
+        if (cong.created_by !== req.user.uid) {
+            return res.status(403).json({ message: 'Apenas o criador pode excluir a congregação.' });
+        }
+
+        // Remove all members from congregation
+        await supabase
+            .from('users')
+            .update({ congregation_id: null, role: 'publisher' })
+            .eq('congregation_id', id);
+
+        // Delete congregation
+        const { error: deleteError } = await supabase
+            .from('congregations')
+            .delete()
+            .eq('id', id);
+
+        if (deleteError) throw deleteError;
+
+        res.json({ success: true, message: 'Congregação excluída com sucesso.' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao excluir congregação.' });
+    }
+});
+
+// LEAVE CONGREGATION (All Members)
+app.post('/api/congregations/leave', authenticateToken, async (req, res) => {
+    try {
+        // Set congregation to null and role to publisher
+        const { error } = await supabase
+            .from('users')
+            .update({ congregation_id: null, role: 'publisher' })
+            .eq('uid', req.user.uid);
+
+        if (error) throw error;
+
+        // Generate new token without congregation
+        const token = jwt.sign(
+            { uid: req.user.uid, email: req.user.email, role: 'publisher', congregationId: null },
+            process.env.JWT_SECRET || 'yoursecret'
+        );
+
+        res.json({ success: true, token, message: 'Você saiu da congregação.' });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao sair da congregação.' });
+    }
+});
+
+// SWITCH CONGREGATION (All Members)
+app.post('/api/congregations/switch', authenticateToken, async (req, res) => {
+    try {
+        const { inviteCode } = req.body;
+
+        if (!inviteCode) {
+            return res.status(400).json({ message: 'Código de convite obrigatório.' });
+        }
+
+        // Validate new congregation
+        const { data: newCong, error: congError } = await supabase
+            .from('congregations')
+            .select('id, name')
+            .eq('invite_code', inviteCode)
+            .single();
+
+        if (congError || !newCong) {
+            return res.status(404).json({ message: 'Código de convite inválido.' });
+        }
+
+        // Switch congregation (leave current, join new)
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ congregation_id: newCong.id, role: 'publisher' })
+            .eq('uid', req.user.uid);
+
+        if (updateError) throw updateError;
+
+        // Generate new token with new congregation
+        const token = jwt.sign(
+            { uid: req.user.uid, email: req.user.email, role: 'publisher', congregationId: newCong.id },
+            process.env.JWT_SECRET || 'yoursecret'
+        );
+
+        res.json({
+            success: true,
+            token,
+            congregationId: newCong.id,
+            congregationName: newCong.name,
+            message: `Você entrou na congregação ${newCong.name}.`
+        });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao trocar de congregação.' });
+    }
+});
+
 // --- TERRITORY ROUTES ---
 
 app.get('/api/territories', authenticateToken, async (req, res) => {

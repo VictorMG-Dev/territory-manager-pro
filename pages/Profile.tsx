@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 import { Congregation, CongregationMember, Role } from '../types';
 
 const Profile = () => {
-  const { user, updateProfile, updatePassword, createCongregation, joinCongregation } = useAuth();
+  const { user, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation } = useAuth();
   const { theme, toggleTheme } = useTheme();
 
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
@@ -36,6 +36,19 @@ const Profile = () => {
   // Remove Member State
   const [removingMember, setRemovingMember] = useState<CongregationMember | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+
+  // Delete Congregation State
+  const [showDeleteCongModal, setShowDeleteCongModal] = useState(false);
+  const [isDeletingCong, setIsDeletingCong] = useState(false);
+
+  // Leave Congregation State
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [isLeavingCong, setIsLeavingCong] = useState(false);
+
+  // Switch Congregation State
+  const [showSwitchModal, setShowSwitchModal] = useState(false);
+  const [switchCode, setSwitchCode] = useState('');
+  const [isSwitchingCong, setIsSwitchingCong] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -255,6 +268,55 @@ const Profile = () => {
       toast.error(error.response?.data?.message || 'Erro ao remover membro');
     } finally {
       setIsRemovingMember(false);
+    }
+  };
+
+  const handleDeleteCongregation = async () => {
+    if (!congregation) return;
+
+    setIsDeletingCong(true);
+    try {
+      await deleteCongregation(congregation.id);
+      setShowDeleteCongModal(false);
+      setCongregation(null);
+      setMembers([]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsDeletingCong(false);
+    }
+  };
+
+  const handleLeaveCongregation = async () => {
+    setIsLeavingCong(true);
+    try {
+      await leaveCongregation();
+      setShowLeaveModal(false);
+      setCongregation(null);
+      setMembers([]);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLeavingCong(false);
+    }
+  };
+
+  const handleSwitchCongregation = async () => {
+    if (!switchCode.trim()) {
+      toast.error('Digite o código de convite');
+      return;
+    }
+
+    setIsSwitchingCong(true);
+    try {
+      await switchCongregation(switchCode);
+      setShowSwitchModal(false);
+      setSwitchCode('');
+      await loadCongregationData();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsSwitchingCong(false);
     }
   };
 
@@ -522,6 +584,38 @@ const Profile = () => {
                     </div>
                   </div>
                 )}
+
+                {/* Congregation Management Buttons */}
+                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                  {/* Admin: Delete Congregation */}
+                  {congregation.createdBy === user?.uid && (
+                    <button
+                      onClick={() => setShowDeleteCongModal(true)}
+                      className="w-full px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-800"
+                    >
+                      <AlertTriangle size={18} />
+                      Excluir Congregação
+                    </button>
+                  )}
+
+                  {/* All Members: Leave and Switch */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => setShowLeaveModal(true)}
+                      className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <LogOut size={18} />
+                      Sair
+                    </button>
+                    <button
+                      onClick={() => setShowSwitchModal(true)}
+                      className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                    >
+                      <UserPlus size={18} />
+                      Trocar
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-12">
@@ -712,6 +806,146 @@ const Profile = () => {
                     Remover
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Congregation Modal */}
+      {showDeleteCongModal && congregation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Excluir Congregação</h3>
+            </div>
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Tem certeza que deseja excluir a congregação <span className="font-bold text-gray-900 dark:text-white">{congregation.name}</span>?
+            </p>
+
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
+              <p className="text-xs text-red-800 dark:text-red-300 font-medium">
+                ⚠️ Esta ação é <strong>IRREVERSÍVEL</strong>. Todos os {members.length} membros serão removidos e perderão acesso aos territórios da congregação.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteCongModal(false)}
+                disabled={isDeletingCong}
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteCongregation}
+                disabled={isDeletingCong}
+                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isDeletingCong ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={18} />
+                    Excluir
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Leave Congregation Modal */}
+      {showLeaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                <LogOut className="text-amber-600 dark:text-amber-400" size={24} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Sair da Congregação</h3>
+            </div>
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+              Tem certeza que deseja sair da congregação? Você perderá acesso aos territórios e precisará de um novo convite para retornar.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                disabled={isLeavingCong}
+                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleLeaveCongregation}
+                disabled={isLeavingCong}
+                className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLeavingCong ? (
+                  <>
+                    <Loader2 className="animate-spin" size={18} />
+                    Saindo...
+                  </>
+                ) : (
+                  <>
+                    <LogOut size={18} />
+                    Sair
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Switch Congregation Modal */}
+      {showSwitchModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Trocar de Congregação</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Digite o código de convite da nova congregação. Você sairá automaticamente da congregação atual.
+            </p>
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
+                <input
+                  type="text"
+                  value={switchCode}
+                  onChange={(e) => setSwitchCode(e.target.value.toUpperCase())}
+                  className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
+                  placeholder="XXXXXXXX"
+                  maxLength={8}
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-8">
+              <button
+                onClick={() => {
+                  setShowSwitchModal(false);
+                  setSwitchCode('');
+                }}
+                disabled={isSwitchingCong}
+                className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleSwitchCongregation}
+                disabled={isSwitchingCong || !switchCode.trim()}
+                className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isSwitchingCong ? <Loader2 className="animate-spin" size={20} /> : 'Trocar'}
               </button>
             </div>
           </div>

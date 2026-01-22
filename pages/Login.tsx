@@ -3,18 +3,14 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layers, Mail, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
 import AnimatedBackground from '../components/AnimatedBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const { login, loading } = useAuth(); // Use global loading state or just local? 
-  // Context loading is for initial session check. We need local loading for the action.
-  // Actually context exposes loading, but that might be "app loading". 
-  // Let's rely on the promise from login for local loading state if needed.
-  // But wait, the context's login function sets the global loading state. 
-  // Let's use a local submitting state for better UI control if needed, 
-  // or just rely on the fact that we await login.
+  const { login, loading } = useAuth();
+  const { getDefaultRoute } = usePermissions();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -24,7 +20,9 @@ const Login = () => {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/');
+      // Redirect to default route based on user's role
+      const defaultRoute = getDefaultRoute();
+      navigate(defaultRoute);
     } catch (error) {
       // Toast is handled in context
     } finally {

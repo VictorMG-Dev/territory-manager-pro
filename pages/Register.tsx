@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layers, User, Mail, Lock, ChevronRight, Loader2, Users, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { usePermissions } from '../hooks/usePermissions';
 import toast from 'react-hot-toast';
 import AnimatedBackground from '../components/AnimatedBackground';
 
@@ -17,6 +18,7 @@ const Register = () => {
   const [inviteCode, setInviteCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { register } = useAuth();
+  const { getDefaultRoute } = usePermissions();
   const navigate = useNavigate();
 
   const handleStep1Submit = (e: React.FormEvent) => {
@@ -39,7 +41,9 @@ const Register = () => {
       }
 
       await register(name, email, password, congregationData);
-      navigate('/');
+      // Redirect to default route based on user's role
+      const defaultRoute = getDefaultRoute();
+      navigate(defaultRoute);
     } catch (error) {
       // Error handling done in context via toast
     } finally {

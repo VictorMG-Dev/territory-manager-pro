@@ -23,6 +23,9 @@ interface AuthContextType {
     updatePassword: (password: string) => Promise<void>;
     createCongregation: (name: string, description?: string) => Promise<any>;
     joinCongregation: (inviteCode: string) => Promise<void>;
+    deleteCongregation: (congregationId: string) => Promise<void>;
+    leaveCongregation: () => Promise<void>;
+    switchCongregation: (inviteCode: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -181,8 +184,83 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
+    const deleteCongregation = async (congregationId: string) => {
+        setLoading(true);
+        try {
+            await api.delete(`/congregations/${congregationId}`);
+
+            // Update user state (remove congregation)
+            const updatedUser = { ...user!, congregationId: undefined, congregationName: undefined, role: 'publisher' as const };
+            setUser(updatedUser);
+            localStorage.setItem('territory_session', JSON.stringify(updatedUser));
+
+            toast.success('Congregação excluída com sucesso!');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Erro ao excluir congregação');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const leaveCongregation = async () => {
+        setLoading(true);
+        try {
+            const response = await api.post('/congregations/leave', {});
+
+            // Update user state
+            const updatedUser = { ...user!, congregationId: undefined, congregationName: undefined, role: 'publisher' as const };
+            setUser(updatedUser);
+            localStorage.setItem('territory_session', JSON.stringify(updatedUser));
+
+            // Update token if returned
+            if (response.token) {
+                localStorage.setItem('territory_token', response.token);
+            }
+
+            toast.success('Você saiu da congregação.');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Erro ao sair da congregação');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const switchCongregation = async (inviteCode: string) => {
+        setLoading(true);
+        try {
+            const response = await api.post('/congregations/switch', { inviteCode });
+
+            // Update user state with new congregation
+            const updatedUser = {
+                ...user!,
+                congregationId: response.congregationId,
+                congregationName: response.congregationName,
+                role: 'publisher' as const
+            };
+            setUser(updatedUser);
+            localStorage.setItem('territory_session', JSON.stringify(updatedUser));
+
+            // Update token if returned
+            if (response.token) {
+                localStorage.setItem('territory_token', response.token);
+            }
+
+            toast.success(response.message || 'Você trocou de congregação!');
+        } catch (error: any) {
+            console.error(error);
+            toast.error(error.message || 'Erro ao trocar de congregação');
+            throw error;
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updatePassword, createCongregation, joinCongregation }}>
+        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation }}>
             {children}
         </AuthContext.Provider>
     );
