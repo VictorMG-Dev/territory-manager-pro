@@ -5,7 +5,6 @@ const API_URL = typeof window !== 'undefined' && window.location.hostname !== 'l
     : 'http://localhost:3002/api';
 
 
-
 const getHeaders = () => {
     const token = localStorage.getItem('territory_token');
     return {
@@ -16,6 +15,7 @@ const getHeaders = () => {
 
 export const api = {
     async post(endpoint: string, body: any) {
+        // Handle dynamic paths if needed, but fetch handles it fine
         try {
             const response = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
@@ -23,6 +23,8 @@ export const api = {
                 body: JSON.stringify(body)
             });
 
+            // Vercel functions might return empty body on 204 or certain errors?
+            // Checking content-type or checking text first might be safer but catch matches existing pattern
             const data = await response.json().catch(() => ({}));
 
             if (!response.ok) {
@@ -32,7 +34,7 @@ export const api = {
         } catch (error: any) {
             console.error('API Post Error:', error);
             throw new Error(error.message === 'Failed to fetch'
-                ? 'Não foi possível conectar ao servidor. Verifique se o node index.js está rodando.'
+                ? 'Não foi possível conectar ao servidor. Verifique se o node index.js está rodando ou se a API está online.'
                 : error.message);
         }
     },

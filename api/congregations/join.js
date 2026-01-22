@@ -1,63 +1,46 @@
-const { getSupabaseClient, verifyToken, handleCors, errorResponse, successResponse } = require('../_utils');
+const jwt = require('jsonwebtoken');
+const { supabase, allowCors, verifyToken } = require('../_utils');
 
-module.exports = async (req, res) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (handleCors(req, res)) return;
-
+const handler = async (req, res) => {
     if (req.method !== 'POST') {
-        return errorResponse(res, 'Method not allowed', 405);
+        return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
     try {
-        const decoded = verifyToken(req);
+        const user = verifyToken(req);
         const { inviteCode } = req.body;
 
-        if (!inviteCode) {
-            return errorResponse(res, 'Código de convite é obrigatório');
-        }
-
-        const supabase = getSupabaseClient();
-
-        // Find congregation by invite code
-        const { data: congregation, error: congError } = await supabase
+        const { data, error } = await supabase
             .from('congregations')
-            .select('id, name')
+            .select('id')
             .eq('invite_code', inviteCode)
             .single();
 
-        if (congError || !congregation) {
-            return errorResponse(res, 'Código de convite inválido');
+        if (error || !data) {
+            return res.status(404).json({ message: 'Código de convite inválido.' });
         }
 
-        // Update user to join congregation
+        const congregationId = data.id;
+
         const { error: updateError } = await supabase
             .from('users')
-            .update({
-                congregation_id: congregation.id,
-                role: 'publisher'
-            })
-            .eq('id', decoded.userId);
+            .update({ congregation_id: congregationId })
+            .eq('uid', user.uid);
 
         if (updateError) {
-            console.error('User update error:', updateError);
-            return errorResponse(res, 'Erro ao entrar na congregação');
+            console.error(updateError);
+            return res.status(500).json({ message: 'Erro ao entrar na congregação.' });
         }
 
-        return successResponse(res, {
-            congregation: {
-                id: congregation.id,
-                name: congregation.name
-            }
-        });
+        // Generate new token with updated congregationId
+        const newToken = jwt.sign({ uid: user.uid, email: user.email, role: user.role, congregationId }, process.env.JWT_SECRET || 'yoursecret');
 
+        res.status(200).json({ success: true, congregationId, token: newToken });
     } catch (error) {
-        console.error('Join congregation error:', error);
-        if (error.message === 'No token provided' || error.message === 'Invalid token') {
-            return errorResponse(res, error.message, 401);
-        }
-        return errorResponse(res, 'Erro interno do servidor', 500);
+        console.error(error);
+        const status = error.status || 500;
+        res.status(status).json({ message: error.message || 'Erro ao entrar na congregação.' });
     }
 };
+
+module.exports = allowCors(handler);

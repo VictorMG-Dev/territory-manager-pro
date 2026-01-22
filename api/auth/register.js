@@ -1,85 +1,94 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const { getSupabaseClient, corsHeaders, handleCors, errorResponse, successResponse } = require('../_utils');
+const { supabase, allowCors } = require('../_utils');
 
-module.exports = async (req, res) => {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (handleCors(req, res)) return;
-
+const handler = async (req, res) => {
     if (req.method !== 'POST') {
-        return errorResponse(res, 'Method not allowed', 405);
+        return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
+    console.log('--- Nova tentativa de Cadastro (Vercel) ---');
+    console.log('Dados recebidos:', req.body);
+
     try {
-        const { name, email, password, congregationId } = req.body;
+        const { uid, name, email, password, congregationData } = req.body;
 
-        if (!name || !email || !password) {
-            return errorResponse(res, 'Nome, email e senha são obrigatórios');
+        if (!uid || !name || !email || !password) {
+            console.log('❌ Dados incompletos');
+            return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
         }
 
-        const supabase = getSupabaseClient();
-
-        // Check if user already exists
-        const { data: existingUser } = await supabase
-            .from('users')
-            .select('id')
-            .eq('email', email)
-            .single();
-
-        if (existingUser) {
-            return errorResponse(res, 'Email já cadastrado');
-        }
-
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
+        let congregationId = null;
+        let role = 'publisher';
 
-        // Create user
-        const userId = uuidv4();
-        const { data: newUser, error: insertError } = await supabase
+        // Handle congregation logic
+        if (congregationData) {
+            if (congregationData.inviteCode) {
+                // Join existing congregation
+                const { data: congData, error } = await supabase
+                    .from('congregations')
+                    .select('id')
+                    .eq('invite_code', congregationData.inviteCode)
+                    .single();
+
+                if (error || !congData) {
+                    return res.status(400).json({ message: 'Código de convite inválido.' });
+                }
+                congregationId = congData.id;
+            } else if (congregationData.name) {
+                // Create new congregation
+                const crypto = require('crypto');
+                congregationId = crypto.randomUUID();
+                const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+                const { error } = await supabase
+                    .from('congregations')
+                    .insert({
+                        id: congregationId,
+                        name: congregationData.name,
+                        description: congregationData.description || '',
+                        invite_code: inviteCode,
+                        created_by: uid
+                    });
+
+                if (error) {
+                    console.error('Erro ao criar congregação:', error);
+                    return res.status(500).json({ message: 'Erro ao criar congregação.' });
+                }
+
+                // Creator is an Elder
+                role = 'elder';
+            }
+        }
+
+        const { error: userError } = await supabase
             .from('users')
             .insert({
-                id: userId,
+                uid,
                 name,
                 email,
                 password: hashedPassword,
-                congregation_id: congregationId || null,
-                role: 'publisher',
-                preferences: {}
-            })
-            .select()
-            .single();
+                congregation_id: congregationId,
+                role
+            });
 
-        if (insertError) {
-            console.error('Insert error:', insertError);
-            return errorResponse(res, 'Erro ao criar usuário');
+        if (userError) {
+            console.error('❌ Erro ao criar usuário:', userError);
+            if (userError.code === '23505') { // Unique violation
+                return res.status(400).json({ message: 'Este e-mail já está cadastrado.' });
+            }
+            return res.status(500).json({ message: 'Erro ao criar usuário.' });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: newUser.id, email: newUser.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
-
-        return successResponse(res, {
-            token,
-            user: {
-                id: newUser.id,
-                name: newUser.name,
-                email: newUser.email,
-                role: newUser.role,
-                congregationId: newUser.congregation_id,
-                preferences: newUser.preferences
-            }
-        }, 201);
+        const token = jwt.sign({ uid, email, role, congregationId }, process.env.JWT_SECRET || 'yoursecret');
+        console.log(`✅ Usuário criado com sucesso: ${email}`);
+        res.status(201).json({ token, user: { uid, name, email, congregationId, role } });
 
     } catch (error) {
-        console.error('Register error:', error);
-        return errorResponse(res, 'Erro interno do servidor', 500);
+        console.error('❌ ERRO CRÍTICO:', error.message);
+        res.status(500).json({ message: 'Erro interno: ' + error.message });
     }
 };
+
+module.exports = allowCors(handler);

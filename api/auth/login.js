@@ -1,67 +1,63 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getSupabaseClient, handleCors, errorResponse, successResponse } = require('../_utils');
+const { supabase, allowCors } = require('../_utils');
 
-module.exports = async (req, res) => {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    if (handleCors(req, res)) return;
-
+const handler = async (req, res) => {
     if (req.method !== 'POST') {
-        return errorResponse(res, 'Method not allowed', 405);
+        return res.status(405).json({ message: 'Method Not Allowed' });
     }
 
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return errorResponse(res, 'Email e senha são obrigatórios');
-        }
-
-        const supabase = getSupabaseClient();
-
-        // Find user by email
-        const { data: user, error: userError } = await supabase
+        const { data: users, error } = await supabase
             .from('users')
             .select('*')
-            .eq('email', email)
-            .single();
+            .eq('email', email);
 
-        if (userError || !user) {
-            return errorResponse(res, 'Credenciais inválidas', 401);
+        if (error || !users || users.length === 0) {
+            return res.status(400).json({ message: 'Email ou senha incorretos.' });
         }
 
-        // Verify password
-        const isValidPassword = await bcrypt.compare(password, user.password);
-        if (!isValidPassword) {
-            return errorResponse(res, 'Credenciais inválidas', 401);
+        const user = users[0];
+        const validPassword = await bcrypt.compare(password, user.password);
+
+        if (!validPassword) {
+            return res.status(400).json({ message: 'Email ou senha incorretos.' });
         }
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: user.id, email: user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: '7d' }
-        );
+        // Get congregation info if user has one
+        let congregationName = null;
+        if (user.congregation_id) {
+            const { data: congData } = await supabase
+                .from('congregations')
+                .select('name')
+                .eq('id', user.congregation_id)
+                .single();
 
-        return successResponse(res, {
+            if (congData) {
+                congregationName = congData.name;
+            }
+        }
+
+        const token = jwt.sign({ uid: user.uid, email: user.email, role: user.role, congregationId: user.congregation_id }, process.env.JWT_SECRET || 'yoursecret');
+
+        res.status(200).json({
             token,
             user: {
-                id: user.id,
+                uid: user.uid,
                 name: user.name,
                 email: user.email,
-                role: user.role,
+                photoURL: user.photo_url,
                 congregationId: user.congregation_id,
-                profileImage: user.profile_image,
-                preferences: user.preferences
+                congregationName: congregationName,
+                role: user.role
             }
         });
-
     } catch (error) {
-        console.error('Login error:', error);
-        return errorResponse(res, 'Erro interno do servidor', 500);
+        console.error(error);
+        res.status(500).json({ message: 'Erro ao realizar login.' });
     }
 };
+
+module.exports = allowCors(handler);
