@@ -73,14 +73,10 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
 
   // Filter menu items based on user permissions
   const menuItems = allMenuItems.reduce((acc: any[], item: any) => {
+    // FORCE DISPLAY FOR DEBUG - Unconditionally show groups and children
     if (item.children) {
-      const visibleChildren = item.children.filter((child: any) =>
-        permissions[child.permission as keyof typeof permissions] || user?.role === 'admin'
-      );
-      if (visibleChildren.length > 0) {
-        acc.push({ ...item, children: visibleChildren });
-      }
-    } else if (permissions[item.permission as keyof typeof permissions] || user?.role === 'admin') {
+      acc.push({ ...item });
+    } else {
       acc.push(item);
     }
     return acc;
@@ -102,7 +98,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
             <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
               <Layers className="text-white" size={24} />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro</span></span>
+            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro (v2)</span></span>
           </div>
 
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
