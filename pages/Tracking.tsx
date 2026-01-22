@@ -188,9 +188,11 @@ const Tracking = () => {
                 pathRef.current = [];
                 lastPosRef.current = null;
                 setStartTime(null);
-            } catch (error) {
+            } catch (error: any) {
                 console.error(error);
-                toast.error("Erro ao salvar ministério.");
+                // Extract message from error object if available
+                const msg = error?.response?.data?.message || error?.message || "Erro desconhecido";
+                toast.error(`Erro ao salvar: ${msg}`);
             }
         } else {
             // Se cancelar, apenas pausa (o stopTracking já foi chamado)

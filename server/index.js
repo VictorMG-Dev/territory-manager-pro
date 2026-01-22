@@ -851,8 +851,13 @@ app.put('/api/tracking/sessions/:id/reject', authenticateToken, requireRole(['el
 });
 
 
+// Export app for Vercel
+module.exports = app;
+
 // Start server (Local Only)
-const port = 5000;
-app.listen(port, '0.0.0.0', () => {
-    console.log(`✅ Local Server running on port ${port}`);
-});
+if (require.main === module) {
+    const port = process.env.PORT || 5000;
+    app.listen(port, () => {
+        console.log(`✅ Local Server running on port ${port}`);
+    });
+}

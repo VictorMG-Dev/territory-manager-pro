@@ -19,7 +19,7 @@ interface RolePermissions {
 const rolePermissions: Record<Role, RolePermissions> = {
     publisher: {
         canAccessDashboard: false,
-        canAccessTerritories: false,
+        canAccessTerritories: true,
         canAccessGroups: true,
         canAccessMap: true,
         canAccessPlanning: false,
@@ -33,7 +33,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
     },
     territory_servant: {
         canAccessDashboard: false,
-        canAccessTerritories: false,
+        canAccessTerritories: true,
         canAccessGroups: true,
         canAccessMap: true,
         canAccessPlanning: false,
@@ -61,7 +61,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
     },
     elder: {
         canAccessDashboard: true,
-        canAccessTerritories: false,
+        canAccessTerritories: true,
         canAccessGroups: true,
         canAccessMap: true,
         canAccessPlanning: false,
