@@ -73,11 +73,13 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
   // Filter menu items based on user permissions
   const menuItems = allMenuItems.reduce((acc: any[], item: any) => {
     if (item.children) {
-      const visibleChildren = item.children.filter((child: any) => permissions[child.permission as keyof typeof permissions]);
+      const visibleChildren = item.children.filter((child: any) =>
+        permissions[child.permission as keyof typeof permissions] || user?.role === 'admin'
+      );
       if (visibleChildren.length > 0) {
         acc.push({ ...item, children: visibleChildren });
       }
-    } else if (permissions[item.permission as keyof typeof permissions]) {
+    } else if (permissions[item.permission as keyof typeof permissions] || user?.role === 'admin') {
       acc.push(item);
     }
     return acc;
