@@ -14,6 +14,7 @@ import {
   X,
   Calendar,
   Users,
+  Navigation,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
@@ -29,6 +30,7 @@ import ResetPassword from './pages/ResetPassword';
 import WeeklyPlanning from './pages/WeeklyPlanning';
 import Groups from './pages/Groups';
 import AccessDenied from './pages/AccessDenied';
+import Tracking from './pages/Tracking';
 import ChatBot from './components/ChatBot';
 import { usePermissions } from './hooks/usePermissions';
 
@@ -43,6 +45,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: Users, label: 'Grupos', path: '/groups', permission: 'canAccessGroups' },
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
+    { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
@@ -195,6 +198,7 @@ export default function App() {
               <Route path="/planning" element={<RoleProtectedRoute requiredPermission="canAccessPlanning"><WeeklyPlanning /></RoleProtectedRoute>} />
               <Route path="/reports" element={<RoleProtectedRoute requiredPermission="canAccessReports"><Reports /></RoleProtectedRoute>} />
               <Route path="/profile" element={<RoleProtectedRoute requiredPermission="canAccessProfile"><Profile /></RoleProtectedRoute>} />
+              <Route path="/tracking" element={<RoleProtectedRoute requiredPermission="canAccessTracking"><Tracking /></RoleProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </DataProvider>

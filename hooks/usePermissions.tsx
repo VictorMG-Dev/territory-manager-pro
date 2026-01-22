@@ -11,6 +11,7 @@ interface RolePermissions {
     canAccessProfile: boolean;
     canManageGroups: boolean; // For create/edit groups
     canAssignMembersToGroups: boolean;
+    canAccessTracking: boolean;
 }
 
 const rolePermissions: Record<Role, RolePermissions> = {
@@ -24,6 +25,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessProfile: true,
         canManageGroups: false,
         canAssignMembersToGroups: false,
+        canAccessTracking: true,
     },
     territory_servant: {
         canAccessDashboard: false,
@@ -35,6 +37,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessProfile: true,
         canManageGroups: true,
         canAssignMembersToGroups: false,
+        canAccessTracking: true,
     },
     service_overseer: {
         canAccessDashboard: true,
@@ -46,6 +49,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessProfile: true,
         canManageGroups: true,
         canAssignMembersToGroups: true,
+        canAccessTracking: true,
     },
     elder: {
         canAccessDashboard: true,
@@ -57,6 +61,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessProfile: true,
         canManageGroups: true,
         canAssignMembersToGroups: true,
+        canAccessTracking: true,
     },
     admin: {
         canAccessDashboard: true,
@@ -68,6 +73,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessProfile: true,
         canManageGroups: true,
         canAssignMembersToGroups: true,
+        canAccessTracking: true,
     },
 };
 
@@ -97,6 +103,7 @@ export const usePermissions = () => {
         if (permissions.canAccessPlanning) routes.push('/planning');
         if (permissions.canAccessReports) routes.push('/reports');
         if (permissions.canAccessProfile) routes.push('/profile');
+        if (permissions.canAccessTracking) routes.push('/tracking');
         return routes;
     };
 
