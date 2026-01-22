@@ -1,5 +1,6 @@
 
 // Use relative API path in production (Vercel), localhost in development
+// Note: VITE_ variables must be set in Vercel Project Settings
 const API_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
     ? '/api'
     : 'http://localhost:5000/api';
