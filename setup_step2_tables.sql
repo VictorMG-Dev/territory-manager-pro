@@ -1,13 +1,7 @@
--- Step 1: Add 'admin' to the user_role enum if it doesn't exist
--- This is necessary because the users.role column is a strict Enum type
-DO $$
-BEGIN
-    ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'admin';
-EXCEPTION
-    WHEN duplicate_object THEN null;
-END $$;
+-- PASSO 2: Criar Tabelas e Políticas
+-- Execute APÓS o Passo 1 ter sido concluído com sucesso.
 
--- Step 2: Create Tracking Sessions Table
+-- 1. Create Tracking Sessions Table
 create table if not exists tracking_sessions (
   id uuid primary key default uuid_generate_v4(),
   user_id text references users(uid),
@@ -22,7 +16,7 @@ create table if not exists tracking_sessions (
   created_at timestamptz default now()
 );
 
--- Step 3: Create Tracking Points Table
+-- 2. Create Tracking Points Table
 create table if not exists tracking_points (
   id uuid primary key default uuid_generate_v4(),
   session_id uuid references tracking_sessions(id) on delete cascade,
@@ -35,17 +29,14 @@ create table if not exists tracking_points (
   created_at timestamptz default now()
 );
 
--- Step 4: Enable RLS
+-- 3. Enable RLS
 alter table tracking_sessions enable row level security;
 alter table tracking_points enable row level security;
 
--- Step 5: Policies
--- We cast to text comparison to avoid potential enum issues in some contexts, but strict RLS usually works fine with enum columns if values exist.
-
+-- 4. Policies
 create policy "Users can insert their own sessions" on tracking_sessions for insert with check (auth.uid()::text = user_id);
 create policy "Users can view their own sessions" on tracking_sessions for select using (auth.uid()::text = user_id);
 
--- Updated policy to handle role check safely
 create policy "Admins/Elders can view all sessions" on tracking_sessions for select using (
   exists (
     select 1 from users

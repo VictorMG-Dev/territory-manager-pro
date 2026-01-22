@@ -709,6 +709,148 @@ app.post('/api/weekly-plans', authenticateToken, requireRole(['elder', 'service_
 });
 
 
+// --- TRACKING ROUTES ---
+
+app.post('/api/tracking/sessions', authenticateToken, async (req, res) => {
+    try {
+        const { userId, congregationId, startTime, endTime, durationSeconds, distanceMeters, points, observations, notes } = req.body;
+
+        // 1. Create Session
+        const { data: session, error: sessionError } = await supabase
+            .from('tracking_sessions')
+            .insert({
+                user_id: req.user.uid, // Force user_id from token for security
+                congregation_id: req.user.congregationId,
+                start_time: startTime,
+                end_time: endTime,
+                duration_seconds: durationSeconds,
+                distance_meters: distanceMeters,
+                observations,
+                notes,
+                status: 'pending'
+            })
+            .select()
+            .single();
+
+        if (sessionError) throw sessionError;
+
+        // 2. Insert Points (if any)
+        if (points && points.length > 0) {
+            const formattedPoints = points.map(p => ({
+                session_id: session.id,
+                latitude: p.latitude,
+                longitude: p.longitude,
+                accuracy: p.accuracy,
+                timestamp: p.timestamp || new Date().toISOString()
+            }));
+
+            const { error: pointsError } = await supabase
+                .from('tracking_points')
+                .insert(formattedPoints);
+
+            if (pointsError) console.error("Error saving points:", pointsError); // Log but don't fail session
+        }
+
+        res.status(201).json(session);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao salvar sessão de rastreamento.' });
+    }
+});
+
+app.get('/api/tracking/history', authenticateToken, async (req, res) => {
+    try {
+        const { data } = await supabase
+            .from('tracking_sessions')
+            .select('*')
+            .eq('user_id', req.user.uid)
+            .order('start_time', { ascending: false });
+
+        // CamelCase mapping
+        const mapped = (data || []).map(s => ({
+            id: s.id,
+            userId: s.user_id,
+            congregationId: s.congregation_id,
+            startTime: s.start_time,
+            endTime: s.end_time,
+            status: s.status,
+            distanceMeters: s.distance_meters,
+            durationSeconds: s.duration_seconds,
+            observations: s.observations,
+            notes: s.notes,
+            createdAt: s.created_at
+        }));
+
+        res.json(mapped);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar histórico.' });
+    }
+});
+
+app.get('/api/tracking/pending', authenticateToken, requireRole(['elder', 'service_overseer', 'admin']), async (req, res) => {
+    try {
+        // Get sessions from same congregation
+        const { data } = await supabase
+            .from('tracking_sessions')
+            .select('*, users:user_id(name)') // Join to get user name
+            .eq('congregation_id', req.user.congregationId)
+            .eq('status', 'pending')
+            .order('start_time', { ascending: false });
+
+        const mapped = (data || []).map(s => ({
+            id: s.id,
+            userId: s.user_id,
+            userName: s.users?.name || 'Desconhecido',
+            congregationId: s.congregation_id,
+            startTime: s.start_time,
+            endTime: s.end_time,
+            status: s.status,
+            distanceMeters: s.distance_meters,
+            durationSeconds: s.duration_seconds,
+            observations: s.observations,
+            notes: s.notes,
+            createdAt: s.created_at
+        }));
+
+        res.json(mapped);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar relatórios pendentes.' });
+    }
+});
+
+app.put('/api/tracking/sessions/:id/approve', authenticateToken, requireRole(['elder', 'service_overseer', 'admin']), async (req, res) => {
+    try {
+        await supabase
+            .from('tracking_sessions')
+            .update({ status: 'approved' })
+            .eq('id', req.params.id)
+            .eq('congregation_id', req.user.congregationId); // Security check
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao aprovar.' });
+    }
+});
+
+app.put('/api/tracking/sessions/:id/reject', authenticateToken, requireRole(['elder', 'service_overseer', 'admin']), async (req, res) => {
+    try {
+        await supabase
+            .from('tracking_sessions')
+            .update({ status: 'rejected' })
+            .eq('id', req.params.id)
+            .eq('congregation_id', req.user.congregationId);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao rejeitar.' });
+    }
+});
+
+
 // Start server (Local Only)
 const port = 5000;
 app.listen(port, '0.0.0.0', () => {
