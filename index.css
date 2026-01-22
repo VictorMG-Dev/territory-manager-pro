@@ -42,6 +42,9 @@
   }
 }
 
+@custom-variant dark (&:is(.dark *));
+
+
 @layer utilities {
 
   /* Radial gradient utility */

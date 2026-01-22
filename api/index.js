@@ -171,8 +171,27 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
         const { error } = await supabase.from('users').update(updates).eq('uid', req.user.uid);
         if (error) return res.status(500).json({ message: 'Erro ao atualizar.' });
 
-        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url').eq('uid', req.user.uid).single();
-        res.json({ user: { ...userData, photoURL: userData.photo_url } });
+        // CRITICAL: Include ALL user fields to prevent data loss on frontend
+        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url, congregation_id, role').eq('uid', req.user.uid).single();
+
+        // Get congregation name if user has one
+        let congregationName = null;
+        if (userData.congregation_id) {
+            const { data: congData } = await supabase.from('congregations').select('name').eq('id', userData.congregation_id).single();
+            if (congData) congregationName = congData.name;
+        }
+
+        res.json({
+            user: {
+                uid: userData.uid,
+                name: userData.name,
+                email: userData.email,
+                photoURL: userData.photo_url,
+                congregationId: userData.congregation_id,
+                congregationName,
+                role: userData.role
+            }
+        });
     } catch (error) { res.status(500).json({ message: 'Erro ao atualizar perfil.' }); }
 });
 

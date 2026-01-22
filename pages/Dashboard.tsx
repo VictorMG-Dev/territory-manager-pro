@@ -48,12 +48,14 @@ const StatsCard = ({ title, value, icon: Icon, colorScheme }: any) => {
       <div className={`absolute top-0 right-0 p-4 opacity-5 bg-gradient-to-br from-gray-400 to-transparent rounded-bl-3xl transition-opacity group-hover:opacity-10`} />
 
       <div className="flex items-center justify-between mb-4 relative z-10">
-        <div className={`p-3 rounded-xl bg-opacity-10 ${selectedColor.split(' ')[0].replace('bg-', 'bg-').replace('500', '500/10')} text-${colorScheme}-600 dark:text-${colorScheme}-400`}>
-          {/* The above text- construction is still risky if not safelisted. Let's use full strings in map. */}
+        <div className={`p-3 rounded-xl ${selectedColor.split(' ')[0].replace('500', '500/10')} ${selectedColor.split(' ').slice(1).join(' ')}`}>
+          <Icon size={24} />
         </div>
       </div>
-      {/* ... wait, simpler to just map the FULL classes in the render */}
-      { /* Let's rewrite the return completely */}
+      <div className="relative z-10">
+        <p className="text-sm text-gray-500 dark:text-slate-400 mb-1">{title}</p>
+        <p className={`text-3xl font-bold ${selectedColor.split(' ').slice(1).join(' ')}`}>{value}</p>
+      </div>
     </div>
   );
 };
