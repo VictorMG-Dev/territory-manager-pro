@@ -15,6 +15,9 @@ import {
   Calendar,
   Users,
   Navigation,
+  Shield,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
 import Dashboard from './pages/Dashboard';
@@ -40,6 +43,13 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
   const location = useLocation();
   const { user, logout } = useAuth();
   const { permissions } = usePermissions();
+  const [openMenus, setOpenMenus] = useState<string[]>(['Controle ADM']);
+
+  const toggleMenu = (label: string) => {
+    setOpenMenus(prev =>
+      prev.includes(label) ? prev.filter(i => i !== label) : [...prev, label]
+    );
+  };
 
   const allMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/', permission: 'canAccessDashboard' },
@@ -48,16 +58,30 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
     { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
-    { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
-    { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+    {
+      icon: Shield,
+      label: 'Controle ADM',
+      children: [
+        { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
+        { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+      ]
+    },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
 
   // Filter menu items based on user permissions
-  const menuItems = allMenuItems.filter(item =>
-    permissions[item.permission as keyof typeof permissions]
-  );
+  const menuItems = allMenuItems.reduce((acc: any[], item: any) => {
+    if (item.children) {
+      const visibleChildren = item.children.filter((child: any) => permissions[child.permission as keyof typeof permissions]);
+      if (visibleChildren.length > 0) {
+        acc.push({ ...item, children: visibleChildren });
+      }
+    } else if (permissions[item.permission as keyof typeof permissions]) {
+      acc.push(item);
+    }
+    return acc;
+  }, []);
 
   return (
     <>
@@ -78,8 +102,53 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
             <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro</span></span>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1 mt-4">
-            {menuItems.map((item) => {
+          <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+            {menuItems.map((item: any) => {
+              if (item.children) {
+                const isOpen = openMenus.includes(item.label);
+                const isActive = item.children.some((child: any) => location.pathname === child.path);
+
+                return (
+                  <div key={item.label} className="space-y-1">
+                    <button
+                      onClick={() => toggleMenu(item.label)}
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${isActive
+                        ? 'text-blue-600 dark:text-blue-400 font-semibold'
+                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                        }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <item.icon size={20} />
+                        <span>{item.label}</span>
+                      </div>
+                      {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                    </button>
+
+                    {isOpen && (
+                      <div className="pl-4 space-y-1">
+                        {item.children.map((child: any) => {
+                          const isChildActive = location.pathname === child.path;
+                          return (
+                            <Link
+                              key={child.path}
+                              to={child.path}
+                              onClick={() => setIsOpen(false)}
+                              className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sm ${isChildActive
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold'
+                                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                                }`}
+                            >
+                              <child.icon size={18} />
+                              <span>{child.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isActive = location.pathname === item.path;
               return (
                 <Link
