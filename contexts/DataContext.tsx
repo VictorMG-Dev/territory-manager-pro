@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
@@ -22,6 +22,12 @@ interface DataContextType {
     updateGroup: (id: string, updates: Partial<TerritoryGroup>) => Promise<void>;
     deleteGroup: (id: string) => Promise<void>;
     members: CongregationMember[];
+    /* Tracking */
+    registerTrackingSession: (session: Omit<TrackingSession, 'id' | 'createdAt' | 'status'>) => Promise<void>;
+    getTrackingHistory: () => Promise<TrackingSession[]>;
+    getPendingReports: () => Promise<TrackingSession[]>;
+    approveReport: (id: string) => Promise<void>;
+    rejectReport: (id: string) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -253,6 +259,27 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const currentWeeklyPlan = weeklyPlans.length > 0 ? weeklyPlans[0] : undefined;
 
+    /* TRACKING FUNCTIONS */
+    const registerTrackingSession = async (session: Omit<TrackingSession, 'id' | 'createdAt' | 'status'>) => {
+        await api.post('/tracking/sessions', session);
+    };
+
+    const getTrackingHistory = async () => {
+        return await api.get('/tracking/history');
+    };
+
+    const getPendingReports = async () => {
+        return await api.get('/tracking/pending');
+    };
+
+    const approveReport = async (id: string) => {
+        await api.put(`/tracking/sessions/${id}/approve`, {});
+    };
+
+    const rejectReport = async (id: string) => {
+        await api.put(`/tracking/sessions/${id}/reject`, {});
+    };
+
     return (
         <DataContext.Provider value={{
             territories,
@@ -270,7 +297,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             addGroup,
             updateGroup,
             deleteGroup,
-            members
+            members,
+            /* Tracking */
+            registerTrackingSession,
+            getTrackingHistory,
+            getPendingReports,
+            approveReport,
+            rejectReport
         }}>
             {children}
         </DataContext.Provider>

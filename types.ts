@@ -114,3 +114,29 @@ export interface WeeklyPlan {
   days: DailyAllocation;
   createdAt: string;
 }
+
+export interface TrackingPoint {
+  id: string;
+  sessionId: string;
+  latitude: number;
+  longitude: number;
+  accuracy: number;
+  heading?: number;
+  speed?: number;
+  timestamp: string;
+}
+
+export interface TrackingSession {
+  id: string;
+  userId: string;
+  congregationId: string;
+  startTime: string;
+  endTime?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  distanceMeters: number;
+  durationSeconds: number;
+  observations?: string;
+  notes?: string;
+  points?: TrackingPoint[];
+  createdAt: string;
+}

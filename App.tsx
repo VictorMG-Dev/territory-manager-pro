@@ -31,6 +31,8 @@ import WeeklyPlanning from './pages/WeeklyPlanning';
 import Groups from './pages/Groups';
 import AccessDenied from './pages/AccessDenied';
 import Tracking from './pages/Tracking';
+import TrackingHistory from './pages/TrackingHistory';
+import TrackingAdmin from './pages/TrackingAdmin';
 import ChatBot from './components/ChatBot';
 import { usePermissions } from './hooks/usePermissions';
 
@@ -46,6 +48,8 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
     { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
+    { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
+    { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
@@ -199,6 +203,8 @@ export default function App() {
               <Route path="/reports" element={<RoleProtectedRoute requiredPermission="canAccessReports"><Reports /></RoleProtectedRoute>} />
               <Route path="/profile" element={<RoleProtectedRoute requiredPermission="canAccessProfile"><Profile /></RoleProtectedRoute>} />
               <Route path="/tracking" element={<RoleProtectedRoute requiredPermission="canAccessTracking"><Tracking /></RoleProtectedRoute>} />
+              <Route path="/tracking/history" element={<RoleProtectedRoute requiredPermission="canAccessTrackingHistory"><TrackingHistory /></RoleProtectedRoute>} />
+              <Route path="/tracking/admin" element={<RoleProtectedRoute requiredPermission="canAccessTrackingAdmin"><TrackingAdmin /></RoleProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </DataProvider>

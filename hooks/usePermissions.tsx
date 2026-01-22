@@ -12,6 +12,8 @@ interface RolePermissions {
     canManageGroups: boolean; // For create/edit groups
     canAssignMembersToGroups: boolean;
     canAccessTracking: boolean;
+    canAccessTrackingHistory: boolean;
+    canAccessTrackingAdmin: boolean;
 }
 
 const rolePermissions: Record<Role, RolePermissions> = {
@@ -26,6 +28,8 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canManageGroups: false,
         canAssignMembersToGroups: false,
         canAccessTracking: true,
+        canAccessTrackingHistory: true, // Users see their own history
+        canAccessTrackingAdmin: false,
     },
     territory_servant: {
         canAccessDashboard: false,
@@ -38,6 +42,8 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canManageGroups: true,
         canAssignMembersToGroups: false,
         canAccessTracking: true,
+        canAccessTrackingHistory: true,
+        canAccessTrackingAdmin: false,
     },
     service_overseer: {
         canAccessDashboard: true,
@@ -50,6 +56,8 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canManageGroups: true,
         canAssignMembersToGroups: true,
         canAccessTracking: true,
+        canAccessTrackingHistory: true,
+        canAccessTrackingAdmin: true, // Can approve reports
     },
     elder: {
         canAccessDashboard: true,
@@ -62,6 +70,8 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canManageGroups: true,
         canAssignMembersToGroups: true,
         canAccessTracking: true,
+        canAccessTrackingHistory: true,
+        canAccessTrackingAdmin: true, // Can approve reports
     },
     admin: {
         canAccessDashboard: true,
@@ -74,6 +84,8 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canManageGroups: true,
         canAssignMembersToGroups: true,
         canAccessTracking: true,
+        canAccessTrackingHistory: true,
+        canAccessTrackingAdmin: true,
     },
 };
 
@@ -104,6 +116,8 @@ export const usePermissions = () => {
         if (permissions.canAccessReports) routes.push('/reports');
         if (permissions.canAccessProfile) routes.push('/profile');
         if (permissions.canAccessTracking) routes.push('/tracking');
+        if (permissions.canAccessTrackingHistory) routes.push('/tracking/history');
+        if (permissions.canAccessTrackingAdmin) routes.push('/tracking/admin');
         return routes;
     };
 
