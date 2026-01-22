@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Layers, Mail, Lock, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -33,14 +34,9 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Image & Overlay */}
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('/assets/img/map_background.png')`,
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+      {/* Animated Premium Background */}
+      <div className="absolute inset-0 z-0">
+        <AnimatedBackground />
       </div>
 
       <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500 relative z-10 bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl">
@@ -73,6 +69,9 @@ const Login = () => {
             <div className="relative">
               <div className="flex justify-between items-center mb-1">
                 <label className="text-xs font-bold text-blue-200 uppercase tracking-widest ml-1">Senha</label>
+                <Link to="/forgot-password" className="text-xs text-blue-400 hover:text-blue-300 font-medium underline underline-offset-2">
+                  Esqueceu sua senha?
+                </Link>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />

@@ -238,6 +238,123 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     }
 });
 
+// Password Recovery - Request Reset
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ message: 'Email é obrigatório.' });
+        }
+
+        // Check if user exists
+        const { data: users, error } = await supabase
+            .from('users')
+            .select('uid, email, name')
+            .eq('email', email);
+
+        if (error || !users || users.length === 0) {
+            // Don't reveal if email exists or not for security
+            return res.json({ message: 'Se o email existir, você receberá instruções para redefinir sua senha.' });
+        }
+
+        const user = users[0];
+
+        // Generate reset token
+        const crypto = require('crypto');
+        const token = crypto.randomBytes(32).toString('hex');
+        const expiresAt = new Date(Date.now() + 3600000); // 1 hour from now
+
+        // Save token to database
+        const { error: tokenError } = await supabase
+            .from('password_reset_tokens')
+            .insert({
+                user_id: user.uid,
+                token,
+                expires_at: expiresAt.toISOString()
+            });
+
+        if (tokenError) {
+            console.error('Erro ao criar token:', tokenError);
+            return res.status(500).json({ message: 'Erro ao processar solicitação.' });
+        }
+
+        // In production, send email with reset link
+        // For now, log the token to console
+        console.log('🔑 PASSWORD RESET TOKEN 🔑');
+        console.log('Email:', email);
+        console.log('Token:', token);
+        console.log('Reset URL:', `http://localhost:3000/reset-password?token=${token}`);
+        console.log('Expires at:', expiresAt.toLocaleString());
+        console.log('========================');
+
+        res.json({ message: 'Se o email existir, você receberá instruções para redefinir sua senha.' });
+    } catch (error) {
+        console.error('Erro ao processar recuperação de senha:', error);
+        res.status(500).json({ message: 'Erro ao processar solicitação.' });
+    }
+});
+
+// Password Recovery - Reset Password
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: 'Token e nova senha são obrigatórios.' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'A senha deve ter pelo menos 6 caracteres.' });
+        }
+
+        // Find valid token
+        const { data: tokens, error: tokenError } = await supabase
+            .from('password_reset_tokens')
+            .select('*')
+            .eq('token', token)
+            .eq('used', false);
+
+        if (tokenError || !tokens || tokens.length === 0) {
+            return res.status(400).json({ message: 'Token inválido ou expirado.' });
+        }
+
+        const resetToken = tokens[0];
+
+        // Check if token is expired
+        if (new Date(resetToken.expires_at) < new Date()) {
+            return res.status(400).json({ message: 'Token expirado.' });
+        }
+
+        // Hash new password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        // Update user password
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('uid', resetToken.user_id);
+
+        if (updateError) {
+            console.error('Erro ao atualizar senha:', updateError);
+            return res.status(500).json({ message: 'Erro ao redefinir senha.' });
+        }
+
+        // Mark token as used
+        await supabase
+            .from('password_reset_tokens')
+            .update({ used: true })
+            .eq('id', resetToken.id);
+
+        console.log(`✅ Senha redefinida com sucesso para usuário: ${resetToken.user_id}`);
+        res.json({ message: 'Senha redefinida com sucesso!' });
+    } catch (error) {
+        console.error('Erro ao redefinir senha:', error);
+        res.status(500).json({ message: 'Erro ao redefinir senha.' });
+    }
+});
+
+
 // --- CONGREGATION ROUTES ---
 
 app.post('/api/congregations', authenticateToken, async (req, res) => {

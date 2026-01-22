@@ -24,6 +24,8 @@ import Reports from './pages/Reports';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import WeeklyPlanning from './pages/WeeklyPlanning';
 import Groups from './pages/Groups';
 import ChatBot from './components/ChatBot';
@@ -156,6 +158,8 @@ export default function App() {
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/territories" element={<ProtectedRoute><Territories /></ProtectedRoute>} />
               <Route path="/territory/:id" element={<ProtectedRoute><TerritoryDetail /></ProtectedRoute>} />

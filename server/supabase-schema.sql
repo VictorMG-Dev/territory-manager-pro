@@ -82,6 +82,16 @@ CREATE TABLE IF NOT EXISTS weekly_plans (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Password Reset Tokens Table
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID REFERENCES users(uid) ON DELETE CASCADE,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    expires_at TIMESTAMPTZ NOT NULL,
+    used BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_users_congregation ON users(congregation_id);
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -90,6 +100,8 @@ CREATE INDEX IF NOT EXISTS idx_territories_user ON territories(user_id);
 CREATE INDEX IF NOT EXISTS idx_work_records_territory ON work_records(territory_id);
 CREATE INDEX IF NOT EXISTS idx_territory_groups_congregation ON territory_groups(congregation_id);
 CREATE INDEX IF NOT EXISTS idx_weekly_plans_group ON weekly_plans(group_id);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_token ON password_reset_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_reset_tokens_user ON password_reset_tokens(user_id);
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()

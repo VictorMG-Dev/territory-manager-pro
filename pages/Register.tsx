@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Layers, User, Mail, Lock, ChevronRight, Loader2, Users, Building2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 const Register = () => {
   const [step, setStep] = useState(1);
@@ -48,14 +49,9 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 transition-colors relative overflow-hidden">
-      {/* Background Image & Overlay */}
-      <div
-        className="absolute inset-0 z-0 bg-cover bg-center bg-no-repeat"
-        style={{
-          backgroundImage: `url('/assets/img/map_background.png')`,
-        }}
-      >
-        <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm"></div>
+      {/* Animated Premium Background */}
+      <div className="absolute inset-0 z-0">
+        <AnimatedBackground />
       </div>
 
       <div className="max-w-md w-full space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative z-10 bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-3xl shadow-2xl">
