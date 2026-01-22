@@ -6,6 +6,18 @@ import toast from 'react-hot-toast';
 import { FileText, CheckCircle, XCircle, Map, User, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix Leaflet icons
+const DefaultIcon = L.icon({
+    iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+    shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41]
+});
+L.Marker.prototype.options.icon = DefaultIcon;
 
 // Extended session for admin view might include user name if backend joins it
 // For now assuming TrackingSession has everything or we map it
@@ -15,8 +27,10 @@ interface AdminSession extends TrackingSession {
 
 const TrackingAdmin = () => {
     const { user } = useAuth();
-    const { getPendingReports, approveReport, rejectReport } = useData();
+    const { getPendingReports, approveReport, rejectReport, getTrackingSessionDetails } = useData();
     const [sessions, setSessions] = useState<AdminSession[]>([]);
+    const [selectedSession, setSelectedSession] = useState<TrackingSession | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         const loadPending = async () => {
@@ -46,6 +60,22 @@ const TrackingAdmin = () => {
             setSessions(sessions.filter(s => s.id !== id));
             toast.success("Relatório rejeitado.");
         } catch (e) { toast.error("Erro ao rejeitar."); }
+    }
+
+    const openDetails = async (sessionId: string) => {
+        try {
+            const details = await getTrackingSessionDetails(sessionId);
+            setSelectedSession(details);
+            setIsModalOpen(true);
+        } catch (error) {
+            console.error("Failed to load details", error);
+            toast.error("Erro ao carregar mapa.");
+        }
+    };
+
+    const closeDetails = () => {
+        setIsModalOpen(false);
+        setSelectedSession(null);
     }
 
     return (
@@ -115,7 +145,10 @@ const TrackingAdmin = () => {
                             </button>
                         </div>
 
-                        <button className="w-full mt-3 py-2 text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center justify-center gap-1 hover:underline">
+                        <button
+                            onClick={() => openDetails(session.id)}
+                            className="w-full mt-3 py-2 text-blue-600 dark:text-blue-400 text-sm font-bold flex items-center justify-center gap-1 hover:underline"
+                        >
                             Ver Mapa Detalhado <ChevronRight size={14} />
                         </button>
                     </div>
@@ -128,6 +161,54 @@ const TrackingAdmin = () => {
                     </div>
                 )}
             </div>
+
+            {/* Map Modal */}
+            {isModalOpen && selectedSession && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-slate-900 rounded-3xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="p-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <MapPin className="text-blue-600" />
+                                Detalhes do Ministério
+                            </h2>
+                            <button onClick={closeDetails} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                                <XCircle size={24} className="text-gray-500" />
+                            </button>
+                        </div>
+
+                        <div className="relative h-[60vh] w-full bg-gray-100">
+                            {selectedSession.points && selectedSession.points.length > 0 ? (
+                                <MapContainer
+                                    center={[selectedSession.points[0].latitude, selectedSession.points[0].longitude]}
+                                    zoom={15}
+                                    style={{ height: '100%', width: '100%' }}
+                                >
+                                    <TileLayer
+                                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                    />
+                                    <Polyline
+                                        positions={selectedSession.points.map(p => [p.latitude, p.longitude])}
+                                        color="blue"
+                                        weight={4}
+                                        opacity={0.7}
+                                    />
+                                    <Marker position={[selectedSession.points[0].latitude, selectedSession.points[0].longitude]}>
+                                        <Popup>Início</Popup>
+                                    </Marker>
+                                    <Marker position={[selectedSession.points[selectedSession.points.length - 1].latitude, selectedSession.points[selectedSession.points.length - 1].longitude]}>
+                                        <Popup>Fim</Popup>
+                                    </Marker>
+                                </MapContainer>
+                            ) : (
+                                <div className="flex h-full items-center justify-center text-gray-500">
+                                    Sem dados de GPS para este relatório.
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
