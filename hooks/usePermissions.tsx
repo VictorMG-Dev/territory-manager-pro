@@ -18,7 +18,7 @@ interface RolePermissions {
 
 const rolePermissions: Record<Role, RolePermissions> = {
     publisher: {
-        canAccessDashboard: true,
+        canAccessDashboard: false,
         canAccessTerritories: true,
         canAccessGroups: true,
         canAccessMap: true,
