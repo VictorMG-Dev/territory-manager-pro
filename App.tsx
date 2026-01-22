@@ -62,8 +62,9 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
       icon: Shield,
       label: 'Controle ADM',
       children: [
-        { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
-        { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+        // { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
+        // { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+        { icon: User, label: 'Teste de Menu', path: '/profile', permission: 'canAccessProfile' },
       ]
     },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
