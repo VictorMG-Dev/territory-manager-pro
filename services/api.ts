@@ -1,5 +1,10 @@
 
-const API_URL = 'http://localhost:3002/api';
+// Use relative API path in production (Vercel), localhost in development
+const API_URL = typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? '/api'
+    : 'http://localhost:3002/api';
+
+
 
 const getHeaders = () => {
     const token = localStorage.getItem('territory_token');
