@@ -294,65 +294,66 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await api.put(`/tracking/sessions/${id}/reject`, {});
     };
 
-    return await api.get(`/tracking/sessions/${id}`);
-};
-
-const saveServiceReport = async (reportData: Omit<ServiceReport, 'id' | 'updatedAt'>) => {
-    const id = uuidv4();
-    const now = new Date().toISOString();
-    const newReport: ServiceReport = {
-        ...reportData,
-        id,
-        updatedAt: now
+    const getTrackingSessionDetails = async (id: string) => {
+        return await api.get(`/tracking/sessions/${id}`);
     };
 
-    try {
-        await api.post('/service-reports', newReport);
-        // Update local state (replace if exists for same month, or add)
-        setServiceReports(prev => {
-            const filtered = prev.filter(r => r.month !== reportData.month);
-            return [...filtered, newReport];
-        });
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
-};
+    const saveServiceReport = async (reportData: Omit<ServiceReport, 'id' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const newReport: ServiceReport = {
+            ...reportData,
+            id,
+            updatedAt: now
+        };
 
-return (
-    <DataContext.Provider value={{
-        territories,
-        addTerritory,
-        updateTerritory,
-        deleteTerritory,
-        getTerritory,
-        registerWork,
-        getHistory,
-        allWorkHistory: workHistory,
-        weeklyPlans,
-        currentWeeklyPlan,
-        saveWeeklyPlan,
-        groups,
-        addGroup,
-        updateGroup,
-        deleteGroup,
-        members,
-        /* Tracking */
-        registerTrackingSession,
-        getTrackingHistory,
-        getPendingReports,
-        approveReport,
-        rejectReport,
-        getTrackingHistory,
-        getPendingReports,
-        approveReport,
-        rejectReport,
-        getTrackingSessionDetails,
-        /* Service Reports */
-        serviceReports,
-        saveServiceReport
-    }}>
-        {children}
-    </DataContext.Provider>
-);
+        try {
+            await api.post('/service-reports', newReport);
+            // Update local state (replace if exists for same month, or add)
+            setServiceReports(prev => {
+                const filtered = prev.filter(r => r.month !== reportData.month);
+                return [...filtered, newReport];
+            });
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    return (
+        <DataContext.Provider value={{
+            territories,
+            addTerritory,
+            updateTerritory,
+            deleteTerritory,
+            getTerritory,
+            registerWork,
+            getHistory,
+            allWorkHistory: workHistory,
+            weeklyPlans,
+            currentWeeklyPlan,
+            saveWeeklyPlan,
+            groups,
+            addGroup,
+            updateGroup,
+            deleteGroup,
+            members,
+            /* Tracking */
+            registerTrackingSession,
+            getTrackingHistory,
+            getPendingReports,
+            approveReport,
+            rejectReport,
+            getTrackingHistory,
+            getPendingReports,
+            approveReport,
+            rejectReport,
+            getTrackingSessionDetails,
+            /* Service Reports */
+            serviceReports,
+            saveServiceReport
+        }}>
+            {children}
+        </DataContext.Provider>
+    );
 };
