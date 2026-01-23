@@ -98,7 +98,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:from-slate-900 dark:to-slate-950 border-r border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none z-50 transform transition-all duration-300 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none z-50 transform transition-all duration-300 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
           <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-transparent">
             <div className="relative group">
