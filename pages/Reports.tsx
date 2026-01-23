@@ -1,21 +1,13 @@
 import React, { useState } from 'react';
-import {
-  FileDown,
-  BarChart2,
-  PieChart as PieIcon,
-  Download,
-  Filter,
-  CheckCircle2,
-  Calendar
-} from 'lucide-react';
-import { useData } from '../contexts/DataContext';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { TerritoryStatus } from '../types';
 import toast from 'react-hot-toast';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend
+} from 'recharts';
+import {
+  FileDown, BarChart2, PieChart as PieIcon, Download, Filter,
+  CheckCircle2, Calendar, TrendingUp, AlertCircle, FileText
+} from 'lucide-react';
 
 const Reports = () => {
   const { territories, allWorkHistory } = useData();
