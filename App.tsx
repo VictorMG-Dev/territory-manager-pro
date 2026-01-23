@@ -58,18 +58,28 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
     { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
-    { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
-    { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+    {
+      icon: Shield,
+      label: 'Controle ADM',
+      children: [
+        { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
+        { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+      ]
+    },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
 
   // Filter menu items based on user permissions
   const menuItems = allMenuItems.reduce((acc: any[], item: any) => {
-    // FORCE DISPLAY FOR DEBUG - Unconditionally show groups and children
     if (item.children) {
-      acc.push({ ...item });
-    } else {
+      const visibleChildren = item.children.filter((child: any) =>
+        permissions[child.permission as keyof typeof permissions] || user?.role === 'admin'
+      );
+      if (visibleChildren.length > 0) {
+        acc.push({ ...item, children: visibleChildren });
+      }
+    } else if (permissions[item.permission as keyof typeof permissions] || user?.role === 'admin') {
       acc.push(item);
     }
     return acc;
