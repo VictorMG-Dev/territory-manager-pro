@@ -371,22 +371,23 @@ const ServiceReportPage = () => {
     };
 
     const renderActionButtons = () => (
-        <div className="flex gap-4 mt-6">
+        <div className="flex gap-4 mt-8 pb-4">
             <button
                 onClick={handleSendToElders}
-                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+                className="group relative flex-1 py-4 bg-gradient-to-r from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white rounded-[1.5rem] font-bold shadow-[0_10px_40px_rgba(79,70,229,0.3)] dark:shadow-[0_10px_40px_rgba(79,70,229,0.2)] flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 border border-white/10"
             >
-                <div className="p-1 bg-white/20 rounded-lg">
-                    <Send size={18} />
+                <div className="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 group-hover:scale-110 transition-transform duration-300">
+                    <Send size={20} className="drop-shadow-sm" />
                 </div>
-                Enviar Relatório
+                <span className="text-lg tracking-tight">Enviar Relatório</span>
+                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 rounded-[1.5rem] transition-opacity"></div>
             </button>
             <button
                 onClick={handleWhatsAppShare}
-                className="aspect-square h-[3.5rem] bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center transition-all active:scale-95"
+                className="group aspect-square h-[4.25rem] bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white rounded-full font-bold shadow-[0_10px_40px_rgba(16,185,129,0.3)] dark:shadow-[0_10px_40px_rgba(16,185,129,0.2)] flex items-center justify-center transition-all duration-300 active:scale-95 border border-white/10"
                 title="Compartilhar no WhatsApp"
             >
-                <MessageCircle size={24} />
+                <MessageCircle size={28} className="group-hover:scale-110 transition-transform duration-300 drop-shadow-sm" />
             </button>
         </div>
     );
