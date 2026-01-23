@@ -67,12 +67,12 @@ const TerritoryForm: React.FC<TerritoryFormProps> = ({ initialData, onSubmit, on
         if (e.target.files) {
             const files = Array.from(e.target.files);
 
-            // Limit checks if necessary
-            const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+            // Limit checks
+            const MAX_SIZE = 20 * 1024 * 1024; // 20MB
 
             files.forEach((file: File) => {
                 if (file.size > MAX_SIZE) {
-                    alert(`O arquivo ${file.name} é muito grande (Máx 5MB).`);
+                    alert(`O arquivo ${file.name} é muito grande (Máx 20MB).`);
                     return;
                 }
 
