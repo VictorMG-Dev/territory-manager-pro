@@ -76,7 +76,7 @@ const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({ currentDate, monthlyGoal,
     }, [currentPlan, currentDate]); // Re-sync when plan or date changes
 
     // Calculate totals from LOCAL calendar data
-    const totalPlanned = Object.values(calendarData).reduce((sum, day) => {
+    const totalPlanned = Object.values(calendarData).reduce((sum, day: { hours: string; minutes: string }) => {
         const h = parseFloat(day.hours || '0');
         const m = parseFloat(day.minutes || '0');
         return sum + h + (m / 60);
