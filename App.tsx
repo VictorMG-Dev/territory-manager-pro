@@ -20,6 +20,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Toaster } from 'react-hot-toast';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Dashboard from './pages/Dashboard';
 import Territories from './pages/Territories';
 import TerritoryDetail from './pages/TerritoryDetail';
@@ -267,6 +268,7 @@ export default function App() {
               <Route path="/tracking/history" element={<RoleProtectedRoute requiredPermission="canAccessTrackingHistory"><TrackingHistory /></RoleProtectedRoute>} />
               <Route path="/tracking/admin" element={<RoleProtectedRoute requiredPermission="canAccessTrackingAdmin"><TrackingAdmin /></RoleProtectedRoute>} />
             </Routes>
+            <SpeedInsights />
           </BrowserRouter>
         </DataProvider>
       </AuthProvider>
