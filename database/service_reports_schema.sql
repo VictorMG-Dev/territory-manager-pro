@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS service_reports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
+    user_id TEXT NOT NULL REFERENCES users(uid) ON DELETE CASCADE,
     month VARCHAR(7) NOT NULL, -- Format: YYYY-MM
     hours INTEGER DEFAULT 0,
     minutes INTEGER DEFAULT 0,

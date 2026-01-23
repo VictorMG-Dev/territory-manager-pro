@@ -648,27 +648,25 @@ const ServiceReportPage = () => {
                                 )}
                             </p>
                         </div>
-                        <div className="h-28 w-28 min-w-[7rem] flex items-center justify-center">
-                            <ResponsiveContainer width="100%" height="100%" debounce={100}>
-                                <PieChart>
-                                    <Pie
-                                        data={[{ value: currentHours || 0.001 }, { value: remaining || 0.001 }]}
-                                        cx="50%"
-                                        cy="50%"
-                                        innerRadius={35}
-                                        outerRadius={50}
-                                        startAngle={90}
-                                        endAngle={-270}
-                                        dataKey="value"
-                                        stroke="none"
-                                        isAnimationActive={false}
-                                    >
-                                        <Cell fill={progressColor} />
-                                        <Cell fill="#e2e8f0" className="dark:fill-slate-700" />
-                                    </Pie>
-                                </PieChart>
-                            </ResponsiveContainer>
-                            <div className="absolute top-1/2 right-8 -translate-y-1/2 text-center pointer-events-none">
+                        <div className="h-28 w-28 min-w-[7rem] flex items-center justify-center relative">
+                            <PieChart width={112} height={112}>
+                                <Pie
+                                    data={[{ value: currentHours || 0.001 }, { value: remaining || 0.001 }]}
+                                    cx={56}
+                                    cy={56}
+                                    innerRadius={35}
+                                    outerRadius={50}
+                                    startAngle={90}
+                                    endAngle={-270}
+                                    dataKey="value"
+                                    stroke="none"
+                                    isAnimationActive={false}
+                                >
+                                    <Cell fill={progressColor} />
+                                    <Cell fill="#e2e8f0" className="dark:fill-slate-700" />
+                                </Pie>
+                            </PieChart>
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                 <p className="text-xl font-bold text-gray-900 dark:text-white">{progress.toFixed(0)}%</p>
                             </div>
                         </div>

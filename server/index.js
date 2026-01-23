@@ -1091,46 +1091,39 @@ app.get('/api/service-reports', authenticateToken, async (req, res) => {
 app.post('/api/service-reports', authenticateToken, async (req, res) => {
     try {
         const r = req.body;
-
-        // Upsert based on userId + month
-        // We first check if it exists
-        const { data: existing } = await supabase
-            .from('service_reports')
-            .select('id')
-            .eq('user_id', req.user.uid)
-            .eq('month', r.month)
-            .single();
+        console.log(`[ServiceReport] Saving for ${req.user.uid}, month: ${r.month}`);
 
         const payload = {
             user_id: req.user.uid,
             month: r.month,
-            hours: r.hours,
-            minutes: r.minutes,
-            bible_studies: r.bibleStudies,
-            participated: r.participated,
-            is_campaign: r.isCampaign,
-            daily_records: r.dailyRecords
+            hours: parseInt(r.hours || 0),
+            minutes: parseInt(r.minutes || 0),
+            bible_studies: parseInt(r.bibleStudies || 0),
+            participated: !!r.participated,
+            is_campaign: !!r.isCampaign,
+            daily_records: r.dailyRecords || {}
         };
 
-        if (existing) {
-            await supabase
-                .from('service_reports')
-                .update(payload)
-                .eq('id', existing.id);
-            res.json({ id: existing.id, ...r });
-        } else {
-            const { data: newReport, error } = await supabase
-                .from('service_reports')
-                .insert(payload)
-                .select()
-                .single();
+        const { data, error } = await supabase
+            .from('service_reports')
+            .upsert(payload, { onConflict: 'user_id, month' })
+            .select()
+            .single();
 
-            if (error) throw error;
-            res.status(201).json({ id: newReport.id, ...r });
+        if (error) {
+            console.error('[Supabase Error]', error);
+            // Return 400 or 500 with details
+            return res.status(error.code === 'PGRST116' ? 400 : 500).json({
+                message: 'Erro ao salvar relatório no Supabase',
+                error: error.message,
+                code: error.code
+            });
         }
+
+        res.json({ id: data.id, ...r });
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Erro ao salvar relatório.' });
+        console.error('[Server Error]', e);
+        res.status(500).json({ message: 'Erro interno no servidor', error: e.message });
     }
 });
 
