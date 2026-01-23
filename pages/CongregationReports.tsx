@@ -87,7 +87,7 @@ const CongregationReports = () => {
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 mb-12">
                 <div className="space-y-2">
                     <h1 className="text-4xl font-extrabold text-slate-900 dark:text-white flex items-center gap-4 tracking-tight">
-                        <div className="p-4 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[1.25rem] shadow-xl shadow-indigo-500/20 text-white animate-float">
+                        <div className="p-4 bg-gradient-to-tr from-indigo-600 to-violet-600 rounded-[1.25rem] shadow-xl shadow-indigo-500/20 text-white">
                             <Users size={28} />
                         </div>
                         <span>Relatórios da Congregação</span>
@@ -273,7 +273,7 @@ const CongregationReports = () => {
                                         <td className="px-8 py-6">
                                             <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400 font-bold">
                                                 <Calendar size={18} className="opacity-40" />
-                                                <span>{format(new Date(report.month + '-01'), 'MMMM yyyy', { locale: ptBR })}</span>
+                                                <span className="capitalize">{format(new Date(report.month + '-01T12:00:00'), 'MMMM yyyy', { locale: ptBR })}</span>
                                             </div>
                                         </td>
                                         <td className="px-8 py-6 text-center">
@@ -334,7 +334,10 @@ const CongregationReports = () => {
                                                 <p className="text-xs text-slate-500 font-bold capitalize">{report.userRole?.replace('_', ' ')}</p>
                                             </div>
                                         </div>
-                                        <div className="text-right">
+                                        <div className="text-right flex flex-col items-end gap-1">
+                                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded-md mb-1 capitalize">
+                                                {format(new Date(report.month + '-01T12:00:00'), 'MMM yyyy', { locale: ptBR })}
+                                            </div>
                                             <div className="text-emerald-500 font-black text-[10px] bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded flex items-center gap-1">
                                                 <CheckCircle2 size={10} />
                                                 ENVIADO

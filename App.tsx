@@ -62,14 +62,38 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     );
   };
 
+  // Auto-open menu if child is active
+  React.useEffect(() => {
+    allMenuItems.forEach(item => {
+      if (item.children) {
+        const hasActiveChild = item.children.some(child => location.pathname === child.path);
+        if (hasActiveChild && !openMenus.includes(item.label)) {
+          setOpenMenus(prev => [...prev, item.label]);
+        }
+      }
+    });
+  }, [location.pathname]);
+
   const allMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/', permission: 'canAccessDashboard' },
-    { icon: Layers, label: 'Territórios', path: '/territories', permission: 'canAccessTerritories' },
-    { icon: Users, label: 'Grupos', path: '/groups', permission: 'canAccessGroups' },
-    { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
-    { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
-    { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
-    { icon: Clock, label: 'Meu Relatório', path: '/service-report', permission: 'canAccessReports' },
+    {
+      icon: Layers,
+      label: 'Territórios',
+      children: [
+        { icon: Layers, label: 'Meus Territórios', path: '/territories', permission: 'canAccessTerritories' },
+        { icon: Users, label: 'Grupos de Campo', path: '/groups', permission: 'canAccessGroups' },
+        { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
+      ]
+    },
+    {
+      icon: Navigation,
+      label: 'Ministério',
+      children: [
+        { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
+        { icon: Navigation, label: 'Iniciar Serviço', path: '/tracking', permission: 'canAccessTracking' },
+        { icon: Clock, label: 'Minhas Horas', path: '/service-report', permission: 'canAccessReports' },
+      ]
+    },
     {
       icon: Shield,
       label: 'Controle ADM',
@@ -77,9 +101,9 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
         { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
         { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
         { icon: Users, label: 'Relatórios Cong.', path: '/congregation/reports', permission: 'canAccessCongregationReports' },
+        { icon: FileText, label: 'Insights Gerais', path: '/reports', permission: 'canAccessReports' },
       ]
     },
-    { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
 
