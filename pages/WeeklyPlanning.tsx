@@ -16,7 +16,11 @@ import {
     AlertCircle,
     Save,
     ChevronRight,
-    Users
+    Users,
+    ArrowRight,
+    Sparkles,
+    Printer,
+    Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
