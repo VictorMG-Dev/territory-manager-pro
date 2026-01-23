@@ -83,7 +83,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 api.get('/work-history'),
                 api.get('/groups'),
                 api.get('/weekly-plans'),
-                api.get('/weekly-plans'),
                 api.get('/congregations/members'),
                 api.get('/service-reports'),
                 api.get('/monthly-plans'),

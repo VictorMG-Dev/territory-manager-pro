@@ -1134,6 +1134,121 @@ app.post('/api/service-reports', authenticateToken, async (req, res) => {
     }
 });
 
+// --- MONTHLY PLANNING ROUTES ---
+
+app.get('/api/monthly-plans', authenticateToken, async (req, res) => {
+    try {
+        const { data: plans } = await supabase
+            .from('monthly_plans')
+            .select('*, weekly_schedules(*)')
+            .eq('user_id', req.user.uid)
+            .order('month', { ascending: false });
+
+        const mapped = (plans || []).map(p => ({
+            id: p.id,
+            userId: p.user_id,
+            month: p.month,
+            targetHours: p.target_hours,
+            totalPlannedHours: p.total_planned_hours,
+            projectedCompletion: p.projected_completion,
+            weeks: (p.weekly_schedules || []).map(w => ({
+                id: w.id,
+                userId: w.user_id,
+                planId: w.plan_id,
+                month: w.month,
+                weekNumber: w.week_number,
+                days: w.days,
+                totalPlannedHours: w.total_planned_hours
+            }))
+        }));
+        res.json(mapped);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar planos mensais.' });
+    }
+});
+
+app.post('/api/monthly-plans', authenticateToken, async (req, res) => {
+    try {
+        const p = req.body;
+        const { data, error } = await supabase
+            .from('monthly_plans')
+            .upsert({
+                user_id: req.user.uid,
+                month: p.month,
+                target_hours: p.targetHours,
+                total_planned_hours: p.totalPlannedHours,
+                projected_completion: p.projectedCompletion
+            }, { onConflict: 'user_id, month' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({ id: data.id, ...p });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao criar plano mensal.' });
+    }
+});
+
+app.put('/api/monthly-plans/:id', authenticateToken, async (req, res) => {
+    try {
+        const { targetHours, totalPlannedHours, projectedCompletion, weeks } = req.body;
+        await supabase
+            .from('monthly_plans')
+            .update({
+                target_hours: targetHours,
+                total_planned_hours: totalPlannedHours,
+                projected_completion: projectedCompletion
+            })
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.uid);
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao atualizar plano.' });
+    }
+});
+
+app.delete('/api/monthly-plans/:id', authenticateToken, async (req, res) => {
+    try {
+        await supabase
+            .from('monthly_plans')
+            .delete()
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.uid);
+        res.json({ success: true });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao excluir plano.' });
+    }
+});
+
+app.post('/api/weekly-schedules', authenticateToken, async (req, res) => {
+    try {
+        const s = req.body;
+        const { data, error } = await supabase
+            .from('weekly_schedules')
+            .upsert({
+                user_id: req.user.uid,
+                plan_id: s.planId,
+                month: s.month,
+                week_number: s.weekNumber,
+                days: s.days,
+                total_planned_hours: s.totalPlannedHours
+            }, { onConflict: 'user_id, month, week_number' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({ id: data.id, ...s });
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao salvar agenda semanal.' });
+    }
+});
+
 // --- PLAN TEMPLATES ROUTES ---
 
 app.get('/api/plan-templates', authenticateToken, async (req, res) => {
