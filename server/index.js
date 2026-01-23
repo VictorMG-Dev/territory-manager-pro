@@ -1164,7 +1164,7 @@ app.get('/api/congregation/reports', authenticateToken, requireRole(['elder', 'a
             .from('service_reports')
             .select(`
                 *,
-                user:user_id (
+                user:users!user_id (
                     name,
                     role,
                     email
@@ -1216,8 +1216,12 @@ app.get('/api/congregation/reports', authenticateToken, requireRole(['elder', 'a
 
         res.json(mapped);
     } catch (e) {
-        console.error(e);
-        res.status(500).json({ message: 'Erro ao buscar relatórios da congregação.' });
+        console.error('[API Congregation Reports Error]:', e);
+        res.status(500).json({
+            message: 'Erro ao buscar relatórios da congregação.',
+            error: e.message,
+            details: e.details || e.hint
+        });
     }
 });
 
