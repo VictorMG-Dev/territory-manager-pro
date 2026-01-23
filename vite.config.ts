@@ -13,6 +13,16 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            // Force separate chunk for map libs to change main bundle hash
+            'maps': ['leaflet', 'react-leaflet'],
+            'utils': ['date-fns', 'xlsx'],
+            'vendor': ['react', 'react-dom']
+          }
+        }
+      }
     },
     plugins: [
       react(),
