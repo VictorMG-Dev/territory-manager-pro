@@ -200,94 +200,137 @@ const Tracking = () => {
     };
 
     return (
-        <div className="h-[calc(100vh-100px)] flex flex-col space-y-4 animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Navigation className="text-blue-600" size={28} />
-                        Ministério em Campo
-                    </h1>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm hidden md:block">
-                        {isTracking ? "Rastreamento ativo..." : "Pronto para iniciar."}
-                    </p>
-                </div>
+        <div className="relative w-full h-[calc(100vh-80px)] rounded-3xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-2xl animate-in fade-in duration-700 bg-slate-900 group">
 
-                <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-gray-200 dark:border-slate-800">
-                    <div className="flex items-center gap-2 px-3 border-r border-gray-100 dark:border-slate-800">
-                        <Clock size={16} className="text-blue-500" />
-                        <span className="font-mono text-xl font-bold text-gray-900 dark:text-white">
-                            {new Date(elapsedTime * 1000).toISOString().substr(11, 8)}
-                        </span>
-                    </div>
-                    <div className="flex items-center gap-2 px-3">
-                        <Ruler size={16} className="text-emerald-500" />
-                        <span className="font-mono text-xl font-bold text-gray-900 dark:text-white">
-                            {distance.toFixed(2)} km
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <div className="flex-1 relative bg-gray-100 dark:bg-slate-900 rounded-3xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-inner z-0">
+            {/* Map Layer (Always Present) */}
+            <div className={`absolute inset-0 z-0 transition-all duration-700 ${!isTracking ? 'opacity-50 blur-sm scale-110' : 'opacity-100 scale-100'}`}>
                 {currentPosition ? (
                     <MapContainer
                         center={currentPosition}
                         zoom={17}
                         style={{ height: '100%', width: '100%' }}
                         zoomControl={false}
+                        className="grayscale-[0.2]"
                     >
                         <TileLayer
-                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         />
                         <RecenterAutomatically position={isTracking ? currentPosition : null} />
 
                         <Marker position={currentPosition}>
-                            <Popup>Sua localização atual</Popup>
+                            <Popup>Você está aqui</Popup>
                         </Marker>
 
                         {path.length > 1 && (
                             <Polyline
                                 positions={path}
-                                color="#2563eb"
-                                weight={5}
-                                opacity={0.7}
+                                color="#3b82f6"
+                                weight={6}
+                                opacity={0.8}
                             />
                         )}
                     </MapContainer>
                 ) : (
-                    <div className="absolute inset-0 flex items-center justify-center flex-col gap-4 text-gray-400">
-                        <div className="animate-spin text-blue-500">
-                            <Navigation size={48} />
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900 text-white">
+                        <div className="flex flex-col items-center gap-4 animate-pulse">
+                            <Navigation size={48} className="text-blue-500" />
+                            <p className="font-medium tracking-widest text-sm uppercase">Localizando GPS...</p>
                         </div>
-                        <p>Obtendo GPS...</p>
                     </div>
                 )}
+            </div>
 
-                {/* Floating Controls */}
-                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 z-[1000]">
+            {/* Content Overlay */}
+            <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-6">
+
+                {/* Header / Top Stats */}
+                <div className="flex justify-between items-start pointer-events-auto">
+                    {!isTracking ? (
+                        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 rounded-2xl shadow-lg border border-white/20 dark:border-slate-700 animate-in slide-in-from-top-4 duration-500">
+                            <h1 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                                <Zap className="text-amber-500 fill-amber-500" size={20} />
+                                Ministério em Campo
+                            </h1>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Pronto para iniciar sua atividade?</p>
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex justify-center animate-in slide-in-from-top-10 duration-500">
+                            <div className="bg-slate-900/90 text-white backdrop-blur-xl px-8 py-4 rounded-full shadow-2xl flex items-center gap-8 border border-slate-700/50 min-w-[320px] justify-center">
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Tempo</span>
+                                    <span className="font-mono text-2xl font-bold tracking-tight">
+                                        {new Date(elapsedTime * 1000).toISOString().substr(11, 8)}
+                                    </span>
+                                </div>
+                                <div className="w-px h-8 bg-slate-700"></div>
+                                <div className="flex flex-col items-center">
+                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Distância</span>
+                                    <span className="font-mono text-2xl font-bold tracking-tight">
+                                        {distance.toFixed(2)} <span className="text-sm text-slate-500">km</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Weather Widget (Mock) */}
+                    <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-white/20 dark:border-slate-700 flex items-center gap-3 animate-in slide-in-from-right-4 duration-700 delay-100 pointer-events-auto">
+                        <div className="bg-sky-100 dark:bg-sky-900/30 p-2 rounded-xl text-sky-500">
+                            <CloudSun size={20} />
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-gray-900 dark:text-white">24°C</p>
+                            <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase">Ensolarado</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Center / Bottom Controls */}
+                <div className="pointer-events-auto flex flex-col items-center justify-end pb-8">
                     {!isTracking ? (
                         <button
                             onClick={startTracking}
-                            className="w-16 h-16 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-600/30 hover:scale-110 transition-transform"
+                            className="group relative flex items-center justify-center pointer-events-auto animate-in zoom-in-50 duration-500"
                         >
-                            <Play size={32} fill="currentColor" className="ml-1" />
+                            <div className="absolute inset-0 bg-blue-500 rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity animate-pulse"></div>
+                            <div className="w-24 h-24 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-xl shadow-blue-500/40 transform transition-all duration-300 group-hover:scale-110 group-active:scale-95 border-4 border-white dark:border-slate-800 z-10">
+                                <Play size={36} fill="white" className="text-white ml-1" />
+                            </div>
+                            <span className="absolute -bottom-10 text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest animate-bounce">Iniciar</span>
                         </button>
                     ) : (
-                        <>
+                        <div className="flex items-center gap-6 animate-in slide-in-from-bottom-10 duration-500">
                             <button
                                 onClick={stopTracking}
-                                className="w-16 h-16 bg-amber-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-amber-500/30 hover:scale-110 transition-transform"
+                                className="flex flex-col items-center gap-2 group"
                             >
-                                <Pause size={32} fill="currentColor" />
+                                <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-gray-100 dark:border-slate-700 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/20 transition-all group-active:scale-95">
+                                    <Pause size={24} className="text-amber-500 fill-amber-500" />
+                                </div>
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Pausar</span>
                             </button>
+
                             <button
                                 onClick={finishTracking}
-                                className="w-16 h-16 bg-rose-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-rose-600/30 hover:scale-110 transition-transform"
+                                className="flex flex-col items-center gap-2 group"
                             >
-                                <Save size={32} />
+                                <div className="w-20 h-20 bg-gradient-to-br from-rose-500 to-rose-600 rounded-full flex items-center justify-center shadow-xl shadow-rose-500/40 group-hover:scale-105 transition-all group-active:scale-95 border-4 border-white dark:border-slate-900">
+                                    <StopCircle size={32} fill="white" className="text-white" />
+                                </div>
+                                <span className="text-xs font-bold text-white bg-slate-900 px-3 py-1 rounded-full uppercase tracking-widest">Finalizar</span>
                             </button>
-                        </>
+
+                            <button
+                                onClick={() => toast("Visita Registrada!", { icon: '🏡' })}
+                                className="flex flex-col items-center gap-2 group"
+                            >
+                                <div className="w-16 h-16 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-lg border border-gray-100 dark:border-slate-700 group-hover:bg-emerald-50 dark:group-hover:bg-emerald-900/20 transition-all group-active:scale-95">
+                                    <Footprints size={24} className="text-emerald-500" />
+                                </div>
+                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Visita</span>
+                            </button>
+                        </div>
                     )}
                 </div>
             </div>
