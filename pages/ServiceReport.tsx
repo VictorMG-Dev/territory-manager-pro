@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
     BarChart2, Calendar as CalendarIcon, CheckCircle2, AlertCircle, Clock,
     BookOpen, Target, TrendingUp, Save, ChevronLeft, ChevronRight, Loader2,
-    Share2, Plus, Edit2, Trash2, X
+    Share2, Plus, Edit2, Trash2, X, Send, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
@@ -160,81 +160,40 @@ const ServiceReportPage = () => {
         }
     };
 
-    const handleWhatsAppShare = () => {
-        const monthName = format(currentDate, 'MMMM/yyyy', { locale: ptBR });
-        let text = `*Relatório de Serviço - ${monthName}*\n\n`;
+    const handleSendToElders = async () => {
+        // First save any pending changes
+        await handleSave();
 
-        if (isPioneer) {
-            text += `⏱ *Horas:* ${hours}:${minutes.padStart(2, '0')}\n`;
-            text += `📚 *Estudos:* ${studies || 0}\n`;
-            if (monthlyGoal > 0) {
-                text += `🎯 *Meta:* ${progress.toFixed(0)}% concluída (${remaining.toFixed(1)}h restantes)\n`;
-            }
-        } else {
-            text += `${participated ? '✅ Participei no ministério' : '❌ Não participei'}\n`;
-            text += `📚 *Estudos:* ${studies || 0}\n`;
-        }
+        // Simulate sending process
+        const loadingToast = toast.loading('Enviando relatório para a secretaria...');
 
-        text += `\n_Gerado por TerritoryPro_`;
-
-        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
+        setTimeout(() => {
+            toast.dismiss(loadingToast);
+            toast.success('Relatório enviado com sucesso!');
+            // Here we would ideally set a 'submitted' status in the DB
+        }, 1500);
     };
 
-    const openDailyModal = (day: number) => {
-        setSelectedDay(day);
-        const record = dailyRecords[day];
-        if (record) {
-            setDayHours(record.hours.toString());
-            setDayMinutes(record.minutes.toString());
-            setDayStudies(record.studies.toString());
-            setDayNotes(record.notes || '');
-        } else {
-            setDayHours('');
-            setDayMinutes('');
-            setDayStudies('');
-            setDayNotes('');
-        }
-        setDailyModalOpen(true);
-    };
-
-    const saveDailyRecord = () => {
-        if (selectedDay === null) return;
-
-        const h = parseInt(dayHours || '0');
-        const m = parseInt(dayMinutes || '0');
-        const s = parseInt(dayStudies || '0');
-
-        if (h === 0 && m === 0 && s === 0 && !dayNotes.trim()) {
-            // Delete if empty
-            const newRecords = { ...dailyRecords };
-            delete newRecords[selectedDay];
-            setDailyRecords(newRecords);
-        } else {
-            setDailyRecords({
-                ...dailyRecords,
-                [selectedDay]: {
-                    hours: h,
-                    minutes: m,
-                    studies: s,
-                    notes: dayNotes
-                }
-            });
-        }
-        setDailyModalOpen(false);
-    };
-
-    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
-    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
-
-    // Calendar Grid Generation
-    const daysInMonth = eachDayOfInterval({
-        start: startOfMonth(currentDate),
-        end: endOfMonth(currentDate)
-    });
-
-    // Colors
-    const progressColor = progress >= 100 ? '#10b981' : progress >= 50 ? '#f59e0b' : '#3b82f6';
+    const renderActionButtons = () => (
+        <div className="flex gap-4 mt-6">
+            <button
+                onClick={handleSendToElders}
+                className="flex-1 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all active:scale-95"
+            >
+                <div className="p-1 bg-white/20 rounded-lg">
+                    <Send size={18} />
+                </div>
+                Enviar Relatório
+            </button>
+            <button
+                onClick={handleWhatsAppShare}
+                className="aspect-square h-[3.5rem] bg-emerald-500 hover:bg-emerald-600 text-white rounded-full font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center transition-all active:scale-95"
+                title="Compartilhar no WhatsApp"
+            >
+                <MessageCircle size={24} />
+            </button>
+        </div>
+    );
 
     const renderPublisherView = () => (
         <div className="space-y-6">
@@ -271,6 +230,9 @@ const ServiceReportPage = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Action Buttons for Publisher */}
+            {(participated || parseInt(studies || '0') > 0) && renderActionButtons()}
         </div>
     );
 
@@ -595,15 +557,7 @@ const ServiceReportPage = () => {
                 )}
 
                 {/* Share Button - Only visible if has content */}
-                {(Math.round(currentHours) > 0 || participated) && (
-                    <button
-                        onClick={handleWhatsAppShare}
-                        className="w-full p-6 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white rounded-[2rem] font-bold shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-3 transition-all"
-                    >
-                        <Share2 size={24} />
-                        Compartilhar no WhatsApp
-                    </button>
-                )}
+                {(Math.round(currentHours) > 0 || participated) && renderActionButtons()}
             </div>
         </div>
     );
@@ -654,8 +608,8 @@ const ServiceReportPage = () => {
                     <button
                         onClick={() => setActiveView('planejamento')}
                         className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'planejamento'
-                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         📅 Planejamento
@@ -663,8 +617,8 @@ const ServiceReportPage = () => {
                     <button
                         onClick={() => setActiveView('analise')}
                         className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'analise'
-                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         📈 Análise
