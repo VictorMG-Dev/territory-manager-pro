@@ -10,7 +10,12 @@ import {
     X,
     Layers,
     Search,
-    CheckCircle2
+    CheckCircle2,
+    MessageCircle,
+    Target,
+    Calendar,
+    ChevronRight,
+    Users2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePermissions } from '../hooks/usePermissions';
@@ -23,6 +28,7 @@ const Groups: React.FC = () => {
     const { user: currentUser } = useAuth();
     const [isAdding, setIsAdding] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [viewingGroup, setViewingGroup] = useState<TerritoryGroup | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [memberSearchTerm, setMemberSearchTerm] = useState('');
 
@@ -108,20 +114,22 @@ const Groups: React.FC = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in slide-in-from-bottom-4 duration-500">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        <Users className="text-blue-600" size={28} />
-                        Grupos de Trabalho
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                        <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/30">
+                            <Users2 className="text-white" size={24} />
+                        </div>
+                        Grupos Congregacionais
                     </h1>
-                    <p className="text-gray-500 dark:text-gray-400">
-                        Gerencie equipes e seus respectivos territórios.
+                    <p className="text-gray-500 dark:text-gray-400 mt-2 text-lg">
+                        Gerencie grupos e seus respectivos territórios.
                     </p>
                 </div>
                 {!isAdding && !editingId && (
                     <button
                         onClick={() => setIsAdding(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-medium shadow-lg shadow-blue-500/20"
+                        className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 transition-all font-bold shadow-lg shadow-blue-500/25 active:scale-95"
                     >
                         <Plus size={20} />
                         Novo Grupo
