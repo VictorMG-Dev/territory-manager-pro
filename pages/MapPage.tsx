@@ -67,70 +67,90 @@ const MapPage = () => {
   };
 
   return (
-    <div className="h-[calc(100vh-120px)] flex flex-col space-y-4 animate-in fade-in duration-500">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Mapa Global</h1>
-          <p className="text-gray-500 dark:text-slate-400 text-sm">Visualize e gerencie as áreas dos territórios.</p>
+  return (
+    <div className="relative w-full h-[calc(100vh-80px)] rounded-3xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-2xl animate-in fade-in duration-700">
+
+      {/* Floating Header Card */}
+      {!isEditing && (
+        <div className="absolute top-6 left-6 z-[400] bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-5 rounded-2xl shadow-xl border border-white/20 dark:border-slate-700 max-w-sm animate-in slide-in-from-left-4 duration-500">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-600 rounded-lg shadow-lg shadow-blue-500/30 text-white">
+              <Navigation size={20} />
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mapa Global</h1>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+            Visualize os territórios. Use o seletor de camadas (no canto inferior) para ver modo Satélite ou Dark.
+          </p>
+          <div className="flex gap-4 text-xs font-bold text-gray-500 dark:text-slate-400">
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50"></span>
+              Em Dia
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
+              Atenção
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shadow-sm shadow-rose-500/50"></span>
+              Atrasados
+            </div>
+          </div>
         </div>
+      )}
 
-        <div className="flex gap-2">
-          {!isEditing ? (
-            <button
-              onClick={startEditing}
-              className="bg-blue-600 dark:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-blue-700 flex items-center gap-2 shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all"
-            >
-              <Edit size={18} />
-              Delimitar Área
-            </button>
-          ) : (
-            <>
-              <button
-                onClick={cancelEdit}
-                className="bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 px-4 py-2.5 rounded-xl font-bold border border-gray-200 dark:border-slate-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 flex items-center gap-2 transition-all"
-              >
-                <Trash size={18} />
-                Cancelar
-              </button>
-              <button
-                onClick={savePolygon}
-                className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 flex items-center gap-2 shadow-lg shadow-blue-100 dark:shadow-blue-900/20 transition-all"
-              >
-                <Save size={18} />
-                Salvar Área
-              </button>
-            </>
-          )}
+      {/* Floating Action Button */}
+      {!isEditing && (
+        <div className="absolute top-6 right-6 z-[400] animate-in slide-in-from-right-4 duration-500">
+          <button
+            onClick={startEditing}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-xl font-bold shadow-xl shadow-blue-600/30 flex items-center gap-2 transition-transform hover:scale-105 active:scale-95 backdrop-blur-sm"
+          >
+            <Edit size={18} />
+            <span className="hidden sm:inline">Delimitar Área</span>
+          </button>
         </div>
-      </div>
+      )}
 
-      <div className="flex-1 bg-white dark:bg-slate-900 rounded-3xl border border-gray-200 dark:border-slate-800 shadow-sm overflow-hidden relative z-0 transition-colors">
-        <TerritoryMap
-          territories={territories}
-          editMode={isEditing}
-          onPolygonChange={handlePolygonChange}
-        />
-
-        {!isEditing && (
-          <div className="absolute bottom-6 right-6 z-[1000]">
-            <div className="bg-white dark:bg-slate-900 p-4 rounded-3xl shadow-2xl border border-gray-100 dark:border-slate-800 space-y-3 transition-colors">
-              <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-slate-500">Legenda</h4>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm" />
-                <span className="text-xs font-bold text-gray-600 dark:text-slate-300">Em dia</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-amber-500 shadow-sm" />
-                <span className="text-xs font-bold text-gray-600 dark:text-slate-300">Atenção</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="w-3 h-3 rounded-full bg-rose-500 shadow-sm" />
-                <span className="text-xs font-bold text-gray-600 dark:text-slate-300">Atrasado</span>
+      {/* Editing Mode UI Overlay */}
+      {isEditing && (
+        <>
+          {/* Top Instruction Banner */}
+          <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[400] w-full max-w-md px-4 pointer-events-none">
+            <div className="bg-slate-900/90 text-white backdrop-blur-md px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 animate-in slide-in-from-top-4 duration-300">
+              <Info size={20} className="text-blue-400 shrink-0" />
+              <div>
+                <p className="font-bold text-sm">Modo de Edição Ativo</p>
+                <p className="text-xs text-slate-300">Clique pontos no mapa para desenhar o polígono.</p>
               </div>
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Bottom Action Bar */}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[400] flex gap-3 animate-in slide-in-from-bottom-6 duration-300">
+            <button
+              onClick={cancelEdit}
+              className="bg-white text-rose-600 px-6 py-3 rounded-xl font-bold shadow-xl hover:bg-rose-50 transition-all flex items-center gap-2"
+            >
+              <Trash size={18} />
+              Cancelar
+            </button>
+            <button
+              onClick={savePolygon}
+              className="bg-blue-600 text-white px-8 py-3 rounded-xl font-bold shadow-xl shadow-blue-600/30 hover:bg-blue-500 transition-all transform hover:-translate-y-1 flex items-center gap-2"
+            >
+              <Save size={18} />
+              Salvar Território
+            </button>
+          </div>
+        </>
+      )}
+
+      <TerritoryMap
+        territories={territories}
+        editMode={isEditing}
+        onPolygonChange={handlePolygonChange}
+      />
     </div>
   );
 };
