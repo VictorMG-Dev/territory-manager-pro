@@ -58,15 +58,8 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
     { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
-    {
-      icon: Shield,
-      label: 'Controle ADM',
-      children: [
-        // { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
-        // { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
-        { icon: User, label: 'Teste de Menu', path: '/profile', permission: 'canAccessProfile' },
-      ]
-    },
+    { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
+    { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
     { icon: User, label: 'Perfil', path: '/profile', permission: 'canAccessProfile' },
   ];
