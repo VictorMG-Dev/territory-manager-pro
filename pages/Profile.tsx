@@ -16,6 +16,8 @@ const Profile = () => {
   const [email, setEmail] = useState(user?.email || '');
   const [serviceRole, setServiceRole] = useState<ServiceRole>(user?.serviceRole || 'publisher');
   const [newPassword, setNewPassword] = useState('');
+  const [banner, setBanner] = useState(user?.banner || 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600');
+  const [showBannerEditor, setShowBannerEditor] = useState(false);
 
   // Sync state with user data when it loads/updates
   useEffect(() => {
@@ -24,6 +26,9 @@ const Profile = () => {
       setEmail(user.email || '');
       if (user.serviceRole) {
         setServiceRole(user.serviceRole);
+      }
+      if (user.banner) {
+        setBanner(user.banner);
       }
     }
   }, [user]);
@@ -63,6 +68,15 @@ const Profile = () => {
   const [isSwitchingCong, setIsSwitchingCong] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const bannerPresets = [
+    { name: 'Índigo Real', class: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600' },
+    { name: 'Esmeralda Vital', class: 'bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600' },
+    { name: 'Pôr do Sol', class: 'bg-gradient-to-r from-orange-500 via-rose-500 to-purple-600' },
+    { name: 'Noite Estelar', class: 'bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950' },
+    { name: 'Oceano Profundo', class: 'bg-gradient-to-r from-blue-700 via-blue-800 to-slate-900' },
+  ];
 
   useEffect(() => {
     if (user?.congregationId) {
@@ -132,6 +146,39 @@ const Profile = () => {
         }
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Imagem muito grande. Máximo 5MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const result = reader.result as string;
+        setBanner(result);
+        try {
+          await updateProfile({ banner: result });
+          toast.success('Banner personalizado atualizado!');
+        } catch (error) {
+          toast.error('Erro ao salvar banner.');
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const selectBannerPreset = async (presetClass: string) => {
+    setBanner(presetClass);
+    try {
+      await updateProfile({ banner: presetClass });
+      toast.success('Estilo do banner atualizado!');
+    } catch (error) {
+      toast.error('Erro ao salvar banner.');
     }
   };
 
@@ -358,14 +405,63 @@ const Profile = () => {
   return (
     <div className="max-w-7xl mx-auto animate-in fade-in duration-500 pb-20">
       {/* Premium Banner */}
-      <div className="relative h-64 rounded-[2.5rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-xl overflow-hidden mb-[-120px] mx-4 md:mx-8">
+      <div
+        className={`relative h-64 rounded-[2.5rem] shadow-xl overflow-hidden mb-[-120px] mx-4 md:mx-8 group transition-all duration-500 ${!banner.startsWith('data:') && !banner.startsWith('http') ? banner : ''}`}
+        style={banner.startsWith('data:') || banner.startsWith('http') ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+      >
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
         <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
         <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
 
-        <div className="absolute bottom-4 left-8 text-white/80 text-sm font-medium tracking-wider uppercase">
-          Membro Oficial
-        </div>
+        {/* Edit Banner Button */}
+        <button
+          onClick={() => setShowBannerEditor(!showBannerEditor)}
+          className="absolute top-6 right-6 p-3 bg-white/20 backdrop-blur-md text-white rounded-2xl border border-white/30 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/40 flex items-center gap-2 font-bold text-sm shadow-lg"
+        >
+          <Camera size={18} />
+          Personalizar Banner
+        </button>
+
+        {showBannerEditor && (
+          <div className="absolute inset-x-0 bottom-0 p-6 bg-black/60 backdrop-blur-xl border-t border-white/10 animate-in slide-in-from-bottom duration-300 z-20">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6 overflow-x-auto">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="px-6 py-2.5 bg-white text-indigo-900 rounded-xl font-bold flex items-center gap-2 hover:bg-gray-100 transition-all shadow-lg active:scale-95 whitespace-nowrap"
+                >
+                  <Plus size={18} />
+                  Da Galeria
+                </button>
+                <input
+                  type="file"
+                  ref={bannerInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleBannerUpload}
+                />
+              </div>
+
+              <div className="flex gap-3 overflow-x-auto pb-2 md:pb-0 px-2 scrollbar-hide">
+                {bannerPresets.map((p) => (
+                  <button
+                    key={p.class}
+                    onClick={() => selectBannerPreset(p.class)}
+                    className={`w-10 h-10 rounded-full border-2 transition-all ${banner === p.class ? 'border-white scale-110 shadow-xl' : 'border-transparent opacity-60 hover:opacity-100'} ${p.class}`}
+                    title={p.name}
+                  />
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowBannerEditor(false)}
+                className="text-white font-bold text-sm opacity-60 hover:opacity-100"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 md:px-8 pt-8">

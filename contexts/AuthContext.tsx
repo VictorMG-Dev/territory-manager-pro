@@ -13,6 +13,7 @@ export interface User {
     congregationName?: string;
     role?: 'publisher' | 'territory_servant' | 'service_overseer' | 'elder' | 'admin';
     serviceRole?: 'publisher' | 'auxiliary_pioneer' | 'regular_pioneer';
+    banner?: string;
 }
 
 interface AuthContextType {

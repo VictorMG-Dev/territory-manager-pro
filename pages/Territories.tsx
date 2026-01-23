@@ -64,7 +64,7 @@ const TerritoryCard = ({ territory, index }: any) => {
 
         <Link
           to={`/territory/${territory.id}`}
-          className="w-full flex items-center justify-center gap-2 bg-slate-900 dark:bg-white hover:bg-blue-600 dark:hover:bg-blue-500 text-white dark:text-slate-900 hover:text-white dark:hover:text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/25 group-hover:translate-y-0 active:scale-95"
+          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-lg shadow-blue-500/25 active:scale-95"
         >
           Ver Detalhes
           <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />

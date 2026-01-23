@@ -153,7 +153,8 @@ app.post('/api/auth/login', async (req, res) => {
                 congregationId: user.congregation_id,
                 congregationName,
                 role: user.role,
-                serviceRole: user.service_role
+                serviceRole: user.service_role,
+                banner: user.banner
             }
         });
     } catch (error) {
@@ -235,7 +236,8 @@ app.post('/api/auth/google', async (req, res) => {
                 congregationId: user.congregation_id,
                 congregationName,
                 role: user.role,
-                serviceRole: user.service_role
+                serviceRole: user.service_role,
+                banner: user.banner
             }
         });
 
@@ -253,6 +255,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
         if (photoURL) updates.photo_url = photoURL;
         if (email) updates.email = email;
         if (serviceRole) updates.service_role = serviceRole;
+        if (banner) updates.banner = banner;
         if (password) updates.password = await bcrypt.hash(password, 10);
 
         if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'Nada para atualizar.' });
@@ -261,7 +264,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
         if (error) return res.status(500).json({ message: 'Erro ao atualizar.' });
 
         // CRITICAL: Include ALL user fields to prevent data loss on frontend
-        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url, congregation_id, role, service_role').eq('uid', req.user.uid).single();
+        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url, congregation_id, role, service_role, banner').eq('uid', req.user.uid).single();
 
         // Get congregation name if user has one
         let congregationName = null;
@@ -279,7 +282,8 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
                 congregationId: userData.congregation_id,
                 congregationName,
                 role: userData.role,
-                serviceRole: userData.service_role
+                serviceRole: userData.service_role,
+                banner: userData.banner
             }
         });
     } catch (error) { res.status(500).json({ message: 'Erro ao atualizar perfil.' }); }
