@@ -1,50 +1,88 @@
 import React from 'react';
+import { MapPin, Navigation, Compass, Map as MapIcon, Locate } from 'lucide-react';
 
 const AnimatedBackground = () => {
     return (
         <>
-            {/* Gradient overlays */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900" />
+            {/* Multi-layer gradient background - Vibrant Purple/Cyan theme */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-cyan-950/40 via-transparent to-pink-950/30" />
 
-            {/* Radial gradient overlay for depth */}
-            <div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-slate-900/50" />
+            {/* Abstract Territory Polygons - Floating Overlay */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-1/4 left-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '8s' }} />
+                <div className="absolute bottom-10 right-10 w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '10s' }} />
 
-            {/* Floating geometric shapes */}
-            <div className="absolute inset-0 overflow-hidden">
-                {/* Large circle - top left */}
-                <div className="absolute -top-40 -left-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl animate-pulse"
-                    style={{ animationDuration: '4s' }} />
+                {/* Geometrical Territory Shapes */}
+                <svg className="absolute inset-0 w-full h-full opacity-20">
+                    <defs>
+                        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style={{ stopColor: '#8b5cf6', stopOpacity: 0.2 }} />
+                            <stop offset="100%" style={{ stopColor: '#06b6d4', stopOpacity: 0.2 }} />
+                        </linearGradient>
+                    </defs>
 
-                {/* Medium circle - bottom right */}
-                <div className="absolute -bottom-32 -right-32 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl animate-pulse"
-                    style={{ animationDuration: '5s', animationDelay: '1s' }} />
-
-                {/* Small circle - top right */}
-                <div className="absolute top-20 right-20 w-48 h-48 bg-cyan-500/10 rounded-full blur-2xl animate-pulse"
-                    style={{ animationDuration: '3s', animationDelay: '0.5s' }} />
-
-                {/* Floating squares */}
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 border border-blue-400/20 rounded-lg rotate-12 animate-float" />
-                <div className="absolute bottom-1/3 right-1/3 w-24 h-24 border border-purple-400/20 rounded-lg -rotate-12 animate-float-delayed" />
-
-                {/* Additional floating elements for depth */}
-                <div className="absolute top-1/2 right-1/4 w-20 h-20 border border-cyan-400/15 rounded-lg rotate-45 animate-float"
-                    style={{ animationDelay: '2s' }} />
-                <div className="absolute bottom-1/4 left-1/3 w-16 h-16 border border-blue-400/15 rounded-lg -rotate-6 animate-float-delayed"
-                    style={{ animationDelay: '1.5s' }} />
+                    {/* Floating Hexagons/Polygons representing territories */}
+                    <path d="M100,200 L150,150 L250,150 L300,200 L250,250 L150,250 Z"
+                        fill="url(#grad1)" className="animate-float" style={{ animationDuration: '15s' }} />
+                    <path d="M800,500 L850,450 L950,450 L1000,500 L950,550 L850,550 Z"
+                        fill="url(#grad1)" className="animate-float-delayed" style={{ animationDuration: '18s' }} />
+                    <circle cx="80%" cy="20%" r="100" fill="none" stroke="#ec4899" strokeWidth="0.5" strokeDasharray="10 5" className="animate-spin-slow" style={{ animationDuration: '60s' }} />
+                </svg>
             </div>
 
-            {/* Scanline effect */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent animate-scan" />
+            {/* Glowing Map Routes Animation */}
+            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-40">
+                {/* Route 1 - Pink */}
+                <path d="M-10,300 Q150,300 300,100 T600,150 T900,100"
+                    fill="none" stroke="#ec4899" strokeWidth="2" strokeDasharray="1000" strokeDashoffset="1000"
+                    className="animate-draw" />
 
-            {/* Noise texture overlay */}
-            <div className="absolute inset-0 opacity-[0.015] mix-blend-overlay"
+                {/* Route 2 - Cyan */}
+                <path d="M100,800 Q300,600 500,700 T900,500"
+                    fill="none" stroke="#06b6d4" strokeWidth="2" strokeDasharray="1000" strokeDashoffset="1000"
+                    className="animate-draw" style={{ animationDelay: '1s', animationDuration: '6s' }} />
+
+                {/* Route 3 - Purple - Vertical */}
+                <path d="M200,0 Q250,300 100,600 T300,900"
+                    fill="none" stroke="#8b5cf6" strokeWidth="2" strokeDasharray="1000" strokeDashoffset="1000"
+                    className="animate-draw" style={{ animationDelay: '2s', animationDuration: '7s' }} />
+
+                {/* Route connections (nodes) */}
+                <circle cx="300" cy="100" r="4" fill="#ec4899" className="animate-pulse" />
+                <circle cx="500" cy="700" r="4" fill="#06b6d4" className="animate-pulse" style={{ animationDelay: '1.5s' }} />
+                <circle cx="100" cy="600" r="4" fill="#8b5cf6" className="animate-pulse" style={{ animationDelay: '2.5s' }} />
+            </svg>
+
+            {/* Floating 3D Map Icons */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-[15%] opacity-20 animate-float text-cyan-400">
+                    <Compass size={120} strokeWidth={1} />
+                </div>
+                <div className="absolute bottom-40 right-[10%] opacity-15 animate-float-delayed text-purple-400" style={{ animationDelay: '1s' }}>
+                    <MapIcon size={180} strokeWidth={0.5} />
+                </div>
+                <div className="absolute top-1/2 right-[25%] opacity-20 animate-float text-pink-400" style={{ animationDelay: '2s' }}>
+                    <Navigation size={80} strokeWidth={1.5} />
+                </div>
+
+                {/* Pulse Rings (Radar Effect) at key locations */}
+                <div className="absolute top-32 left-[20%] w-24 h-24 border border-cyan-500/30 rounded-full animate-pulse-ring" />
+                <div className="absolute bottom-1/3 right-[15%] w-32 h-32 border border-purple-500/30 rounded-full animate-pulse-ring" style={{ animationDelay: '1s' }} />
+            </div>
+
+            {/* Subtle Grid Pattern Overlay */}
+            <div className="absolute inset-0 opacity-[0.03]"
                 style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' /%3E%3C/svg%3E")`,
-                }} />
+                    backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+                    backgroundSize: '40px 40px'
+                }}
+            />
+
+            {/* Scanline effect */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-scan pointer-events-none" />
         </>
     );
 };
 
 export default AnimatedBackground;
-
