@@ -15,7 +15,8 @@ import {
     Target,
     Calendar,
     ChevronRight,
-    Users2
+    Users2,
+    Save
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { usePermissions } from '../hooks/usePermissions';
@@ -138,105 +139,125 @@ const Groups: React.FC = () => {
             </div>
 
             {(isAdding || editingId) && (
-                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-200 dark:border-slate-800 p-6 shadow-sm">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                            {isAdding ? 'Criar Novo Grupo' : 'Editar Grupo'}
-                        </h2>
+                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-gray-100 dark:border-slate-800 p-8 shadow-xl animate-in zoom-in-95 duration-300 relative z-20">
+                    <div className="flex items-center justify-between mb-8 border-b border-gray-100 dark:border-slate-800 pb-6">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                                <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg text-blue-600 dark:text-blue-400">
+                                    {isAdding ? <Plus size={24} /> : <Edit2 size={24} />}
+                                </div>
+                                {isAdding ? 'Criar Novo Grupo' : 'Editar Grupo'}
+                            </h2>
+                            <p className="text-gray-500 dark:text-gray-400 mt-1">Configure os detalhes, territórios e membros da equipe.</p>
+                        </div>
                         <button
                             onClick={() => { setIsAdding(false); setEditingId(null); resetForm(); }}
-                            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+                            className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-full transition-all"
                         >
                             <X size={24} />
                         </button>
                     </div>
 
-                    <div className="space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Nome do Grupo</label>
+                    <div className="space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="space-y-3">
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Nome do Grupo</label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Ex: Grupo Sul, Equipe Alfa..."
+                                    className="w-full px-5 py-3 border border-gray-200 dark:border-slate-700 rounded-2xl bg-gray-50 dark:bg-slate-800/50 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none transition-all font-medium"
+                                    placeholder="Ex: Grupo Boas Novas"
                                 />
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Descrição (Opcional)</label>
+                            <div className="space-y-3">
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300">Descrição (Opcional)</label>
                                 <input
                                     type="text"
                                     value={description}
                                     onChange={(e) => setDescription(e.target.value)}
-                                    className="w-full px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-xl bg-gray-50 dark:bg-slate-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Breve descrição do grupo..."
+                                    className="w-full px-5 py-3 border border-gray-200 dark:border-slate-700 rounded-2xl bg-gray-50 dark:bg-slate-800/50 text-gray-900 dark:text-white focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/20 outline-none transition-all font-medium"
+                                    placeholder="Objetivos ou área de atuação..."
                                 />
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Selecionar Territórios ({selectedTerritories.length})</label>
+                        {/* Territories Selection */}
+                        <div className="space-y-4 bg-gray-50 dark:bg-slate-800/30 p-6 rounded-3xl border border-gray-100 dark:border-slate-800/50">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                    <Layers size={18} className="text-blue-500" />
+                                    Selecionar Territórios
+                                    <span className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full text-xs">
+                                        {selectedTerritories.length}
+                                    </span>
+                                </label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                     <input
                                         type="text"
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Buscar território..."
+                                        className="pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
+                                        placeholder="Buscar por código ou nome..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1 custom-scrollbar">
                                 {filteredTerritories.map(t => (
                                     <button
                                         key={t.id}
                                         onClick={() => toggleTerritory(t.id)}
-                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left ${selectedTerritories.includes(t.id)
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
-                                            : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400'
+                                        className={`flex items-center justify-between p-3 rounded-xl border transition-all text-left group ${selectedTerritories.includes(t.id)
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                            : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400 hover:border-blue-400 dark:hover:border-blue-500'
                                             }`}
                                     >
                                         <div className="min-w-0">
-                                            <p className="font-bold text-sm truncate">{t.code}</p>
-                                            <p className="text-xs truncate opacity-70">{t.name}</p>
+                                            <p className={`font-bold text-sm truncate ${selectedTerritories.includes(t.id) ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{t.code}</p>
+                                            <p className={`text-xs truncate ${selectedTerritories.includes(t.id) ? 'text-blue-100' : 'opacity-70'}`}>{t.name}</p>
                                         </div>
-                                        {selectedTerritories.includes(t.id) && <CheckCircle2 size={18} className="text-blue-500" />}
+                                        {selectedTerritories.includes(t.id) && <CheckCircle2 size={18} className="text-white" />}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="space-y-4">
-                            <div className="flex items-center justify-between">
-                                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Selecionar Publicadores para o Grupo ({selectedMembers.length})</label>
+                        {/* Members Selection */}
+                        <div className="space-y-4 bg-gray-50 dark:bg-slate-800/30 p-6 rounded-3xl border border-gray-100 dark:border-slate-800/50">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <label className="text-sm font-bold text-gray-700 dark:text-gray-300 flex items-center gap-2">
+                                    <User size={18} className="text-emerald-500" />
+                                    Selecionar Membros
+                                    <span className="bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full text-xs">
+                                        {selectedMembers.length}
+                                    </span>
+                                </label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                     <input
                                         type="text"
                                         value={memberSearchTerm}
                                         onChange={(e) => setMemberSearchTerm(e.target.value)}
-                                        className="pl-9 pr-4 py-1.5 text-sm border border-gray-200 dark:border-slate-700 rounded-lg bg-gray-50 dark:bg-slate-800 outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Buscar irmão..."
+                                        className="pl-10 pr-4 py-2 text-sm border border-gray-200 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 outline-none focus:ring-2 focus:ring-emerald-500 w-full sm:w-64"
+                                        placeholder="Buscar irmão por nome..."
                                     />
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto p-1">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 max-h-60 overflow-y-auto p-1 custom-scrollbar">
                                 {filteredMembers.map(m => (
                                     <button
                                         key={m.uid}
                                         onClick={() => toggleMember(m.uid)}
                                         disabled={!permissions.canAssignMembersToGroups}
                                         className={`flex items-center gap-3 p-3 rounded-xl border transition-all text-left ${selectedMembers.includes(m.uid)
-                                            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-700 dark:text-blue-300'
-                                            : 'bg-gray-50 dark:bg-slate-800 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400'
+                                            ? 'bg-emerald-600 border-emerald-600 text-white shadow-lg shadow-emerald-500/30'
+                                            : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-400 hover:border-emerald-400 dark:hover:border-emerald-500'
                                             } ${!permissions.canAssignMembersToGroups ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
-                                        <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-xs font-bold text-blue-600 dark:text-blue-400 overflow-hidden">
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold overflow-hidden ${selectedMembers.includes(m.uid) ? 'bg-white/20 text-white ring-2 ring-white/30' : 'bg-gray-100 dark:bg-slate-800 text-gray-500'}`}>
                                             {m.photoURL ? (
                                                 <img src={m.photoURL} alt={m.name} className="w-full h-full object-cover" />
                                             ) : (
@@ -244,26 +265,27 @@ const Groups: React.FC = () => {
                                             )}
                                         </div>
                                         <div className="min-w-0 flex-1">
-                                            <p className="font-bold text-sm truncate">{m.name}</p>
-                                            <p className="text-xs truncate opacity-70 uppercase tracking-tighter">{m.role?.replace('_', ' ')}</p>
+                                            <p className={`font-bold text-sm truncate ${selectedMembers.includes(m.uid) ? 'text-white' : 'text-gray-900 dark:text-white'}`}>{m.name}</p>
+                                            <p className={`text-xs truncate uppercase tracking-tighter ${selectedMembers.includes(m.uid) ? 'text-emerald-100' : 'opacity-70'}`}>{m.role?.replace('_', ' ')}</p>
                                         </div>
-                                        {selectedMembers.includes(m.uid) && <CheckCircle2 size={18} className="text-blue-500" />}
+                                        {selectedMembers.includes(m.uid) && <CheckCircle2 size={18} className="text-white" />}
                                     </button>
                                 ))}
                             </div>
                         </div>
 
-                        <div className="flex justify-end gap-3 pt-4 border-t dark:border-slate-800">
+                        <div className="flex justify-end gap-3 pt-6 border-t border-gray-100 dark:border-slate-800">
                             <button
                                 onClick={() => { setIsAdding(false); setEditingId(null); resetForm(); }}
-                                className="px-6 py-2 text-gray-600 dark:text-gray-400 font-medium hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+                                className="px-8 py-3 text-gray-600 dark:text-gray-400 font-bold hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-all"
                             >
                                 Cancelar
                             </button>
                             <button
                                 onClick={() => editingId ? handleUpdateGroup(editingId) : handleCreateGroup()}
-                                className="px-6 py-2 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20"
+                                className="px-8 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/30 active:scale-95 flex items-center gap-2"
                             >
+                                {editingId ? <Save size={20} /> : <Plus size={20} />}
                                 {editingId ? 'Salvar Alterações' : 'Criar Grupo'}
                             </button>
                         </div>
@@ -412,8 +434,8 @@ const Groups: React.FC = () => {
                                             <h4 className="font-bold text-gray-900 dark:text-white truncate">{member.name}</h4>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${member.role === 'admin'
-                                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
-                                                        : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300'
+                                                    : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
                                                     }`}>
                                                     {member.role?.replace('_', ' ')}
                                                 </span>
