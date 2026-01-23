@@ -31,6 +31,9 @@ const ServiceReportPage = () => {
     const [dailyRecords, setDailyRecords] = useState<Record<number, { hours: number; minutes: number; studies: number; notes?: string }>>({});
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
     const [dailyModalOpen, setDailyModalOpen] = useState(false);
+    // Date Picker State
+    const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+    const [pickerYear, setPickerYear] = useState(new Date().getFullYear());
     // Daily Input State
     const [dayHours, setDayHours] = useState('');
     const [dayMinutes, setDayMinutes] = useState('');
@@ -166,7 +169,7 @@ const ServiceReportPage = () => {
         setDailyModalOpen(true);
     };
 
-    const saveDailyRecord = () => {
+    const saveDailyRecord = async () => {
         if (selectedDay === null) return;
 
         const newRecords = { ...dailyRecords };
@@ -186,8 +189,127 @@ const ServiceReportPage = () => {
             };
         }
 
+        // Calculate new totals for immediate save
+        let newHours = parseFloat(hours || '0');
+        let newMinutes = parseFloat(minutes || '0');
+        let newStudies = parseFloat(studies || '0');
+
+        if (isPioneer) {
+            let totalH = 0;
+            let totalM = 0;
+            let totalS = 0;
+
+            Object.values(newRecords).forEach((record: any) => {
+                totalH += record.hours || 0;
+                totalM += record.minutes || 0;
+                totalS += record.studies || 0;
+            });
+
+            totalH += Math.floor(totalM / 60);
+            totalM = totalM % 60;
+
+            newHours = totalH;
+            newMinutes = totalM;
+            newStudies = totalS;
+        }
+
+        // Update local state immediately (Optimistic)
         setDailyRecords(newRecords);
+        if (isPioneer) {
+            setHours(newHours.toString());
+            setMinutes(newMinutes.toString());
+            setStudies(newStudies.toString());
+        }
         setDailyModalOpen(false);
+
+        // Persist to Backend
+        setIsSaving(true);
+        try {
+            await saveServiceReport({
+                userId: user?.uid || '',
+                month: monthKey,
+                hours: newHours,
+                minutes: newMinutes,
+                bibleStudies: newStudies,
+                participated,
+                isCampaign,
+                dailyRecords: newRecords
+            });
+            toast.success('Atividades salvas!', { id: 'autosave' });
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao salvar atividades.');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteDay = async () => {
+        if (selectedDay === null) return;
+
+        const newRecords = { ...dailyRecords };
+        delete newRecords[selectedDay];
+
+        // Recalculate totals
+        let newHours = parseFloat(hours || '0');
+        let newMinutes = parseFloat(minutes || '0');
+        let newStudies = parseFloat(studies || '0');
+
+        if (isPioneer) {
+            let totalH = 0;
+            let totalM = 0;
+            let totalS = 0;
+
+            Object.values(newRecords).forEach((record: any) => {
+                totalH += record.hours || 0;
+                totalM += record.minutes || 0;
+                totalS += record.studies || 0;
+            });
+
+            totalH += Math.floor(totalM / 60);
+            totalM = totalM % 60;
+
+            newHours = totalH;
+            newMinutes = totalM;
+            newStudies = totalS;
+        }
+
+        // Update local state
+        setDailyRecords(newRecords);
+        if (isPioneer) {
+            setHours(newHours.toString());
+            setMinutes(newMinutes.toString());
+            setStudies(newStudies.toString());
+        }
+
+        // Clear inputs
+        setDayHours('');
+        setDayMinutes('');
+        setDayStudies('');
+        setDayNotes('');
+
+        setDailyModalOpen(false);
+
+        // Persist deletion
+        setIsSaving(true);
+        try {
+            await saveServiceReport({
+                userId: user?.uid || '',
+                month: monthKey,
+                hours: newHours,
+                minutes: newMinutes,
+                bibleStudies: newStudies,
+                participated,
+                isCampaign,
+                dailyRecords: newRecords
+            });
+            toast.success('Atividade excluída!');
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao excluir.');
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleWhatsAppShare = () => {
@@ -657,9 +779,15 @@ const ServiceReportPage = () => {
                     <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                         <ChevronLeft size={20} className="text-gray-500" />
                     </button>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white min-w-[140px] text-center capitalize">
+                    <button
+                        onClick={() => {
+                            setPickerYear(currentDate.getFullYear());
+                            setIsDatePickerOpen(true);
+                        }}
+                        className="text-lg font-bold text-gray-900 dark:text-white min-w-[140px] text-center capitalize hover:bg-gray-100 dark:hover:bg-slate-800 px-4 py-1 rounded-lg transition-colors"
+                    >
                         {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-                    </span>
+                    </button>
                     <button onClick={nextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                         <ChevronRight size={20} className="text-gray-500" />
                     </button>
@@ -837,13 +965,7 @@ const ServiceReportPage = () => {
                             <div className="flex gap-3">
                                 {(dailyRecords[selectedDay || 0]) && (
                                     <button
-                                        onClick={() => {
-                                            setDayHours('');
-                                            setDayMinutes('');
-                                            setDayStudies('');
-                                            setDayNotes('');
-                                            saveDailyRecord();
-                                        }}
+                                        onClick={handleDeleteDay}
                                         className="px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all flex items-center gap-2"
                                     >
                                         <Trash2 size={20} />
@@ -859,6 +981,56 @@ const ServiceReportPage = () => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Date Picker Modal */}
+            {isDatePickerOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-sm p-6 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                        <div className="flex items-center justify-between mb-6">
+                            <button
+                                onClick={() => setPickerYear(y => y - 1)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                            >
+                                <ChevronLeft size={20} className="text-gray-500" />
+                            </button>
+                            <span className="text-xl font-bold text-gray-900 dark:text-white">{pickerYear}</span>
+                            <button
+                                onClick={() => setPickerYear(y => y + 1)}
+                                className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+                            >
+                                <ChevronRight size={20} className="text-gray-500" />
+                            </button>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                            {Array.from({ length: 12 }, (_, i) => {
+                                const date = new Date(pickerYear, i, 1);
+                                const isSelected = isSameMonth(date, currentDate);
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => {
+                                            setCurrentDate(date);
+                                            setIsDatePickerOpen(false);
+                                        }}
+                                        className={`p-3 rounded-xl font-bold text-sm transition-all ${isSelected
+                                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                            : 'bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        {format(date, 'MMM', { locale: ptBR }).toUpperCase()}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <button
+                            onClick={() => setIsDatePickerOpen(false)}
+                            className="mt-6 w-full py-3 bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-400 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+                        >
+                            Cancelar
+                        </button>
                     </div>
                 </div>
             )}
