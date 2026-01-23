@@ -131,18 +131,6 @@ const HistoricalInsights: React.FC = () => {
                 </div>
             </div>
 
-            {/* Suggestion based on history */}
-            {patterns.completionRate < 50 && (
-                <div className="bg-amber-50 dark:bg-amber-900/10 p-4 rounded-2xl border border-amber-200 dark:border-amber-800 flex items-start gap-3">
-                    <TrendingUp className="text-amber-600 dark:text-amber-400 mt-1" size={20} />
-                    <div>
-                        <p className="font-bold text-amber-900 dark:text-amber-300">Dica de Planejamento</p>
-                        <p className="text-sm text-amber-800 dark:text-amber-400 mt-1">
-                            Notamos que você tem dificuldade em atingir a meta. Tente usar o template <strong>"Intensivo Inicial"</strong> para garantir mais horas no começo do mês.
-                        </p>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
