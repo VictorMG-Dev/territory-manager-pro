@@ -67,7 +67,6 @@ const MapPage = () => {
   };
 
   return (
-  return (
     <div className="relative w-full h-[calc(100vh-80px)] rounded-3xl overflow-hidden border border-gray-200 dark:border-slate-800 shadow-2xl animate-in fade-in duration-700">
 
       {/* Floating Header Card */}
