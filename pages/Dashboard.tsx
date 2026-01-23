@@ -50,23 +50,23 @@ const CountUp = ({ end, duration = 1500 }: { end: number; duration?: number }) =
 const StatsCard = ({ title, value, icon: Icon, variant, delay = 0 }: any) => {
   const styles = {
     blue: {
-      gradient: "from-blue-500 to-blue-600",
-      light: "bg-blue-50 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400",
+      gradient: "from-blue-600 to-blue-700",
+      light: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
       shadow: "shadow-blue-500/20"
     },
     green: {
-      gradient: "from-emerald-500 to-emerald-600",
-      light: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400",
+      gradient: "from-emerald-600 to-emerald-700",
+      light: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
       shadow: "shadow-emerald-500/20"
     },
     yellow: {
-      gradient: "from-amber-400 to-amber-500",
-      light: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400",
+      gradient: "from-amber-500 to-amber-600",
+      light: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
       shadow: "shadow-amber-500/20"
     },
     red: {
-      gradient: "from-rose-500 to-rose-600",
-      light: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400",
+      gradient: "from-rose-600 to-rose-700",
+      light: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400",
       shadow: "shadow-rose-500/20"
     },
   };
@@ -75,7 +75,7 @@ const StatsCard = ({ title, value, icon: Icon, variant, delay = 0 }: any) => {
 
   return (
     <div
-      className="bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up md:backdrop-blur-xl"
+      className="bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-premium hover:shadow-premium-hover transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up md:backdrop-blur-xl"
       style={{ animationDelay: `${delay}ms` }}
     >
       <div className="flex items-center justify-between mb-4">
@@ -85,8 +85,8 @@ const StatsCard = ({ title, value, icon: Icon, variant, delay = 0 }: any) => {
 
       </div>
       <div>
-        <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{title}</h3>
-        <p className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">
+        <h3 className="text-slate-600 dark:text-slate-400 text-sm font-bold mb-1">{title}</h3>
+        <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
           <CountUp end={value} />
         </p>
       </div>
@@ -192,17 +192,17 @@ const Dashboard = () => {
     <div className="space-y-8 max-w-[1600px] mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up">
         <div>
-          <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
             Dashboard
           </h1>
-          <p className="text-gray-500 dark:text-slate-400 mt-1">
+          <p className="text-slate-600 dark:text-slate-400 mt-1 font-medium">
             Visão geral do progresso e atividades recentes.
           </p>
         </div>
         <button
           onClick={handleGenerateReport}
           disabled={generating}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
         >
           {generating ? <Loader2 size={18} className="animate-spin" /> : <TrendingUp size={18} />}
           {generating ? 'Exportando...' : 'Exportar Relatório'}
@@ -218,9 +218,9 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Gráfico */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium dark:shadow-none animate-fade-in-up" style={{ animationDelay: '400ms' }}>
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <div className="p-2 bg-purple-100 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
                 <TrendingUp size={20} />
               </div>
@@ -238,32 +238,31 @@ const Dashboard = () => {
                     </linearGradient>
                   ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" opacity={0.3} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" opacity={0.5} />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 12, fontWeight: 500 }}
+                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#94a3b8', fontSize: 12 }}
+                  tick={{ fill: '#64748b', fontSize: 12 }}
                 />
                 <Tooltip
-                  cursor={{ fill: '#f8fafc', opacity: 0.1 }}
+                  cursor={{ fill: '#f1f5f9', opacity: 0.5 }}
                   contentStyle={{
                     borderRadius: '16px',
-                    border: 'none',
-                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.1)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(8px)',
+                    border: '1px solid #e2e8f0',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.98)',
                     padding: '12px 20px',
                   }}
-                  itemStyle={{ fontWeight: 600, color: '#1e293b' }}
+                  itemStyle={{ fontWeight: 600, color: '#0f172a' }}
                 />
-                <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={60} animationDuration={1500} animationBegin={500}>
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={60} animationDuration={1500} animationBegin={500}>
                   {statsData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
                   ))}
@@ -274,8 +273,8 @@ const Dashboard = () => {
         </div>
 
         {/* Atividade Recente */}
-        <div className="bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none flex flex-col animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-8 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium dark:shadow-none flex flex-col animate-fade-in-up" style={{ animationDelay: '500ms' }}>
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-2">
             <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400">
               <Clock size={20} />
             </div>
@@ -286,28 +285,28 @@ const Dashboard = () => {
               recentActivity.map((activity, index) => (
                 <div
                   key={activity.id}
-                  className="flex items-center gap-4 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-default group"
+                  className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-default group border border-transparent hover:border-slate-100 dark:hover:border-slate-700 hover:shadow-sm"
                   style={{ animationDelay: `${600 + (index * 100)}ms` }}
                 >
                   <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs shrink-0
-                    ${activity.status === TerritoryStatus.GREEN ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400' : ''}
-                    ${activity.status === TerritoryStatus.YELLOW ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400' : ''}
-                    ${activity.status === TerritoryStatus.RED ? 'bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400' : ''}
+                    w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0
+                    ${activity.status === TerritoryStatus.GREEN ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ''}
+                    ${activity.status === TerritoryStatus.YELLOW ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : ''}
+                    ${activity.status === TerritoryStatus.RED ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : ''}
                   `}>
                     {activity.territoryCode}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">
                       {activity.territory}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-medium">
                       <span className="truncate max-w-[120px]">{activity.user}</span>
                       <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                       <span>{formatDistanceToNow(activity.parsedDate, { addSuffix: true, locale: ptBR })}</span>
                     </p>
                   </div>
-                  <ChevronRight size={16} className="text-gray-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1" />
+                  <ChevronRight size={18} className="text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1" />
                 </div>
               ))
             ) : (
@@ -321,7 +320,7 @@ const Dashboard = () => {
           </div>
           <Link
             to="/territories"
-            className="mt-8 py-3 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 transition-all active:scale-95"
+            className="mt-8 py-3.5 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 transition-all active:scale-95 border border-slate-100 dark:border-transparent"
           >
             Ver todos os territórios
           </Link>

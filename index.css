@@ -117,31 +117,100 @@
   .bg-gradient-radial {
     background: radial-gradient(circle, var(--tw-gradient-stops));
   }
+
+  /* Premium Light Mode Shadows */
+  .shadow-premium {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  }
+
+  .shadow-premium-hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04), 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Text Balance */
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Base resets for better contrast */
+@layer base {
+  body {
+    @apply text-slate-800 antialiased bg-slate-50;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-slate-900 font-bold tracking-tight;
+  }
+
+  p {
+    @apply text-slate-700 leading-relaxed;
+  }
+
+  .dark body {
+    @apply text-slate-200 bg-slate-950;
+  }
+
+  .dark h1,
+  .dark h2,
+  .dark h3,
+  .dark h4,
+  .dark h5,
+  .dark h6 {
+    @apply text-white;
+  }
+
+  .dark p {
+    @apply text-slate-400;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.8);
+  /* slate-100 */
+}
+
+.dark ::-webkit-scrollbar-track {
   background: rgba(15, 23, 42, 0.5);
 }
 
 ::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.8);
+  /* slate-400 */
+  border-radius: 5px;
+  border: 2px solid rgba(241, 245, 249, 0.8);
+  /* Border creates 'padding' effect */
+}
+
+.dark ::-webkit-scrollbar-thumb {
   background: rgba(59, 130, 246, 0.5);
-  border-radius: 4px;
+  border-color: rgba(15, 23, 42, 0.5);
 }
 
 ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 1);
+  /* slate-500 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(59, 130, 246, 0.7);
 }
 
 
 /* Smooth transitions */
 * {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, transform;
+  transition-property: background-color, border-color, color, fill, stroke, opacity, transform, box-shadow;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 200ms;
 }

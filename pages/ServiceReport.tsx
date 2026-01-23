@@ -68,7 +68,7 @@ const ServiceReportPage = () => {
             let totalM = 0;
             let totalS = 0;
 
-            Object.values(dailyRecords).forEach(record => {
+            Object.values(dailyRecords).forEach((record: { hours: number; minutes: number; studies: number; notes?: string }) => {
                 totalH += record.hours || 0;
                 totalM += record.minutes || 0;
                 totalS += record.studies || 0;
@@ -234,14 +234,14 @@ const ServiceReportPage = () => {
 
     const renderPublisherView = () => (
         <div className="space-y-6">
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm text-center">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium text-center">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Atividade do Mês</h3>
 
                 <button
                     onClick={() => setParticipated(!participated)}
                     className={`w-32 h-32 rounded-full mx-auto flex items-center justify-center transition-all ${participated
-                            ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110'
-                            : 'bg-gray-100 dark:bg-slate-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
+                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 scale-110'
+                        : 'bg-gray-100 dark:bg-slate-800 text-gray-400 hover:bg-gray-200 dark:hover:bg-slate-700'
                         }`}
                 >
                     <CheckCircle2 size={48} />
@@ -275,7 +275,7 @@ const ServiceReportPage = () => {
             {/* Left Column: Totals & Calendar */}
             <div className="space-y-6">
                 {/* Main Input Card (Read Only or Manual Override?) Let's make it read-only if daily records exist, or editable if user wants to force it. */}
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-premium">
                     <div className="flex items-center justify-between mb-8">
                         <div>
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white">Total do Mês</h3>
@@ -344,17 +344,54 @@ const ServiceReportPage = () => {
                 </div>
 
                 {/* Calendar / Daily Log */}
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Registro Diário</h3>
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-premium">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white">Calendário de Atividades</h3>
+                        <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Alta</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Média</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Baixa</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-7 gap-2">
-                        {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                            <div key={i} className="text-center text-xs font-bold text-gray-400 py-2">{d}</div>
+                        {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map((d, i) => (
+                            <div key={i} className="text-center text-xs font-bold text-gray-400 uppercase py-2">{d}</div>
                         ))}
                         {daysInMonth.map((day) => {
                             const dayNum = getDate(day);
                             const record = dailyRecords[dayNum];
                             const hasRecord = !!record;
                             const isTodayDate = isToday(day);
+                            const totalHours = hasRecord ? record.hours + (record.minutes / 60) : 0;
+
+                            // Color coding based on hours
+                            let bgColor = 'bg-gray-50 dark:bg-slate-800';
+                            let textColor = 'text-gray-700 dark:text-gray-300';
+                            let shadowColor = '';
+
+                            if (hasRecord) {
+                                if (totalHours >= 3) {
+                                    bgColor = 'bg-gradient-to-br from-emerald-500 to-emerald-600';
+                                    shadowColor = 'shadow-lg shadow-emerald-500/30';
+                                } else if (totalHours >= 1.5) {
+                                    bgColor = 'bg-gradient-to-br from-blue-500 to-blue-600';
+                                    shadowColor = 'shadow-lg shadow-blue-500/30';
+                                } else {
+                                    bgColor = 'bg-gradient-to-br from-amber-500 to-amber-600';
+                                    shadowColor = 'shadow-lg shadow-amber-500/30';
+                                }
+                                textColor = 'text-white';
+                            }
 
                             // Align first day
                             const style = dayNum === 1 ? { gridColumnStart: day.getDay() + 1 } : {};
@@ -366,19 +403,51 @@ const ServiceReportPage = () => {
                                     onClick={() => openDailyModal(dayNum)}
                                     className={`
                                         aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all
-                                        ${hasRecord ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-300'}
+                                        hover:scale-105 active:scale-95
+                                        ${bgColor} ${textColor} ${shadowColor}
+                                        ${!hasRecord ? 'hover:bg-gray-100 dark:hover:bg-slate-700 hover:shadow-md' : ''}
                                         ${isTodayDate && !hasRecord ? 'ring-2 ring-blue-500 ring-offset-2 dark:ring-offset-slate-900' : ''}
+                                        ${isTodayDate && hasRecord ? 'ring-2 ring-white ring-offset-2 ring-offset-blue-500' : ''}
                                     `}
                                 >
                                     <span className={`text-sm font-bold ${hasRecord ? 'text-white' : ''}`}>{dayNum}</span>
                                     {hasRecord && (
-                                        <div className="text-[10px] font-medium opacity-90 mt-1">
-                                            {record.hours}h{record.minutes > 0 ? record.minutes : ''}
+                                        <div className="text-[10px] font-bold opacity-90 mt-0.5">
+                                            {record.hours}h{record.minutes > 0 ? `${record.minutes}m` : ''}
+                                        </div>
+                                    )}
+                                    {hasRecord && record.studies > 0 && (
+                                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-[10px] font-bold text-blue-600 dark:text-blue-400 shadow-md">
+                                            {record.studies}
                                         </div>
                                     )}
                                 </button>
                             );
                         })}
+                    </div>
+
+                    {/* Calendar Stats */}
+                    <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800 grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {Object.keys(dailyRecords).length}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Dias Ativos</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {Object.values(dailyRecords).reduce((sum: number, r: any) => sum + (r.studies || 0), 0)}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Total Estudos</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                                {Object.keys(dailyRecords).length > 0
+                                    ? (currentHours / Object.keys(dailyRecords).length).toFixed(1)
+                                    : '0.0'}h
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Média/Dia</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -386,38 +455,76 @@ const ServiceReportPage = () => {
             {/* Right Column (Goals & Share) */}
             <div className="space-y-6">
                 {/* Monthly Goal Card */}
-                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6">Meta Mensal</h3>
-                    <div className="flex items-center justify-between relative z-10">
+                <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 shadow-premium relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-bold text-gray-900 dark:text-white">Meta Mensal</h3>
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${progress >= 100 ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                            progress >= 50 ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400' :
+                                'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+                            }`}>
+                            {progress.toFixed(0)}%
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between relative z-10 mb-6">
                         <div>
-                            <p className="text-4xl font-bold text-gray-900 dark:text-white">{currentHours.toFixed(1)}<span className="text-lg text-gray-400 ml-1">/ {monthlyGoal}h</span></p>
-                            <p className={`mt-2 font-medium ${remaining === 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
-                                {remaining === 0 ? 'Meta atingida! 🎉' : `Faltam ${remaining.toFixed(1)} horas`}
+                            <p className="text-4xl font-bold text-gray-900 dark:text-white">
+                                {currentHours.toFixed(1)}
+                                <span className="text-lg text-gray-400 ml-1">/ {monthlyGoal}h</span>
+                            </p>
+                            <p className={`mt-2 font-medium flex items-center gap-2 ${remaining === 0 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                                {remaining === 0 ? (
+                                    <>
+                                        <CheckCircle2 size={18} />
+                                        Meta atingida! 🎉
+                                    </>
+                                ) : (
+                                    <>
+                                        <Target size={18} />
+                                        Faltam {remaining.toFixed(1)}h
+                                    </>
+                                )}
                             </p>
                         </div>
-                        <div className="h-24 w-24">
+                        <div className="h-28 w-28">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
                                         data={[{ value: currentHours }, { value: remaining }]}
                                         cx="50%"
                                         cy="50%"
-                                        innerRadius={30}
-                                        outerRadius={40}
+                                        innerRadius={35}
+                                        outerRadius={50}
                                         startAngle={90}
                                         endAngle={-270}
                                         dataKey="value"
                                         stroke="none"
                                     >
                                         <Cell fill={progressColor} />
-                                        <Cell fill="#e2e8f0" />
+                                        <Cell fill="#e2e8f0" className="dark:fill-slate-700" />
                                     </Pie>
                                 </PieChart>
                             </ResponsiveContainer>
+                            <div className="absolute top-1/2 right-8 -translate-y-1/2 text-center">
+                                <p className="text-xl font-bold text-gray-900 dark:text-white">{progress.toFixed(0)}%</p>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Days Remaining Indicator */}
+                    {monthlyGoal > 0 && remaining > 0 && (
+                        <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600 dark:text-gray-400">Média necessária/dia:</span>
+                                <span className="font-bold text-gray-900 dark:text-white">
+                                    {(remaining / Math.max(1, new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate())).toFixed(1)}h
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Progress Bar background */}
-                    <div className="absolute bottom-0 left-0 h-1.5 bg-gray-100 w-full">
+                    <div className="absolute bottom-0 left-0 h-1.5 bg-gray-100 dark:bg-slate-800 w-full">
                         <div className="h-full transition-all duration-1000 ease-out" style={{ width: `${progress}%`, backgroundColor: progressColor }}></div>
                     </div>
                 </div>
@@ -427,22 +534,59 @@ const ServiceReportPage = () => {
                     <div className="bg-gradient-to-br from-indigo-600 to-violet-700 p-8 rounded-[2.5rem] shadow-lg text-white relative overflow-hidden">
                         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
 
-                        <h3 className="text-lg font-bold opacity-90 mb-6">Meta Anual</h3>
-                        <div className="flex items-end gap-2 mb-2">
+                        <div className="flex items-center justify-between mb-6 relative z-10">
+                            <h3 className="text-lg font-bold opacity-90">Meta Anual {currentDate.getFullYear()}</h3>
+                            <div className="px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full text-xs font-bold">
+                                {Math.min(100, (yearlyStats.total / 600) * 100).toFixed(0)}%
+                            </div>
+                        </div>
+
+                        <div className="flex items-end gap-2 mb-2 relative z-10">
                             <span className="text-5xl font-bold">{yearlyStats.total.toFixed(0)}</span>
                             <span className="text-xl opacity-60 mb-1">/ 600h</span>
                         </div>
 
-                        <div className="w-full bg-black/20 h-3 rounded-full overflow-hidden mb-4">
+                        <div className="w-full bg-black/20 h-3 rounded-full overflow-hidden mb-4 relative z-10">
                             <div
                                 className="h-full bg-white/90 rounded-full transition-all duration-1000"
                                 style={{ width: `${Math.min(100, (yearlyStats.total / 600) * 100)}%` }}
                             ></div>
                         </div>
 
-                        <p className="text-sm font-medium opacity-80">
-                            Faltam {yearlyStats.remaining.toFixed(1)} horas para fechar o ano.
-                        </p>
+                        <div className="space-y-2 relative z-10">
+                            <p className="text-sm font-medium opacity-80">
+                                {yearlyStats.remaining > 0
+                                    ? `Faltam ${yearlyStats.remaining.toFixed(1)}h para fechar o ano`
+                                    : 'Meta anual atingida! 🎉'
+                                }
+                            </p>
+                            {yearlyStats.remaining > 0 && (
+                                <p className="text-xs opacity-70">
+                                    Média necessária: {(yearlyStats.remaining / Math.max(1, 12 - currentDate.getMonth())).toFixed(1)}h/mês
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Auxiliary Pioneer Info Card */}
+                {currentrole === 'auxiliary_pioneer' && (
+                    <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-[2rem] shadow-lg text-white">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 bg-white/20 backdrop-blur-sm rounded-xl">
+                                <Target size={24} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg">Pioneiro Auxiliar</h3>
+                                <p className="text-sm opacity-80">
+                                    {isCampaign ? 'Campanha Especial' : 'Mês Regular'}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="bg-white/10 backdrop-blur-sm p-4 rounded-xl">
+                            <p className="text-sm opacity-90 mb-2">Meta deste mês:</p>
+                            <p className="text-3xl font-bold">{monthlyGoal} horas</p>
+                        </div>
                     </div>
                 )}
 
@@ -477,7 +621,7 @@ const ServiceReportPage = () => {
                 </div>
 
                 {/* Month Navigation */}
-                <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800">
+                <div className="flex items-center gap-4 bg-white dark:bg-slate-900 p-2 rounded-2xl shadow-premium border border-slate-200 dark:border-slate-800">
                     <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl transition-colors">
                         <ChevronLeft size={20} className="text-gray-500" />
                     </button>
@@ -508,68 +652,148 @@ const ServiceReportPage = () => {
             {/* Daily Modal */}
             {dailyModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-md p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
+                    <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-lg p-8 shadow-2xl scale-100 animate-in zoom-in-95 duration-200">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                                Dia {selectedDay} de {format(currentDate, 'MMMM', { locale: ptBR })}
-                            </h3>
-                            <button onClick={() => setDailyModalOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full">
+                            <div>
+                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                    {format(new Date(currentDate.getFullYear(), currentDate.getMonth(), selectedDay || 1), 'dd', { locale: ptBR })} de {format(currentDate, 'MMMM', { locale: ptBR })}
+                                </h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                                    Registre suas atividades do dia
+                                </p>
+                            </div>
+                            <button onClick={() => setDailyModalOpen(false)} className="p-2 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-full transition-colors">
                                 <X size={24} className="text-gray-500" />
                             </button>
                         </div>
 
                         <div className="space-y-6">
+                            {/* Quick Hour Buttons */}
+                            <div>
+                                <label className="text-xs font-bold text-gray-400 uppercase mb-3 block">Atalhos Rápidos</label>
+                                <div className="grid grid-cols-4 gap-2">
+                                    {[1, 2, 3, 4].map(h => (
+                                        <button
+                                            key={h}
+                                            onClick={() => {
+                                                setDayHours(h.toString());
+                                                setDayMinutes('0');
+                                            }}
+                                            className={`py-3 px-4 rounded-xl font-bold text-sm transition-all ${dayHours === h.toString() && dayMinutes === '0'
+                                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30'
+                                                : 'bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'
+                                                }`}
+                                        >
+                                            {h}h
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Hours and Minutes Input */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Horas</label>
-                                    <input
-                                        type="number"
-                                        value={dayHours}
-                                        onChange={e => setDayHours(e.target.value)}
-                                        className="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="0"
-                                    />
+                                    <div className="relative">
+                                        <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                        <input
+                                            type="number"
+                                            value={dayHours}
+                                            onChange={e => setDayHours(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                            placeholder="0"
+                                            min="0"
+                                            max="24"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Minutos</label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">min</span>
+                                        <input
+                                            type="number"
+                                            value={dayMinutes}
+                                            onChange={e => setDayMinutes(e.target.value)}
+                                            className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                            placeholder="0"
+                                            min="0"
+                                            max="59"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Studies Input */}
+                            <div>
+                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Estudos Bíblicos / Revisitas</label>
+                                <div className="relative">
+                                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                     <input
                                         type="number"
-                                        value={dayMinutes}
-                                        onChange={e => setDayMinutes(e.target.value)}
-                                        className="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
+                                        value={dayStudies}
+                                        onChange={e => setDayStudies(e.target.value)}
+                                        className="w-full pl-12 pr-4 py-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                                         placeholder="0"
-                                        max="59"
+                                        min="0"
                                     />
                                 </div>
                             </div>
 
+                            {/* Notes Input */}
                             <div>
-                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Estudos / Revisitas</label>
-                                <input
-                                    type="number"
-                                    value={dayStudies}
-                                    onChange={e => setDayStudies(e.target.value)}
-                                    className="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl text-xl font-bold dark:text-white outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="0"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Notas</label>
+                                <label className="text-xs font-bold text-gray-400 uppercase mb-2 block">Observações (Opcional)</label>
                                 <textarea
                                     value={dayNotes}
                                     onChange={e => setDayNotes(e.target.value)}
-                                    className="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl font-medium dark:text-white outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24"
-                                    placeholder="Observações do dia..."
+                                    className="w-full p-4 bg-gray-50 dark:bg-slate-800 rounded-xl font-medium dark:text-white outline-none focus:ring-2 focus:ring-blue-500 resize-none h-24 transition-all"
+                                    placeholder="Ex: Trabalhei no território 12, fiz 3 revisitas..."
                                 />
                             </div>
 
-                            <button
-                                onClick={saveDailyRecord}
-                                className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all"
-                            >
-                                Salvar Dia
-                            </button>
+                            {/* Impact Preview */}
+                            {(parseInt(dayHours || '0') > 0 || parseInt(dayMinutes || '0') > 0) && (
+                                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-xl border border-blue-100 dark:border-blue-800">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <TrendingUp className="text-blue-600 dark:text-blue-400" size={16} />
+                                        <span className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase">Impacto no Total</span>
+                                    </div>
+                                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                                        Novo total mensal: <span className="font-bold text-blue-600 dark:text-blue-400">
+                                            {(currentHours + parseInt(dayHours || '0') + (parseInt(dayMinutes || '0') / 60)).toFixed(1)}h
+                                        </span>
+                                        {monthlyGoal > 0 && (
+                                            <span className="text-gray-500 dark:text-gray-400"> / {monthlyGoal}h</span>
+                                        )}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Action Buttons */}
+                            <div className="flex gap-3">
+                                {(dailyRecords[selectedDay || 0]) && (
+                                    <button
+                                        onClick={() => {
+                                            setDayHours('');
+                                            setDayMinutes('');
+                                            setDayStudies('');
+                                            setDayNotes('');
+                                            saveDailyRecord();
+                                        }}
+                                        className="px-6 py-4 bg-red-500 hover:bg-red-600 text-white rounded-xl font-bold transition-all flex items-center gap-2"
+                                    >
+                                        <Trash2 size={20} />
+                                        Excluir
+                                    </button>
+                                )}
+                                <button
+                                    onClick={saveDailyRecord}
+                                    className="flex-1 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-lg shadow-lg shadow-blue-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Save size={20} />
+                                    Salvar Registro
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

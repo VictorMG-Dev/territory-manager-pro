@@ -111,7 +111,7 @@ app.post('/api/auth/register', async (req, res) => {
         }
 
         const token = jwt.sign({ uid, email, role, congregationId }, process.env.JWT_SECRET || 'yoursecret');
-        res.status(201).json({ token, user: { uid, name, email, congregationId, role } });
+        res.status(201).json({ token, user: { uid, name, email, congregationId, role, serviceRole: 'publisher' } });
 
     } catch (error) {
         console.error('Erro no registro:', error);
@@ -152,7 +152,8 @@ app.post('/api/auth/login', async (req, res) => {
                 photoURL: user.photo_url,
                 congregationId: user.congregation_id,
                 congregationName,
-                role: user.role
+                role: user.role,
+                serviceRole: user.service_role
             }
         });
     } catch (error) {

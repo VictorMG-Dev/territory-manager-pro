@@ -93,21 +93,21 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-slate-900/60 z-40 lg:hidden backdrop-blur-sm transition-opacity"
           onClick={() => setIsOpen(false)}
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border-r border-slate-200/50 dark:border-slate-800/50 backdrop-blur-xl z-50 transform transition-all duration-500 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:from-slate-900 dark:to-slate-950 border-r border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none z-50 transform transition-all duration-300 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200/50 dark:border-slate-800/50">
+          <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-transparent">
             <div className="relative group">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/50 group-hover:scale-110 transition-transform duration-500 ease-out">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
+              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform duration-500 ease-out border border-white/20">
                 <Layers className="text-white transition-transform duration-500 group-hover:rotate-12" size={32} />
               </div>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent tracking-tight">Territory<span className="text-blue-600 dark:text-blue-400">Pro</span></span>
+            <span className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Territory<span className="text-blue-600 dark:text-blue-400">Pro</span></span>
           </div>
 
           <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-thin">
@@ -117,27 +117,30 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                 const isActive = item.children.some((child: any) => location.pathname === child.path);
 
                 return (
-                  <div key={item.label} className="space-y-1" style={{ animation: 'fadeInUp 0.4s ease-out both' }}>
+                  <div key={item.label} className="space-y-1">
                     <button
                       onClick={() => toggleMenu(item.label)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
-                        ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-lg shadow-blue-500/10'
-                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:shadow-md'
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group border border-transparent ${isActive
+                        ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 font-bold'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white font-medium'
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                          <item.icon size={20} strokeWidth={2.5} />
+                        <div className={`transition-transform duration-300 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`}>
+                          <item.icon size={20} className={isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-500 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'} strokeWidth={isActive ? 2.5 : 2} />
                         </div>
-                        <span className="font-medium">{item.label}</span>
+                        <span className="text-sm">{item.label}</span>
                       </div>
-                      <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                      <div className={`transition-transform duration-300 text-slate-400 ${isOpen ? 'rotate-180' : ''}`}>
                         <ChevronDown size={16} />
                       </div>
                     </button>
 
                     <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <div className="pl-4 space-y-1 py-1">
+                      <div className="pl-4 space-y-1 py-1 relative">
+                        {/* Connecting line for submenus */}
+                        <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800"></div>
+
                         {item.children.map((child: any) => {
                           const isChildActive = location.pathname === child.path;
                           return (
@@ -145,13 +148,13 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                               key={child.path}
                               to={child.path}
                               onClick={() => setIsOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 text-sm group ${isChildActive
-                                ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-md shadow-blue-500/10'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:translate-x-1'
+                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm group relative z-10 ${isChildActive
+                                ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm border border-slate-200 dark:border-slate-700'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                             >
                               <div className={`transition-transform duration-300 ${isChildActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                                <child.icon size={18} strokeWidth={2.5} />
+                                <child.icon size={18} strokeWidth={isChildActive ? 2.5 : 2} />
                               </div>
                               <span className="font-medium">{child.label}</span>
                             </Link>
@@ -169,25 +172,24 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  style={{ animation: 'fadeInUp 0.4s ease-out both' }}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
-                    ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-lg shadow-blue-500/10'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:shadow-md'
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group border border-transparent ${isActive
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 font-semibold'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white font-medium active:scale-[0.98]'
                     }`}
                 >
-                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
-                    <item.icon size={20} strokeWidth={2.5} />
+                  <div className={`transition-transform duration-300 ${isActive ? 'scale-105' : 'group-hover:scale-105'}`}>
+                    <item.icon size={20} strokeWidth={isActive ? 2.5 : 2} className={isActive ? 'text-white' : 'text-slate-500 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300'} />
                   </div>
-                  <span className="font-medium">{item.label}</span>
+                  <span className="text-sm">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-b from-transparent to-slate-100/50 dark:to-slate-900/50 backdrop-blur-sm">
-            <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
+            <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300 group hover:border-blue-200 dark:hover:border-slate-600">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-800 overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-800 overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-300">
                   {user?.photoURL ? (
                     <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -197,17 +199,15 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{user?.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 w-full text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all duration-300 font-medium group hover:shadow-lg hover:shadow-rose-500/10"
+              className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all duration-200 font-medium text-sm group"
             >
-              <div className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
-                <LogOut size={20} strokeWidth={2.5} />
-              </div>
+              <LogOut size={18} strokeWidth={2} className="group-hover:stroke-rose-600 dark:group-hover:stroke-rose-400 transition-colors" />
               <span>Sair do Sistema</span>
             </button>
           </div>
@@ -220,15 +220,16 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
 const Header = ({ setSidebarOpen }: { setSidebarOpen: (v: boolean) => void }) => {
   const { user } = useAuth();
   return (
-    <header className="sticky top-0 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-gray-200 dark:border-slate-800 z-30 px-4 flex items-center justify-between lg:px-8 transition-colors">
+    <header className="sticky top-0 h-16 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-b border-slate-200 dark:border-slate-800 z-30 px-4 flex items-center justify-between lg:px-8 transition-colors shadow-sm">
       <div className="flex items-center gap-4">
-        <button onClick={() => setSidebarOpen(true)} className="p-2 lg:hidden text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg">
+        <button onClick={() => setSidebarOpen(true)} className="p-2 lg:hidden text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
           <Menu size={24} />
         </button>
-        <h2 className="text-lg font-semibold text-gray-800 dark:text-slate-100 hidden sm:block">Gerenciamento de Territórios</h2>
+        <h2 className="text-xl font-bold text-slate-900 dark:text-white hidden sm:block tracking-tight">Gerenciamento de Territórios</h2>
       </div>
 
       <div className="flex items-center gap-4">
+        {/* Header Actions can go here */}
       </div>
     </header>
   );

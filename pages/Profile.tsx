@@ -100,6 +100,19 @@ const Profile = () => {
     }
   };
 
+  const handleServiceRoleChange = async (newRole: ServiceRole) => {
+    setServiceRole(newRole);
+    try {
+      await updateProfile({ serviceRole: newRole });
+      toast.success('Papel de campo atualizado!');
+    } catch (error) {
+      console.error(error);
+      toast.error('Erro ao atualizar papel de campo.');
+      // Revert on error
+      setServiceRole(user?.serviceRole || 'publisher');
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -539,7 +552,7 @@ const Profile = () => {
                 ].map((role) => (
                   <button
                     key={role.id}
-                    onClick={() => setServiceRole(role.id as ServiceRole)}
+                    onClick={() => handleServiceRoleChange(role.id as ServiceRole)}
                     className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${serviceRole === role.id
                       ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 shadow-md shadow-indigo-500/10'
                       : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500 dark:text-slate-400'
