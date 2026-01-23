@@ -9,8 +9,7 @@ import { PlanSuggestion, ServiceRole, WeeklySchedule } from '../types';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, getWeekOfMonth, isSameMonth, isToday, getDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import ExportManager from './ExportManager';
-import TemplateManager from './TemplateManager';
+// Imports removed
 
 interface WeeklyPlannerProps {
     currentDate: Date;
@@ -433,33 +432,7 @@ const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({ currentDate, monthlyGoal,
                 </div>
             )}
 
-            {/* Export Manager */}
-            <ExportManager
-                monthlyPlan={currentPlan}
-                currentDate={currentDate}
-                currentHours={currentHours}
-            />
-
-            {/* Template Manager - Updated to work with monthly context if needed, but for now it might need refactor too to support full month templates. 
-                However, keeping it as is might accept the distribution object. 
-                Users request: "maintain functionality of suggestion". 
-                TemplateManager was working with "currentDistribution" which was weeklyHours. 
-                Since we changed to Monthly View, TemplateManager logic for "saving weekly template" is broken if we don't pass a week. 
-                Let's hide it for now or adapt it to "Save Month Template"? 
-                Given the scope, I will comment it out or adapt it simply.
-                The user prioritized "Calendar" and "Remove Smart Alerts". 
-                TemplateManager works on "Weekly" basis in its implementation.
-                I will pass a dummy distribution for now to prevent breaking, or just hide it until requested. 
-                Actually, removing it is safer than having broken UI.
-                BUT user said "maintain functionality of suggestion" (which usually means the built-in ones).
-                Template Manager is distinct. I'll leave it but maybe disable it visually or pass empty.
-            */}
-            <div className="opacity-50 pointer-events-none grayscale">
-                {/* Disabling TemplateManager temporarily as it is strictly weekly-based */}
-                <div className="p-4 text-center text-sm text-gray-400 border border-dashed border-gray-300 rounded-xl">
-                    Gerenciador de Templates adaptando para modo mensal...
-                </div>
-            </div>
+            {/* Export and Template Managers removed */}
         </div>
     );
 };
