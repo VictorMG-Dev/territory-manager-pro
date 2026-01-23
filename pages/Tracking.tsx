@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, Square, MapPin, Navigation, Save, Clock, Ruler } from 'lucide-react';
+import { Play, Pause, Square, MapPin, Navigation, Save, Clock, Ruler, CloudSun, Footprints, Zap, StopCircle } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import toast from 'react-hot-toast';
