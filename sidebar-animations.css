@@ -48,3 +48,20 @@
 .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
     background: rgba(71, 85, 105, 0.7);
 }
+
+/* Staged Animations for Territory Cards */
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.animate-territory-card {
+    animation: fadeInScale 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}

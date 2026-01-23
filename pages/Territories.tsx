@@ -5,51 +5,69 @@ import { Link } from 'react-router-dom';
 import { TerritoryStatus } from '../types';
 import { getStatusColor, getStatusText } from '../utils/helpers';
 
-const TerritoryCard = ({ territory }: any) => {
+const TerritoryCard = ({ territory, index }: any) => {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all group overflow-hidden">
-      <div className="h-40 bg-gray-100 dark:bg-slate-800 relative overflow-hidden">
+    <div
+      className="group bg-white dark:bg-slate-900/50 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-500 overflow-hidden hover:-translate-y-1 relative"
+      style={{ animationDelay: `${index * 100}ms` }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+      <div className="h-48 bg-gray-100 dark:bg-slate-800 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10 transition-opacity duration-300 group-hover:opacity-90" />
         <img
-          src={territory.image || `https://picsum.photos/seed/${territory.code}/400/200`}
+          src={territory.image || `https://picsum.photos/seed/${territory.code}/800/600`}
           alt={territory.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
-        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-white text-xs font-bold ${getStatusColor(territory.status)} shadow-lg`}>
-          {getStatusText(territory.status)}
+
+        <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+          <div className={`px-3 py-1.5 rounded-xl text-white text-[10px] uppercase font-bold tracking-wider ${getStatusColor(territory.status)} shadow-lg backdrop-blur-md bg-opacity-90 flex items-center gap-1.5`}>
+            <div className={`w-1.5 h-1.5 rounded-full bg-white animate-pulse`} />
+            {getStatusText(territory.status)}
+          </div>
         </div>
-        <div className="absolute bottom-4 left-4">
-          <span className="bg-black/50 backdrop-blur-sm text-white px-3 py-1 rounded-lg text-sm font-bold border border-white/20">
+
+        <div className="absolute bottom-4 left-4 z-20">
+          <span className="bg-white/10 backdrop-blur-md text-white px-3 py-1.5 rounded-xl text-sm font-bold border border-white/20 shadow-lg group-hover:bg-white/20 transition-all">
             {territory.code}
           </span>
         </div>
       </div>
-      <div className="p-5">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{territory.name}</h3>
-        <p className="text-sm text-gray-500 dark:text-slate-400 flex items-center gap-1.5 mt-1">
-          <MapPin size={14} />
-          {territory.address}
-        </p>
 
-        <div className="mt-6 pt-4 border-t border-gray-50 dark:border-slate-800 grid grid-cols-2 gap-4">
+      <div className="p-6 relative z-10">
+        <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2 line-clamp-1">{territory.name}</h3>
+
+        <div className="flex items-start gap-2 text-gray-500 dark:text-slate-400 text-sm mb-6 min-h-[40px]">
+          <MapPin size={16} className="mt-0.5 shrink-0 text-blue-500/70" />
+          <span className="line-clamp-2 leading-relaxed">{territory.address}</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 dark:bg-slate-800/50 rounded-2xl border border-gray-100 dark:border-slate-800/50">
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Último trabalho</span>
-            <p className="text-xs font-semibold text-gray-700 dark:text-slate-300 flex items-center gap-1">
-              <Calendar size={12} className="text-blue-500 dark:text-blue-400" />
+            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider flex items-center gap-1">
+              <Calendar size={10} /> Último trabalho
+            </span>
+            <p className="text-xs font-bold text-gray-700 dark:text-slate-200">
               {territory.lastWorked}
             </p>
           </div>
           <div className="space-y-1">
-            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider">Publicador</span>
-            <p className="text-xs font-semibold text-gray-700 dark:text-slate-300 flex items-center gap-1">
-              <User size={12} className="text-blue-500 dark:text-blue-400" />
+            <span className="text-[10px] uppercase font-bold text-gray-400 dark:text-slate-500 tracking-wider flex items-center gap-1">
+              <User size={10} /> Publicador
+            </span>
+            <p className="text-xs font-bold text-gray-700 dark:text-slate-200 line-clamp-1">
               {territory.publisher}
             </p>
           </div>
         </div>
 
-        <Link to={`/territory/${territory.id}`} className="mt-5 w-full flex items-center justify-center gap-2 bg-gray-50 dark:bg-slate-800 hover:bg-blue-600 dark:hover:bg-blue-600 hover:text-white text-gray-600 dark:text-slate-300 py-2.5 rounded-xl text-sm font-bold transition-all">
+        <Link
+          to={`/territory/${territory.id}`}
+          className="w-full flex items-center justify-center gap-2 bg-slate-900 dark:bg-white hover:bg-blue-600 dark:hover:bg-blue-500 text-white dark:text-slate-900 hover:text-white dark:hover:text-white py-3 rounded-xl text-sm font-bold transition-all duration-300 shadow-lg hover:shadow-blue-500/25 group-hover:translate-y-0 active:scale-95"
+        >
           Ver Detalhes
-          <ChevronRight size={16} />
+          <ChevronRight size={16} className="transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
     </div>
@@ -142,8 +160,8 @@ const Territories = () => {
           ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6"
           : "space-y-4"
         }>
-          {filteredTerritories.map((t) => (
-            <TerritoryCard key={t.id} territory={{
+          {filteredTerritories.map((t, idx) => (
+            <TerritoryCard key={t.id} index={idx} territory={{
               ...t,
               lastWorked: t.daysSinceWork > 900 ? 'Nunca trabalhado' : `${t.daysSinceWork} dias atrás`,
               publisher: t.lastWorkedBy || 'Ninguém'
