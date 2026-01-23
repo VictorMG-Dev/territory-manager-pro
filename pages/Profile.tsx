@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, BadgeCheck, UserMinus, AlertTriangle, BookOpen } from 'lucide-react';
+import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, BadgeCheck, UserMinus, AlertTriangle, BookOpen, Clock, Star, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
@@ -522,20 +522,26 @@ const Profile = () => {
               <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Papel de Campo</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 {[
-                  { id: 'publisher', label: 'Publicador', goal: 'Sem meta de horas' },
-                  { id: 'auxiliary_pioneer', label: 'Pioneiro Auxiliar', goal: '30h / 15h' },
-                  { id: 'regular_pioneer', label: 'Pioneiro Regular', goal: '50h / 600h Anual' },
+                  { id: 'publisher', label: 'Publicador', icon: User, goal: 'Sem meta' },
+                  { id: 'auxiliary_pioneer', label: 'P. Auxiliar', icon: Clock, goal: '30h / 15h' },
+                  { id: 'regular_pioneer', label: 'P. Regular', icon: Star, goal: '50h / 600h' }
                 ].map((role) => (
                   <button
                     key={role.id}
                     onClick={() => setServiceRole(role.id as ServiceRole)}
-                    className={`p-4 rounded-2xl border-2 text-left transition-all ${serviceRole === role.id
-                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
-                      : 'border-transparent bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800'
+                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${serviceRole === role.id
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 shadow-md shadow-indigo-500/10'
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500 dark:text-slate-400'
                       }`}
                   >
-                    <div className="font-bold text-gray-900 dark:text-white text-sm mb-1">{role.label}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{role.goal}</div>
+                    {serviceRole === role.id && (
+                      <div className="absolute top-2 right-2 text-indigo-600 animate-in zoom-in spin-in-90 duration-300">
+                        <CheckCircle2 size={16} />
+                      </div>
+                    )}
+                    <role.icon size={28} className={serviceRole === role.id ? 'text-indigo-600' : 'text-slate-400'} />
+                    <span className="font-bold text-sm">{role.label}</span>
+                    <span className="text-[10px] font-medium opacity-70">{role.goal}</span>
                   </button>
                 ))}
               </div>

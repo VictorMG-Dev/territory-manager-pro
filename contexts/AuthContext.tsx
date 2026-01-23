@@ -11,6 +11,7 @@ export interface User {
     congregationId?: string;
     congregationName?: string;
     role?: 'publisher' | 'territory_servant' | 'service_overseer' | 'elder' | 'admin';
+    serviceRole?: 'publisher' | 'auxiliary_pioneer' | 'regular_pioneer';
 }
 
 interface AuthContextType {

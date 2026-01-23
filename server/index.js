@@ -163,11 +163,12 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     try {
-        const { name, photoURL, email, password } = req.body;
+        const { name, photoURL, email, password, serviceRole } = req.body;
         const updates = {};
         if (name) updates.name = name;
         if (photoURL) updates.photo_url = photoURL;
         if (email) updates.email = email;
+        if (serviceRole) updates.service_role = serviceRole;
         if (password) updates.password = await bcrypt.hash(password, 10);
 
         if (Object.keys(updates).length === 0) return res.status(400).json({ message: 'Nada para atualizar.' });
@@ -176,7 +177,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
         if (error) return res.status(500).json({ message: 'Erro ao atualizar.' });
 
         // CRITICAL: Include ALL user fields to prevent data loss on frontend
-        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url, congregation_id, role').eq('uid', req.user.uid).single();
+        const { data: userData } = await supabase.from('users').select('uid, name, email, photo_url, congregation_id, role, service_role').eq('uid', req.user.uid).single();
 
         // Get congregation name if user has one
         let congregationName = null;
@@ -193,7 +194,8 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
                 photoURL: userData.photo_url,
                 congregationId: userData.congregation_id,
                 congregationName,
-                role: userData.role
+                role: userData.role,
+                serviceRole: userData.service_role
             }
         });
     } catch (error) { res.status(500).json({ message: 'Erro ao atualizar perfil.' }); }
