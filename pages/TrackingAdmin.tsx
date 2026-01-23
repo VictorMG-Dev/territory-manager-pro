@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { TrackingSession } from '../types';
 import toast from 'react-hot-toast';
-import { FileText, CheckCircle, XCircle, Map, User, ChevronRight, MapPin } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Map, User, ChevronRight, MapPin, Filter, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { MapContainer, TileLayer, Polyline, Marker, Popup } from 'react-leaflet';
