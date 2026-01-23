@@ -97,11 +97,11 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
 
       <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 z-50 transform transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Layers className="text-white" size={24} />
+          <div className="p-6 flex flex-col items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/50">
+              <Layers className="text-white" size={32} />
             </div>
-            <span className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro (v2)</span></span>
+            <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro</span></span>
           </div>
 
           <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
