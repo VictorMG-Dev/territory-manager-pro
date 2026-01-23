@@ -32,6 +32,8 @@ interface DataContextType {
     /* Service Reports */
     serviceReports: ServiceReport[];
     saveServiceReport: (report: Omit<ServiceReport, 'id' | 'updatedAt'>) => Promise<void>;
+    submitServiceReport: (month: string) => Promise<void>;
+    fetchCongregationReports: (month?: string, year?: string) => Promise<any[]>;
     /* Monthly Planning */
     monthlyPlans: MonthlyPlan[];
     saveMonthlyPlan: (plan: Omit<MonthlyPlan, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -349,6 +351,30 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    const submitServiceReport = async (month: string) => {
+        try {
+            const updatedReport = await api.patch('/service-reports/submit', { month });
+            setServiceReports(prev => prev.map(r =>
+                r.month === month ? { ...r, submitted: true, submittedAt: updatedReport.submitted_at } : r
+            ));
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const fetchCongregationReports = async (month?: string, year?: string) => {
+        try {
+            const query = new URLSearchParams();
+            if (month) query.append('month', month);
+            if (year) query.append('year', year);
+            return await api.get(`/congregation/reports?${query.toString()}`);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
     /* MONTHLY PLANNING FUNCTIONS */
     const saveMonthlyPlan = async (planData: Omit<MonthlyPlan, 'id' | 'createdAt' | 'updatedAt'>) => {
         const id = uuidv4();
@@ -646,6 +672,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             saveTemplate,
             deleteTemplate,
             getPublicTemplates,
+            /* Service Reports Admin */
+            submitServiceReport,
+            fetchCongregationReports,
             /* Analysis */
             getHistoricalPatterns
         }}>

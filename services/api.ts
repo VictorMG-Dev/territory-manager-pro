@@ -58,6 +58,26 @@ export const api = {
         }
     },
 
+    async patch(endpoint: string, body: any) {
+        try {
+            const response = await fetch(`${API_URL}${endpoint}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify(body)
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(data.message || `Erro do servidor: ${response.status}`);
+            }
+            return data;
+        } catch (error: any) {
+            console.error('API Patch Error:', error);
+            throw new Error(error.message);
+        }
+    },
+
     async put(endpoint: string, body: any) {
         try {
             const response = await fetch(`${API_URL}${endpoint}`, {

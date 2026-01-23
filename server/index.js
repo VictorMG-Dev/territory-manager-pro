@@ -1079,6 +1079,8 @@ app.get('/api/service-reports', authenticateToken, async (req, res) => {
             bibleStudies: r.bible_studies,
             participated: r.participated,
             isCampaign: r.is_campaign,
+            submitted: r.submitted || false,
+            submittedAt: r.submitted_at,
             dailyRecords: r.daily_records || {}
         }));
         res.json(mapped);
@@ -1124,6 +1126,98 @@ app.post('/api/service-reports', authenticateToken, async (req, res) => {
     } catch (e) {
         console.error('[Server Error]', e);
         res.status(500).json({ message: 'Erro interno no servidor', error: e.message });
+    }
+});
+
+app.patch('/api/service-reports/submit', authenticateToken, async (req, res) => {
+    try {
+        const { month } = req.body;
+        if (!month) return res.status(400).json({ message: 'Mês é obrigatório.' });
+
+        const { data, error } = await supabase
+            .from('service_reports')
+            .update({
+                submitted: true,
+                submitted_at: new Date().toISOString()
+            })
+            .eq('user_id', req.user.uid)
+            .eq('month', month)
+            .select()
+            .single();
+
+        if (error) {
+            console.error('[Submit Error]', error);
+            return res.status(500).json({ message: 'Erro ao enviar relatório.' });
+        }
+
+        res.json(data);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro interno no servidor.' });
+    }
+});
+
+app.get('/api/congregation/reports', authenticateToken, requireRole(['elder', 'admin', 'service_overseer']), async (req, res) => {
+    try {
+        const { month, year } = req.query;
+        let query = supabase
+            .from('service_reports')
+            .select(`
+                *,
+                user:user_id (
+                    name,
+                    role,
+                    email
+                )
+            `)
+            .eq('submitted', true);
+
+        // Safely check for congregation ID since it might be in different places depending on version/token
+        const congregationId = req.user.congregationId;
+        if (!congregationId) {
+            return res.status(400).json({ message: 'Usuário não está vinculado a uma congregação.' });
+        }
+
+        // We need to filter by users of this congregation
+        const { data: members, error: membersError } = await supabase
+            .from('users')
+            .select('uid')
+            .eq('congregation_id', congregationId);
+
+        if (membersError) throw membersError;
+        const memberUids = (members || []).map(m => m.uid);
+
+        query = query.in('user_id', memberUids);
+
+        if (month) {
+            query = query.eq('month', month);
+        } else if (year) {
+            query = query.like('month', `${year}-%`);
+        }
+
+        const { data, error } = await query.order('month', { ascending: false });
+
+        if (error) throw error;
+
+        const mapped = (data || []).map(r => ({
+            id: r.id,
+            userId: r.user_id,
+            userName: r.user?.name || 'Desconhecido',
+            userRole: r.user?.role,
+            month: r.month,
+            hours: r.hours,
+            minutes: r.minutes,
+            bibleStudies: r.bible_studies,
+            participated: r.participated,
+            isCampaign: r.is_campaign,
+            submittedAt: r.submitted_at,
+            dailyRecords: r.daily_records
+        }));
+
+        res.json(mapped);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar relatórios da congregação.' });
     }
 });
 

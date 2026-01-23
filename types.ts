@@ -66,6 +66,8 @@ export interface ServiceReport {
   bibleStudies: number;
   participated: boolean; // For publishers who don't report hours
   isCampaign: boolean; // For Aux Pioneers (15h vs 30h)
+  submitted: boolean;
+  submittedAt?: string;
   updatedAt: string;
   dailyRecords?: Record<number, {
     hours: number;

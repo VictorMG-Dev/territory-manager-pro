@@ -45,6 +45,7 @@ import AccessDenied from './pages/AccessDenied';
 import Tracking from './pages/Tracking';
 import TrackingHistory from './pages/TrackingHistory';
 import TrackingAdmin from './pages/TrackingAdmin';
+import CongregationReports from './pages/CongregationReports';
 import ChatBot from './components/ChatBot';
 import LoadingScreen from './components/LoadingScreen';
 import { usePermissions } from './hooks/usePermissions';
@@ -75,6 +76,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
       children: [
         { icon: Calendar, label: 'Meu Histórico', path: '/tracking/history', permission: 'canAccessTrackingHistory' },
         { icon: FileText, label: 'Aprov. de Relatórios', path: '/tracking/admin', permission: 'canAccessTrackingAdmin' },
+        { icon: Users, label: 'Relatórios Cong.', path: '/congregation/reports', permission: 'canAccessCongregationReports' },
       ]
     },
     { icon: FileText, label: 'Relatórios', path: '/reports', permission: 'canAccessReports' },
@@ -306,6 +308,7 @@ export default function App() {
               <Route path="/tracking" element={<RoleProtectedRoute requiredPermission="canAccessTracking"><Tracking /></RoleProtectedRoute>} />
               <Route path="/tracking/history" element={<RoleProtectedRoute requiredPermission="canAccessTrackingHistory"><TrackingHistory /></RoleProtectedRoute>} />
               <Route path="/tracking/admin" element={<RoleProtectedRoute requiredPermission="canAccessTrackingAdmin"><TrackingAdmin /></RoleProtectedRoute>} />
+              <Route path="/congregation/reports" element={<RoleProtectedRoute requiredPermission="canAccessCongregationReports"><CongregationReports /></RoleProtectedRoute>} />
             </Routes>
           </BrowserRouter>
         </DataProvider>

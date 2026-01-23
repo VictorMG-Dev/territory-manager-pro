@@ -14,6 +14,7 @@ interface RolePermissions {
     canAccessTracking: boolean;
     canAccessTrackingHistory: boolean;
     canAccessTrackingAdmin: boolean;
+    canAccessCongregationReports: boolean;
 }
 
 const rolePermissions: Record<Role, RolePermissions> = {
@@ -30,6 +31,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessTracking: true,
         canAccessTrackingHistory: true, // Users see their own history
         canAccessTrackingAdmin: false,
+        canAccessCongregationReports: false,
     },
     territory_servant: {
         canAccessDashboard: false,
@@ -44,6 +46,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessTracking: true,
         canAccessTrackingHistory: true,
         canAccessTrackingAdmin: false,
+        canAccessCongregationReports: false,
     },
     service_overseer: {
         canAccessDashboard: true,
@@ -58,6 +61,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessTracking: true,
         canAccessTrackingHistory: true,
         canAccessTrackingAdmin: true, // Can approve reports
+        canAccessCongregationReports: true,
     },
     elder: {
         canAccessDashboard: true,
@@ -72,6 +76,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessTracking: true,
         canAccessTrackingHistory: true,
         canAccessTrackingAdmin: true, // Can approve reports
+        canAccessCongregationReports: true,
     },
     admin: {
         canAccessDashboard: true,
@@ -86,6 +91,7 @@ const rolePermissions: Record<Role, RolePermissions> = {
         canAccessTracking: true,
         canAccessTrackingHistory: true,
         canAccessTrackingAdmin: true,
+        canAccessCongregationReports: true,
     },
 };
 
@@ -118,6 +124,7 @@ export const usePermissions = () => {
         if (permissions.canAccessTracking) routes.push('/tracking');
         if (permissions.canAccessTrackingHistory) routes.push('/tracking/history');
         if (permissions.canAccessTrackingAdmin) routes.push('/tracking/admin');
+        if (permissions.canAccessCongregationReports) routes.push('/congregation/reports');
         return routes;
     };
 

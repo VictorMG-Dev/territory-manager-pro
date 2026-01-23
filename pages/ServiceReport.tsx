@@ -16,7 +16,7 @@ import HistoricalInsights from '../components/HistoricalInsights';
 
 const ServiceReportPage = () => {
     const { user } = useAuth();
-    const { serviceReports, saveServiceReport } = useData();
+    const { serviceReports, saveServiceReport, submitServiceReport } = useData();
 
     // State
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -357,30 +357,44 @@ const ServiceReportPage = () => {
     };
 
     const handleSendToElders = async () => {
+        if (!user) return;
+
         // First save any pending changes
         await handleSave();
 
-        // Simulate sending process
         const loadingToast = toast.loading('Enviando relatório para a secretaria...');
-
-        setTimeout(() => {
-            toast.dismiss(loadingToast);
-            toast.success('Relatório enviado com sucesso!');
-            // Here we would ideally set a 'submitted' status in the DB
-        }, 1500);
+        try {
+            await submitServiceReport(monthKey);
+            toast.success('Relatório enviado com sucesso!', { id: loadingToast });
+        } catch (error) {
+            console.error(error);
+            toast.error('Erro ao enviar relatório.', { id: loadingToast });
+        }
     };
+
+    const report = useMemo(() =>
+        serviceReports.find(r => r.userId === user?.uid && r.month === monthKey),
+        [monthKey, serviceReports, user]);
+
+    const isSubmitted = report?.submitted || false;
 
     const renderActionButtons = () => (
         <div className="flex gap-4 mt-8 pb-4">
             <button
                 onClick={handleSendToElders}
-                className="group relative flex-1 py-4 bg-gradient-to-r from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 text-white rounded-[1.5rem] font-bold shadow-[0_10px_40px_rgba(79,70,229,0.3)] dark:shadow-[0_10px_40px_rgba(79,70,229,0.2)] flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 border border-white/10"
+                disabled={isSubmitted || isSaving}
+                className={`group relative flex-1 py-4 text-white rounded-[1.5rem] font-bold flex items-center justify-center gap-3 transition-all duration-300 active:scale-95 border border-white/10 ${isSubmitted
+                        ? 'bg-emerald-500/50 cursor-default opacity-80'
+                        : 'bg-gradient-to-r from-indigo-600 to-blue-700 hover:from-indigo-500 hover:to-blue-600 shadow-[0_10px_40px_rgba(79,70,229,0.3)] dark:shadow-[0_10px_40px_rgba(79,70,229,0.2)]'
+                    }`}
             >
-                <div className="p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 group-hover:scale-110 transition-transform duration-300">
-                    <Send size={20} className="drop-shadow-sm" />
+                <div className={`p-2 bg-white/10 backdrop-blur-md rounded-xl border border-white/10 transition-transform duration-300 ${!isSubmitted && 'group-hover:scale-110'}`}>
+                    {isSubmitted ? <CheckCircle2 size={20} /> : <Send size={20} className="drop-shadow-sm" />}
                 </div>
-                <span className="text-lg tracking-tight">Enviar Relatório</span>
-                <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 rounded-[1.5rem] transition-opacity"></div>
+                <span className="text-lg tracking-tight">
+                    {isSubmitted ? 'Relatório Enviado' : 'Enviar Relatório'}
+                </span>
+                {!isSubmitted && <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 rounded-[1.5rem] transition-opacity"></div>}
             </button>
             <button
                 onClick={handleWhatsAppShare}
