@@ -205,7 +205,7 @@ app.put('/api/auth/profile', authenticateToken, async (req, res) => {
 app.post('/api/auth/forgot-password', async (req, res) => {
     try {
         const { email } = req.body;
-        // Check if user exists but don't leak info logic is implied
+        // Check if user exists
         const { data: users } = await supabase.from('users').select('uid').eq('email', email);
 
         if (!users || users.length === 0) {
@@ -213,16 +213,80 @@ app.post('/api/auth/forgot-password', async (req, res) => {
             return res.json({ message: 'Se o email existir, as instruções foram enviadas.' });
         }
 
+        const user = users[0];
         const token = require('crypto').randomBytes(32).toString('hex');
         const expiresAt = new Date(Date.now() + 3600000); // 1 hour
 
-        // Criar tabela de tokens se não existir
-        // Por hora, apenas log no console
-        console.log(`[DEV] Reset Token for ${email}: ${token}`);
+        // Save token to database
+        const { error } = await supabase.from('password_reset_tokens').insert({
+            user_id: user.uid,
+            token: token,
+            expires_at: expiresAt.toISOString(),
+            used: false
+        });
+
+        if (error) throw error;
+
+        // In production, send email here. In dev, log it.
+        console.log(`[DEV] Reset Link for ${email}: http://localhost:3000/reset-password?token=${token}`);
         res.json({ message: 'Instruções enviadas.' });
 
     } catch (error) {
-        res.status(500).json({ message: 'Erro ao processar.' });
+        console.error('Forgot password error:', error);
+        res.status(500).json({ message: 'Erro ao processar solicitação.' });
+    }
+});
+
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        if (!token || !newPassword) {
+            return res.status(400).json({ message: 'Token e nova senha são obrigatórios.' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: 'A senha deve ter pelo menos 6 caracteres.' });
+        }
+
+        // Verify token
+        const { data: tokens, error } = await supabase
+            .from('password_reset_tokens')
+            .select('*')
+            .eq('token', token)
+            .eq('used', false)
+            .single();
+
+        if (error || !tokens) {
+            return res.status(400).json({ message: 'Token inválido ou expirado.' });
+        }
+
+        // Check expiration
+        if (new Date(tokens.expires_at) < new Date()) {
+            return res.status(400).json({ message: 'Token expirado. Solicite um novo link.' });
+        }
+
+        // Update password
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        const { error: updateError } = await supabase
+            .from('users')
+            .update({ password: hashedPassword })
+            .eq('uid', tokens.user_id);
+
+        if (updateError) throw updateError;
+
+        // Mark token as used
+        await supabase
+            .from('password_reset_tokens')
+            .update({ used: true })
+            .eq('id', tokens.id);
+
+        res.json({ message: 'Senha redefinida com sucesso!' });
+
+    } catch (error) {
+        console.error('Reset password error:', error);
+        res.status(500).json({ message: 'Erro ao redefinir senha.' });
     }
 });
 

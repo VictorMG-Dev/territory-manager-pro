@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { Layers, Lock, CheckCircle, Loader2, AlertCircle } from 'lucide-react';
+import { Layers, Lock, CheckCircle, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import AnimatedBackground from '../components/AnimatedBackground';
 import { toast } from 'react-hot-toast';
 
@@ -12,6 +12,7 @@ const ResetPassword = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     useEffect(() => {
         const tokenParam = searchParams.get('token');
@@ -38,6 +39,7 @@ const ResetPassword = () => {
         setIsSubmitting(true);
 
         try {
+            // Updated to use the correct API endpoint
             const response = await fetch('/api/auth/reset-password', {
                 method: 'POST',
                 headers: {
@@ -140,15 +142,22 @@ const ResetPassword = () => {
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         required
                                         value={newPassword}
                                         onChange={(e) => setNewPassword(e.target.value)}
-                                        className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all font-medium text-white placeholder:text-gray-500"
+                                        className="w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20 outline-none transition-all font-medium text-white placeholder:text-gray-500"
                                         placeholder="••••••••"
                                         disabled={isSubmitting}
                                         minLength={6}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
                             </div>
 
@@ -159,7 +168,7 @@ const ResetPassword = () => {
                                 <div className="relative">
                                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                     <input
-                                        type="password"
+                                        type={showPassword ? "text" : "password"}
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
@@ -168,6 +177,14 @@ const ResetPassword = () => {
                                         disabled={isSubmitting}
                                         minLength={6}
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                                        tabIndex={-1} // prevent focus on verify icon
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
                                 </div>
                             </div>
                         </div>
