@@ -526,7 +526,7 @@ const ServiceReportPage = () => {
                                 )}
                             </p>
                         </div>
-                        <div className="h-28 w-28">
+                        <div className="h-28 w-28 min-w-[7rem]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
