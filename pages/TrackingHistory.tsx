@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../contexts/DataContext';
 import { TrackingSession } from '../types';
-import { Clock, Calendar, MapPin, CheckCircle, XCircle, Clock as ClockIcon } from 'lucide-react';
+import { Clock, Calendar, MapPin, CheckCircle, XCircle, Clock as ClockIcon, Trophy, Medal, TrendingUp, Hourglass } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
