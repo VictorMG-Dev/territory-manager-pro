@@ -55,6 +55,19 @@ export interface WorkRecord {
 }
 
 export type Role = 'publisher' | 'territory_servant' | 'service_overseer' | 'elder' | 'admin';
+export type ServiceRole = 'publisher' | 'auxiliary_pioneer' | 'regular_pioneer';
+
+export interface ServiceReport {
+  id: string;
+  userId: string;
+  month: string; // YYYY-MM
+  hours: number;
+  minutes: number;
+  bibleStudies: number;
+  participated: boolean; // For publishers who don't report hours
+  isCampaign: boolean; // For Aux Pioneers (15h vs 30h)
+  updatedAt: string;
+}
 
 export interface UserProfile {
   uid: string;
@@ -63,7 +76,8 @@ export interface UserProfile {
   photoURL: string;
   congregationId?: string;
   congregationName?: string;
-  role?: Role;
+  role?: Role; // System Role
+  serviceRole?: ServiceRole; // Field Service Role
   createdAt: any;
 }
 
