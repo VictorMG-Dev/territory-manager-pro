@@ -173,8 +173,8 @@ const Register = () => {
                       setError('');
                     }}
                     className={`w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.name
-                        ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                        : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
+                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                      : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
                       } outline-none`}
                     placeholder="Seu Nome"
                   />
@@ -201,8 +201,8 @@ const Register = () => {
                       setError('');
                     }}
                     className={`w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.email
-                        ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                        : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
+                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                      : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
                       } outline-none`}
                     placeholder="exemplo@email.com"
                   />
@@ -229,8 +229,8 @@ const Register = () => {
                       setError('');
                     }}
                     className={`w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.password
-                        ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                        : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
+                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                      : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
                       } outline-none`}
                     placeholder="Mínimo 6 caracteres"
                   />
@@ -261,9 +261,9 @@ const Register = () => {
                         ))}
                       </div>
                       <p className={`text-xs ml-1 font-medium ${passwordStrength.strength === 1 ? 'text-red-400' :
-                          passwordStrength.strength === 2 ? 'text-orange-400' :
-                            passwordStrength.strength === 3 ? 'text-yellow-400' :
-                              'text-green-400'
+                        passwordStrength.strength === 2 ? 'text-orange-400' :
+                          passwordStrength.strength === 3 ? 'text-yellow-400' :
+                            'text-green-400'
                         }`}>
                         Força da senha: {passwordStrength.label}
                       </p>
@@ -286,10 +286,10 @@ const Register = () => {
                       setError('');
                     }}
                     className={`w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.confirmPassword
-                        ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                        : confirmPassword && password === confirmPassword
-                          ? 'border-green-500/50 focus:border-green-400 focus:ring-4 focus:ring-green-500/20'
-                          : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
+                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                      : confirmPassword && password === confirmPassword
+                        ? 'border-green-500/50 focus:border-green-400 focus:ring-4 focus:ring-green-500/20'
+                        : 'border-white/10 focus:border-purple-400 focus:bg-white/10 focus:ring-4 focus:ring-purple-500/20'
                       } outline-none`}
                     placeholder="Digite a senha novamente"
                   />

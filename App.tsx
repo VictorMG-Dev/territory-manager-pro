@@ -95,39 +95,46 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 z-50 transform transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 border-r border-slate-200/50 dark:border-slate-800/50 backdrop-blur-xl z-50 transform transition-all duration-500 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 flex flex-col items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/50">
-              <Layers className="text-white" size={32} />
+          <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200/50 dark:border-slate-800/50">
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
+              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/50 group-hover:scale-110 transition-transform duration-500 ease-out">
+                <Layers className="text-white transition-transform duration-500 group-hover:rotate-12" size={32} />
+              </div>
             </div>
-            <span className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">Territory<span className="text-blue-600">Pro</span></span>
+            <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-white dark:to-slate-300 bg-clip-text text-transparent tracking-tight">Territory<span className="text-blue-600 dark:text-blue-400">Pro</span></span>
           </div>
 
-          <nav className="flex-1 px-4 space-y-1 mt-4 overflow-y-auto">
+          <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto scrollbar-thin">
             {menuItems.map((item: any) => {
               if (item.children) {
                 const isOpen = openMenus.includes(item.label);
                 const isActive = item.children.some((child: any) => location.pathname === child.path);
 
                 return (
-                  <div key={item.label} className="space-y-1">
+                  <div key={item.label} className="space-y-1" style={{ animation: 'fadeInUp 0.4s ease-out both' }}>
                     <button
                       onClick={() => toggleMenu(item.label)}
-                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all ${isActive
-                        ? 'text-blue-600 dark:text-blue-400 font-semibold'
-                        : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                      className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
+                        ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-lg shadow-blue-500/10'
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:shadow-md'
                         }`}
                     >
                       <div className="flex items-center gap-3">
-                        <item.icon size={20} />
-                        <span>{item.label}</span>
+                        <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                          <item.icon size={20} strokeWidth={2.5} />
+                        </div>
+                        <span className="font-medium">{item.label}</span>
                       </div>
-                      {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      <div className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}>
+                        <ChevronDown size={16} />
+                      </div>
                     </button>
 
-                    {isOpen && (
-                      <div className="pl-4 space-y-1">
+                    <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                      <div className="pl-4 space-y-1 py-1">
                         {item.children.map((child: any) => {
                           const isChildActive = location.pathname === child.path;
                           return (
@@ -135,18 +142,20 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                               key={child.path}
                               to={child.path}
                               onClick={() => setIsOpen(false)}
-                              className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all text-sm ${isChildActive
-                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold'
-                                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                              className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-300 text-sm group ${isChildActive
+                                ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-md shadow-blue-500/10'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:translate-x-1'
                                 }`}
                             >
-                              <child.icon size={18} />
-                              <span>{child.label}</span>
+                              <div className={`transition-transform duration-300 ${isChildActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                                <child.icon size={18} strokeWidth={2.5} />
+                              </div>
+                              <span className="font-medium">{child.label}</span>
                             </Link>
                           );
                         })}
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               }
@@ -157,37 +166,45 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                   key={item.path}
                   to={item.path}
                   onClick={() => setIsOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-semibold'
-                    : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white'
+                  style={{ animation: 'fadeInUp 0.4s ease-out both' }}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group ${isActive
+                    ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 text-blue-600 dark:text-blue-400 font-semibold shadow-lg shadow-blue-500/10'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100/80 dark:hover:bg-slate-800/80 hover:text-slate-900 dark:hover:text-white hover:shadow-md'
                     }`}
                 >
-                  <item.icon size={20} />
-                  <span>{item.label}</span>
+                  <div className={`transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`}>
+                    <item.icon size={20} strokeWidth={2.5} />
+                  </div>
+                  <span className="font-medium">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="p-4 border-t border-gray-100 dark:border-slate-800 transition-colors">
-            <div className="flex items-center gap-3 px-4 py-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-xs ring-2 ring-white dark:ring-slate-800 overflow-hidden">
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.substring(0, 2).toUpperCase() || 'US'
-                )}
+          <div className="p-4 border-t border-slate-200/50 dark:border-slate-800/50 bg-gradient-to-b from-transparent to-slate-100/50 dark:to-slate-900/50 backdrop-blur-sm">
+            <div className="flex items-center gap-3 px-4 py-3 mb-2 rounded-xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50 shadow-lg hover:shadow-xl transition-all duration-300 group">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-800 overflow-hidden shadow-lg group-hover:scale-110 transition-transform duration-300">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.substring(0, 2).toUpperCase() || 'US'
+                  )}
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
+                <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{user?.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-4 py-3 w-full text-left text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all font-medium"
+              className="flex items-center gap-3 px-4 py-3 w-full text-left text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-xl transition-all duration-300 font-medium group hover:shadow-lg hover:shadow-rose-500/10"
             >
-              <LogOut size={20} />
+              <div className="transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12">
+                <LogOut size={20} strokeWidth={2.5} />
+              </div>
               <span>Sair do Sistema</span>
             </button>
           </div>

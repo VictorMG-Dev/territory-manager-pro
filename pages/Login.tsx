@@ -123,8 +123,8 @@ const Login = () => {
                   }}
                   onBlur={handleEmailBlur}
                   className={`w-full pl-12 pr-4 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.email
-                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                      : 'border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
+                    ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                    : 'border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
                     } outline-none`}
                   placeholder="seu@email.com"
                   disabled={isSubmitting}
@@ -157,8 +157,8 @@ const Login = () => {
                     setError('');
                   }}
                   className={`w-full pl-12 pr-12 py-4 rounded-2xl bg-white/5 border transition-all font-medium text-white placeholder:text-gray-500 ${fieldErrors.password
-                      ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
-                      : 'border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
+                    ? 'border-red-500/50 focus:border-red-400 focus:ring-4 focus:ring-red-500/20'
+                    : 'border-white/10 focus:border-blue-400 focus:bg-white/10 focus:ring-4 focus:ring-blue-500/20'
                     } outline-none`}
                   placeholder="••••••••"
                   disabled={isSubmitting}
