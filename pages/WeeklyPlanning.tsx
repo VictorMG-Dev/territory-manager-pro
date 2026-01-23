@@ -181,6 +181,10 @@ const WeeklyPlanning: React.FC = () => {
         toast.success('Sugestão da IA aplicada! (Priorizando territórios antigos e grandes nos fins de semana)');
     };
 
+    const getDayForTerritory = (id: string) => {
+        return Object.keys(daysState).find(day => (daysState[day as keyof DailyAllocation] as string[]).includes(id));
+    };
+
     const handlePrint = () => {
         window.print();
     };
