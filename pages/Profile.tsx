@@ -1,11 +1,11 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, BadgeCheck, UserMinus, AlertTriangle } from 'lucide-react';
+import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, BadgeCheck, UserMinus, AlertTriangle, BookOpen } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { Congregation, CongregationMember, Role } from '../types';
+import { Congregation, CongregationMember, Role, ServiceRole } from '../types';
 
 const Profile = () => {
   const { user, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation } = useAuth();
@@ -14,6 +14,7 @@ const Profile = () => {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [displayName, setDisplayName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
+  const [serviceRole, setServiceRole] = useState<ServiceRole>(user?.serviceRole || 'publisher');
   const [newPassword, setNewPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -74,7 +75,7 @@ const Profile = () => {
   const handleUpdateProfile = async () => {
     try {
       setIsSaving(true);
-      await updateProfile({ name: displayName, email });
+      await updateProfile({ name: displayName, email, serviceRole });
       if (newPassword) {
         await updatePassword(newPassword);
         setNewPassword('');
@@ -502,6 +503,42 @@ const Profile = () => {
                 {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
                 <span>Salvar Alterações</span>
               </button>
+            </div>
+          </div>
+
+          {/* Ministry Data */}
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center">
+                <BookOpen size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados de Ministério</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Defina seu papel para ajustar as metas</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Papel de Campo</label>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                {[
+                  { id: 'publisher', label: 'Publicador', goal: 'Sem meta de horas' },
+                  { id: 'auxiliary_pioneer', label: 'Pioneiro Auxiliar', goal: '30h / 15h' },
+                  { id: 'regular_pioneer', label: 'Pioneiro Regular', goal: '50h / 600h Anual' },
+                ].map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => setServiceRole(role.id as ServiceRole)}
+                    className={`p-4 rounded-2xl border-2 text-left transition-all ${serviceRole === role.id
+                      ? 'border-amber-500 bg-amber-50 dark:bg-amber-900/20'
+                      : 'border-transparent bg-gray-50 dark:bg-slate-800/50 hover:bg-gray-100 dark:hover:bg-slate-800'
+                      }`}
+                  >
+                    <div className="font-bold text-gray-900 dark:text-white text-sm mb-1">{role.label}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">{role.goal}</div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 

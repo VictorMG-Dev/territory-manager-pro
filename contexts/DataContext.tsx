@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession, ServiceReport } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
@@ -29,6 +29,9 @@ interface DataContextType {
     approveReport: (id: string) => Promise<void>;
     rejectReport: (id: string) => Promise<void>;
     getTrackingSessionDetails: (id: string) => Promise<TrackingSession>;
+    /* Service Reports */
+    serviceReports: ServiceReport[];
+    saveServiceReport: (report: Omit<ServiceReport, 'id' | 'updatedAt'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -48,6 +51,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [weeklyPlans, setWeeklyPlans] = useState<WeeklyPlan[]>([]);
     const [groups, setGroups] = useState<TerritoryGroup[]>([]);
     const [members, setMembers] = useState<CongregationMember[]>([]);
+    const [serviceReports, setServiceReports] = useState<ServiceReport[]>([]);
 
     useEffect(() => {
         if (user) {
@@ -62,10 +66,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 api.get('/work-history'),
                 api.get('/groups'),
                 api.get('/weekly-plans'),
-                api.get('/congregations/members')
+                api.get('/weekly-plans'),
+                api.get('/congregations/members'),
+                api.get('/service-reports')
             ]);
 
-            const [tResult, hResult, gResult, pResult, mResult] = results;
+            const [tResult, hResult, gResult, pResult, mResult, rResult] = results;
 
             if (tResult.status === 'fulfilled') {
                 setTerritories(tResult.value);
@@ -97,6 +103,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             } else {
                 console.error('Failed to load members:', mResult.reason);
             }
+
+            if (rResult.status === 'fulfilled') {
+                setServiceReports(rResult.value);
+            } else {
+                console.error('Failed to load reports:', rResult.reason);
+            }
+
 
         } catch (error) {
             console.error('Erro crítico ao carregar dados:', error);
@@ -281,37 +294,65 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await api.put(`/tracking/sessions/${id}/reject`, {});
     };
 
-    const getTrackingSessionDetails = async (id: string) => {
-        return await api.get(`/tracking/sessions/${id}`);
+    return await api.get(`/tracking/sessions/${id}`);
+};
+
+const saveServiceReport = async (reportData: Omit<ServiceReport, 'id' | 'updatedAt'>) => {
+    const id = uuidv4();
+    const now = new Date().toISOString();
+    const newReport: ServiceReport = {
+        ...reportData,
+        id,
+        updatedAt: now
     };
 
-    return (
-        <DataContext.Provider value={{
-            territories,
-            addTerritory,
-            updateTerritory,
-            deleteTerritory,
-            getTerritory,
-            registerWork,
-            getHistory,
-            allWorkHistory: workHistory,
-            weeklyPlans,
-            currentWeeklyPlan,
-            saveWeeklyPlan,
-            groups,
-            addGroup,
-            updateGroup,
-            deleteGroup,
-            members,
-            /* Tracking */
-            registerTrackingSession,
-            getTrackingHistory,
-            getPendingReports,
-            approveReport,
-            rejectReport,
-            getTrackingSessionDetails
-        }}>
-            {children}
-        </DataContext.Provider>
-    );
+    try {
+        await api.post('/service-reports', newReport);
+        // Update local state (replace if exists for same month, or add)
+        setServiceReports(prev => {
+            const filtered = prev.filter(r => r.month !== reportData.month);
+            return [...filtered, newReport];
+        });
+    } catch (error) {
+        console.error(error);
+        throw error;
+    }
+};
+
+return (
+    <DataContext.Provider value={{
+        territories,
+        addTerritory,
+        updateTerritory,
+        deleteTerritory,
+        getTerritory,
+        registerWork,
+        getHistory,
+        allWorkHistory: workHistory,
+        weeklyPlans,
+        currentWeeklyPlan,
+        saveWeeklyPlan,
+        groups,
+        addGroup,
+        updateGroup,
+        deleteGroup,
+        members,
+        /* Tracking */
+        registerTrackingSession,
+        getTrackingHistory,
+        getPendingReports,
+        approveReport,
+        rejectReport,
+        getTrackingHistory,
+        getPendingReports,
+        approveReport,
+        rejectReport,
+        getTrackingSessionDetails,
+        /* Service Reports */
+        serviceReports,
+        saveServiceReport
+    }}>
+        {children}
+    </DataContext.Provider>
+);
 };
