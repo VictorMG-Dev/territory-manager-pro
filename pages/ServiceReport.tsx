@@ -654,23 +654,34 @@ const ServiceReportPage = () => {
                     <button
                         onClick={() => setActiveView('planejamento')}
                         className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'planejamento'
-                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         📅 Planejamento
+                    </button>
+                    <button
+                        onClick={() => setActiveView('analise')}
+                        className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'analise'
+                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        📈 Análise
                     </button>
                 </div>
 
                 {/* Content based on active view */}
                 {activeView === 'registro' ? (
                     currentrole === 'publisher' ? renderPublisherView() : renderPioneerView()
-                ) : (
+                ) : activeView === 'planejamento' ? (
                     <WeeklyPlanner
                         currentDate={currentDate}
                         monthlyGoal={monthlyGoal}
                         currentHours={currentHours}
                     />
+                ) : (
+                    <HistoricalInsights />
                 )}
             </div>
 

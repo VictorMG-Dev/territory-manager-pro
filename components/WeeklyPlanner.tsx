@@ -11,6 +11,8 @@ import { ptBR } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import ExportManager from './ExportManager';
 import TemplateManager from './TemplateManager';
+import SmartAlerts from './SmartAlerts';
+import { useSmartAlerts } from '../hooks/useSmartAlerts';
 
 interface WeeklyPlannerProps {
     currentDate: Date;
@@ -54,6 +56,11 @@ const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({ currentDate, monthlyGoal,
 
     // Get suggestions
     const suggestions = getPlanSuggestions(monthlyGoal, serviceRole);
+
+    // Smart Alerts
+    const alerts = useSmartAlerts(currentPlan, currentHours, monthlyGoal);
+
+    // Status Indicator Logic
 
     // Status Indicator Logic
     const getStatusIndicator = () => {
@@ -236,6 +243,9 @@ const WeeklyPlanner: React.FC<WeeklyPlannerProps> = ({ currentDate, monthlyGoal,
                     )}
                 </p>
             </div>
+
+            {/* Smart Alerts */}
+            <SmartAlerts alerts={alerts} />
 
             {/* Status Indicator */}
             <div className={`${statusIndicator.bgColor} border-2 ${statusIndicator.borderColor} p-4 rounded-2xl`}>
