@@ -344,10 +344,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             getPendingReports,
             approveReport,
             rejectReport,
-            getTrackingHistory,
-            getPendingReports,
-            approveReport,
-            rejectReport,
             getTrackingSessionDetails,
             /* Service Reports */
             serviceReports,

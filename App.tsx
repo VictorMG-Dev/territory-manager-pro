@@ -16,6 +16,7 @@ import {
   Users,
   Navigation,
   Shield,
+  Clock,
   ChevronDown,
   ChevronRight,
 } from 'lucide-react';
@@ -25,6 +26,7 @@ import Territories from './pages/Territories';
 import TerritoryDetail from './pages/TerritoryDetail';
 import MapPage from './pages/MapPage';
 import Reports from './pages/Reports';
+import ServiceReportPage from './pages/ServiceReport';
 import Profile from './pages/Profile';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -58,6 +60,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
     { icon: MapIcon, label: 'Mapa Global', path: '/map', permission: 'canAccessMap' },
     { icon: Calendar, label: 'Planejamento', path: '/planning', permission: 'canAccessPlanning' },
     { icon: Navigation, label: 'Iniciar Ministério', path: '/tracking', permission: 'canAccessTracking' },
+    { icon: Clock, label: 'Meu Relatório', path: '/service-report', permission: 'canAccessReports' },
     {
       icon: Shield,
       label: 'Controle ADM',
@@ -288,6 +291,7 @@ export default function App() {
               <Route path="/groups" element={<RoleProtectedRoute requiredPermission="canAccessGroups"><Groups /></RoleProtectedRoute>} />
               <Route path="/map" element={<RoleProtectedRoute requiredPermission="canAccessMap"><MapPage /></RoleProtectedRoute>} />
               <Route path="/planning" element={<RoleProtectedRoute requiredPermission="canAccessPlanning"><WeeklyPlanning /></RoleProtectedRoute>} />
+              <Route path="/service-report" element={<RoleProtectedRoute requiredPermission="canAccessReports"><ServiceReportPage /></RoleProtectedRoute>} />
               <Route path="/reports" element={<RoleProtectedRoute requiredPermission="canAccessReports"><Reports /></RoleProtectedRoute>} />
               <Route path="/profile" element={<RoleProtectedRoute requiredPermission="canAccessProfile"><Profile /></RoleProtectedRoute>} />
               <Route path="/tracking" element={<RoleProtectedRoute requiredPermission="canAccessTracking"><Tracking /></RoleProtectedRoute>} />
