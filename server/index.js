@@ -249,7 +249,7 @@ app.post('/api/auth/google', async (req, res) => {
 
 app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     try {
-        const { name, photoURL, email, password, serviceRole } = req.body;
+        const { name, photoURL, email, password, serviceRole, banner } = req.body;
         const updates = {};
         if (name) updates.name = name;
         if (photoURL) updates.photo_url = photoURL;

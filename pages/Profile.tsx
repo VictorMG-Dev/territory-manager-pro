@@ -130,8 +130,8 @@ const Profile = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Imagem muito grande. Máximo 5MB.');
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error('Imagem muito grande. Máximo 15MB.');
         return;
       }
 
@@ -152,8 +152,8 @@ const Profile = () => {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        toast.error('Imagem muito grande. Máximo 5MB.');
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error('Imagem muito grande. Máximo 15MB.');
         return;
       }
 
