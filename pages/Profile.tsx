@@ -331,29 +331,41 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in slide-in-from-right-4 duration-500">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Meu Perfil</h1>
-        <p className="text-gray-500 dark:text-gray-400">Gerencie suas informações e preferências do sistema.</p>
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 pb-20">
+      {/* Premium Banner */}
+      <div className="relative h-64 rounded-[2.5rem] bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 shadow-xl overflow-hidden mb-[-120px] mx-4 md:mx-8">
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
+
+        <div className="absolute bottom-4 left-8 text-white/80 text-sm font-medium tracking-wider uppercase">
+          Membro Oficial
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm flex flex-col items-center transition-colors">
-            <div className="relative mb-6 group">
-              <div className="w-32 h-32 rounded-full bg-blue-100 dark:bg-blue-900 border-4 border-white dark:border-slate-800 shadow-xl flex items-center justify-center text-4xl font-bold text-blue-600 dark:text-blue-400 overflow-hidden">
-                {user?.photoURL ? (
-                  <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
-                ) : (
-                  user?.name?.substring(0, 2).toUpperCase() || 'AU'
-                )}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 md:px-8 pt-8">
+        {/* Left Column: Identity & Preferences */}
+        <div className="lg:col-span-4 space-y-6 pt-16 lg:pt-0">
+          {/* Identity Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-xl border border-gray-100 dark:border-slate-800 text-center relative z-10 flex flex-col items-center group">
+            <div className="relative -mt-24 mb-6">
+              <div className="w-32 h-32 rounded-full bg-white dark:bg-slate-900 p-1.5 shadow-2xl">
+                <div className="w-full h-full rounded-full bg-blue-100 dark:bg-blue-900 overflow-hidden relative">
+                  {user?.photoURL ? (
+                    <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      {user?.name?.substring(0, 2).toUpperCase() || 'AU'}
+                    </div>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 p-2 bg-blue-600 text-white rounded-full border-4 border-white dark:border-slate-800 shadow-lg hover:bg-blue-700 transition-all cursor-pointer z-10"
+                className="absolute bottom-1 right-1 p-2.5 bg-blue-600 text-white rounded-full border-4 border-white dark:border-slate-800 shadow-lg hover:bg-blue-700 transition-all cursor-pointer hover:scale-110 active:scale-95"
                 title="Alterar foto"
               >
-                <Camera size={18} />
+                <Camera size={16} />
               </button>
               <input
                 type="file"
@@ -363,51 +375,63 @@ const Profile = () => {
                 onChange={handleImageUpload}
               />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center">{user?.name}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{user?.email}</p>
 
-            {user?.role && (
-              <div className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-4 ${roleColors[user.role]}`}>
-                {roleLabels[user.role]}
-              </div>
-            )}
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{user?.name}</h2>
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6 flex items-center justify-center gap-1.5 bg-gray-50 dark:bg-slate-800/50 py-1 px-3 rounded-full">
+              <Mail size={14} /> {user?.email}
+            </p>
 
-            <div className="w-full pt-6 border-t border-gray-50 dark:border-slate-800 space-y-3">
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 font-medium">
-                <Mail size={16} className="text-gray-400" />
-                <span className="truncate">{user?.email}</span>
+            <div className={`px-6 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-wider mb-8 flex items-center gap-2 ${roleColors[user?.role || 'publisher']} bg-opacity-10 border border-current border-opacity-20`}>
+              <Shield size={16} />
+              {roleLabels[user?.role || 'publisher']}
+            </div>
+
+            {/* Personal Stats Mockup */}
+            <div className="grid grid-cols-3 gap-2 w-full pt-6 border-t border-gray-100 dark:border-slate-800">
+              <div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">12</p>
+                <p className="text-[10px] uppercase font-bold text-gray-400">Meses</p>
               </div>
-              <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300 font-medium">
-                <Shield size={16} className="text-gray-400" />
-                {roleLabels[user?.role || 'publisher']}
+              <div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">850</p>
+                <p className="text-[10px] uppercase font-bold text-gray-400">Horas</p>
+              </div>
+              <div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">Active</p>
+                <p className="text-[10px] uppercase font-bold text-gray-400">Status</p>
               </div>
             </div>
           </div>
 
-          {/* Preferences Section */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-            <h4 className="text-sm font-bold text-gray-900 dark:text-slate-100 mb-4">Preferências</h4>
+          {/* Preferences Card */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative z-0">
+            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 ml-2">Configurações</h4>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors">
                 <div className="flex items-center gap-3">
-                  <Bell size={18} className="text-gray-400 dark:text-slate-500" />
-                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Notificações</span>
+                  <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
+                    <Bell size={18} />
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 dark:text-white">Notificações</span>
                 </div>
                 <button
                   onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`w-10 h-6 rounded-full relative transition-all ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
+                  className={`w-11 h-6 rounded-full relative transition-all ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${notificationsEnabled ? 'right-1' : 'left-1'}`} />
                 </button>
               </div>
-              <div className="flex items-center justify-between">
+
+              <div className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors">
                 <div className="flex items-center gap-3">
-                  {theme === 'dark' ? <Moon size={18} className="text-blue-400" /> : <Sun size={18} className="text-amber-500" />}
-                  <span className="text-sm font-medium text-gray-700 dark:text-slate-300">Modo Escuro</span>
+                  <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 rounded-xl">
+                    {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+                  </div>
+                  <span className="text-sm font-bold text-gray-700 dark:text-white">Modo Escuro</span>
                 </div>
                 <button
                   onClick={toggleTheme}
-                  className={`w-10 h-6 rounded-full relative transition-all ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
+                  className={`w-11 h-6 rounded-full relative transition-all ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
                 >
                   <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
                 </button>
@@ -416,84 +440,96 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-          {/* Edit Info Section */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-8">Editar Informações</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        {/* Right Column: Forms & Data */}
+        <div className="lg:col-span-8 space-y-6 pt-0 lg:pt-14">
+
+          {/* Edit Profile */}
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-6 opacity-5">
+              <User size={120} />
+            </div>
+
+            <div className="flex items-center gap-4 mb-8 relative">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center">
+                <User size={24} />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados da Conta</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Mantenha suas informações atualizadas</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nome Exibido</label>
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nome Completo</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
+                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">E-mail</label>
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Endereço de E-mail</label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
+                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
                 />
               </div>
-              <div className="space-y-2 sm:col-span-2">
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Nova Senha (opcional)</label>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Alterar Senha</label>
                 <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-slate-500" size={18} />
+                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Deixe em branco para manter a atual"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-12 pr-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium text-sm"
+                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
                   />
                 </div>
               </div>
             </div>
-            <button
-              onClick={handleUpdateProfile}
-              disabled={isSaving}
-              className="mt-10 bg-blue-600 text-white px-8 py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-blue-700 transition-all shadow-xl shadow-blue-100 dark:shadow-blue-900/20 disabled:opacity-70 disabled:cursor-not-allowed"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Salvando...
-                </>
-              ) : (
-                <>
-                  <Save size={20} />
-                  Salvar Alterações
-                </>
-              )}
-            </button>
+
+            <div className="mt-8 flex justify-end">
+              <button
+                onClick={handleUpdateProfile}
+                disabled={isSaving}
+                className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 flex items-center gap-2"
+              >
+                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                <span>Salvar Alterações</span>
+              </button>
+            </div>
           </div>
 
-          {/* Congregation Section */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-sm transition-colors">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <Building2 className="text-blue-600 dark:text-blue-400" size={24} />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100">Congregação</h3>
+          {/* Congregation Management */}
+          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
+                  <Building2 size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Congregação</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie sua afiliação e membros</p>
+                </div>
               </div>
               {!congregation && (
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowCreateModal(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-all flex items-center gap-2"
+                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
                   >
-                    <Plus size={16} />
-                    Criar
+                    <Plus size={16} /> Criar
                   </button>
                   <button
                     onClick={() => setShowJoinModal(true)}
-                    className="px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-semibold text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                    className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
                   >
-                    <UserPlus size={16} />
-                    Entrar
+                    <UserPlus size={16} /> Entrar
                   </button>
                 </div>
               )}
@@ -501,22 +537,23 @@ const Profile = () => {
 
             {congregation ? (
               <div className="space-y-6">
-                <div className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-2xl border border-blue-100 dark:border-blue-800/30">
+                <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{congregation.name}</h4>
+                      <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{congregation.name}</h4>
                       {congregation.description && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{congregation.description}</p>
                       )}
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
-                          <Users size={16} />
-                          <span className="font-semibold">{congregation.memberCount || members.length} membros</span>
+                      <div className="flex items-center gap-4 text-sm mt-4">
+                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm">
+                          <Users size={14} />
+                          <span className="font-bold">{congregation.memberCount || members.length} membros</span>
                         </div>
                       </div>
                     </div>
                     {user?.role === 'elder' && (
-                      <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-3 py-1 rounded-lg text-xs font-bold border border-amber-200 dark:border-amber-800">
+                      <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl text-xs font-bold border border-amber-200 dark:border-amber-800 flex flex-col items-center gap-1">
+                        <Shield size={16} />
                         ADMIN
                       </div>
                     )}
@@ -526,26 +563,29 @@ const Profile = () => {
                 <div className="space-y-3">
                   <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Código de Convite</label>
                   <div className="flex gap-2">
-                    <div className="flex-1 px-5 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-100 font-mono text-lg font-bold tracking-wider text-center">
+                    <div className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-100 font-mono text-xl font-bold tracking-widest text-center border-dashed border-2">
                       {congregation.inviteCode}
                     </div>
                     <button
                       onClick={copyInviteCode}
-                      className="px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all flex items-center gap-2"
+                      className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
                     >
-                      {copiedCode ? <Check size={20} /> : <Copy size={20} />}
+                      {copiedCode ? <Check size={24} /> : <Copy size={24} />}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 ml-1">Compartilhe este código com outros membros para que possam entrar na congregação</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 ml-1">Compartilhe este código com o equipamento de anciãos.</p>
                 </div>
 
                 {members.length > 0 && (
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Membros ({members.length})</label>
-                    <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                  <div className="space-y-4 pt-4">
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center justify-between">
+                      <span>Lista de Membros</span>
+                      <span className="bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">{members.length}</span>
+                    </label>
+                    <div className="space-y-2 max-h-96 overflow-y-auto pr-1 customize-scrollbar">
                       {members.map((member) => (
-                        <div key={member.uid} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-800 transition-colors">
-                          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 overflow-hidden">
+                        <div key={member.uid} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 overflow-hidden shadow-sm">
                             {member.photoURL ? (
                               <img src={member.photoURL} alt={member.name} className="w-full h-full object-cover" />
                             ) : (
@@ -553,39 +593,38 @@ const Profile = () => {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-gray-900 dark:text-white text-sm truncate flex items-center gap-2">
+                            <div className="font-bold text-gray-900 dark:text-white text-base truncate flex items-center gap-2">
                               {member.name}
-                              {member.uid === user?.uid && <span className="text-xs text-gray-400 font-normal">(Você)</span>}
+                              {member.uid === user?.uid && <span className="bg-gray-100 dark:bg-slate-700 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">VOCÊ</span>}
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${roleColors[member.role || 'publisher']}`}>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${roleColors[member.role || 'publisher'].replace('bg-', 'border-').replace('text-', 'text-')}`}>
                                 {roleLabels[member.role || 'publisher']}
                               </span>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 truncate">{member.email}</div>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1">
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             {member.uid !== user?.uid && canManageRole(member.role) && (
                               <button
                                 onClick={() => {
                                   setEditingMember(member);
                                   setSelectedRole(member.role || 'publisher');
                                 }}
-                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
                                 title="Alterar Cargo"
                               >
-                                <BadgeCheck size={18} />
+                                <BadgeCheck size={20} />
                               </button>
                             )}
 
                             {member.uid !== user?.uid && canRemoveMember(member.role) && (
                               <button
                                 onClick={() => setRemovingMember(member)}
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
                                 title="Remover Membro"
                               >
-                                <UserMinus size={18} />
+                                <UserMinus size={20} />
                               </button>
                             )}
                           </div>
@@ -596,30 +635,29 @@ const Profile = () => {
                 )}
 
                 {/* Congregation Management Buttons */}
-                <div className="mt-6 pt-6 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-800 space-y-3">
                   {/* Admin: Delete Congregation */}
                   {congregation.createdBy === user?.uid && (
                     <button
                       onClick={() => setShowDeleteCongModal(true)}
-                      className="w-full px-4 py-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-800"
+                      className="w-full px-4 py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-900/30"
                     >
                       <AlertTriangle size={18} />
-                      Excluir Congregação
+                      Excluir Congregação Permanentemente
                     </button>
                   )}
 
-                  {/* All Members: Leave and Switch */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-2 gap-4">
                     <button
                       onClick={() => setShowLeaveModal(true)}
-                      className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                      className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
                     >
                       <LogOut size={18} />
                       Sair
                     </button>
                     <button
                       onClick={() => setShowSwitchModal(true)}
-                      className="px-4 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center justify-center gap-2"
+                      className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"
                     >
                       <UserPlus size={18} />
                       Trocar
@@ -628,11 +666,13 @@ const Profile = () => {
                 </div>
               </div>
             ) : (
-              <div className="text-center py-12">
-                <Building2 className="mx-auto text-gray-300 dark:text-slate-700 mb-4" size={48} />
-                <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Nenhuma Congregação</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  Crie uma nova congregação ou entre em uma existente usando um código de convite
+              <div className="text-center py-16 bg-gray-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
+                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mx-auto mb-6 text-gray-300">
+                  <Building2 size={40} />
+                </div>
+                <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma Congregação</h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">
+                  Junte-se a uma congregação existente ou crie uma nova para começar a gerenciar territórios.
                 </p>
               </div>
             )}
