@@ -67,6 +67,12 @@ export interface ServiceReport {
   participated: boolean; // For publishers who don't report hours
   isCampaign: boolean; // For Aux Pioneers (15h vs 30h)
   updatedAt: string;
+  dailyRecords?: Record<number, {
+    hours: number;
+    minutes: number;
+    studies: number;
+    notes?: string;
+  }>;
 }
 
 export interface UserProfile {
