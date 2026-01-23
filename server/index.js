@@ -1059,6 +1059,136 @@ app.get('/api/tracking/sessions/:id', authenticateToken, async (req, res) => {
 });
 
 
+
+// --- SERVICE REPORTS ROUTES ---
+
+app.get('/api/service-reports', authenticateToken, async (req, res) => {
+    try {
+        const { data } = await supabase
+            .from('service_reports')
+            .select('*')
+            .eq('user_id', req.user.uid)
+            .order('month', { ascending: false });
+
+        const mapped = (data || []).map(r => ({
+            id: r.id,
+            userId: r.user_id,
+            month: r.month,
+            hours: r.hours,
+            minutes: r.minutes,
+            studies: r.bible_studies,
+            participated: r.participated,
+            isCampaign: r.is_campaign,
+            dailyRecords: r.daily_records || {}
+        }));
+        res.json(mapped);
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao buscar relatórios.' });
+    }
+});
+
+app.post('/api/service-reports', authenticateToken, async (req, res) => {
+    try {
+        const r = req.body;
+
+        // Upsert based on userId + month
+        // We first check if it exists
+        const { data: existing } = await supabase
+            .from('service_reports')
+            .select('id')
+            .eq('user_id', req.user.uid)
+            .eq('month', r.month)
+            .single();
+
+        const payload = {
+            user_id: req.user.uid,
+            month: r.month,
+            hours: r.hours,
+            minutes: r.minutes,
+            bible_studies: r.bibleStudies,
+            participated: r.participated,
+            is_campaign: r.isCampaign,
+            daily_records: r.dailyRecords
+        };
+
+        if (existing) {
+            await supabase
+                .from('service_reports')
+                .update(payload)
+                .eq('id', existing.id);
+            res.json({ id: existing.id, ...r });
+        } else {
+            const { data: newReport, error } = await supabase
+                .from('service_reports')
+                .insert(payload)
+                .select()
+                .single();
+
+            if (error) throw error;
+            res.status(201).json({ id: newReport.id, ...r });
+        }
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ message: 'Erro ao salvar relatório.' });
+    }
+});
+
+// --- PLAN TEMPLATES ROUTES ---
+
+app.get('/api/plan-templates', authenticateToken, async (req, res) => {
+    try {
+        const { data } = await supabase
+            .from('plan_templates')
+            .select('*')
+            .eq('user_id', req.user.uid);
+
+        const mapped = (data || []).map(t => ({
+            id: t.id,
+            userId: t.user_id,
+            name: t.name,
+            slots: t.slots || []
+        }));
+        res.json(mapped);
+    } catch (e) {
+        res.status(500).json({ message: 'Erro ao buscar templates.' });
+    }
+});
+
+app.post('/api/plan-templates', authenticateToken, async (req, res) => {
+    try {
+        const t = req.body;
+        const { data, error } = await supabase
+            .from('plan_templates')
+            .insert({
+                user_id: req.user.uid,
+                name: t.name,
+                slots: t.slots
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({ id: data.id, ...t });
+    } catch (e) {
+        res.status(500).json({ message: 'Erro ao criar template.' });
+    }
+});
+
+app.delete('/api/plan-templates/:id', authenticateToken, async (req, res) => {
+    try {
+        await supabase
+            .from('plan_templates')
+            .delete()
+            .eq('id', req.params.id)
+            .eq('user_id', req.user.uid); // Ensure ownership
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ message: 'Erro ao excluir template.' });
+    }
+});
+
+
 // Export app for Vercel
 module.exports = app;
 

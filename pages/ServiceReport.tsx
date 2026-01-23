@@ -138,6 +138,80 @@ const ServiceReportPage = () => {
 
     const yearlyStats = getYearlyStats();
 
+    // Helpers
+    const daysInMonth = eachDayOfInterval({
+        start: startOfMonth(currentDate),
+        end: endOfMonth(currentDate)
+    });
+
+    const prevMonth = () => setCurrentDate(subMonths(currentDate, 1));
+    const nextMonth = () => setCurrentDate(addMonths(currentDate, 1));
+
+    const progressColor = progress >= 100 ? '#10b981' : progress >= 50 ? '#f59e0b' : '#3b82f6';
+
+    const openDailyModal = (day: number) => {
+        setSelectedDay(day);
+        const record = dailyRecords[day];
+        if (record) {
+            setDayHours(record.hours.toString());
+            setDayMinutes(record.minutes.toString());
+            setDayStudies(record.studies.toString());
+            setDayNotes(record.notes || '');
+        } else {
+            setDayHours('');
+            setDayMinutes('');
+            setDayStudies('');
+            setDayNotes('');
+        }
+        setDailyModalOpen(true);
+    };
+
+    const saveDailyRecord = () => {
+        if (selectedDay === null) return;
+
+        const newRecords = { ...dailyRecords };
+
+        // If empty, delete
+        if ((!dayHours || dayHours === '0') &&
+            (!dayMinutes || dayMinutes === '0') &&
+            (!dayStudies || dayStudies === '0') &&
+            !dayNotes) {
+            delete newRecords[selectedDay];
+        } else {
+            newRecords[selectedDay] = {
+                hours: parseInt(dayHours || '0'),
+                minutes: parseInt(dayMinutes || '0'),
+                studies: parseInt(dayStudies || '0'),
+                notes: dayNotes
+            };
+        }
+
+        setDailyRecords(newRecords);
+        setDailyModalOpen(false);
+    };
+
+    const handleWhatsAppShare = () => {
+        const monthName = format(currentDate, 'MMMM/yyyy', { locale: ptBR });
+        let text = `*Relatório de Serviço - ${monthName}*\n\n`;
+
+        if (isPioneer) {
+            text += `⏱ *Horas:* ${hours}:${minutes.padStart(2, '0')}\n`;
+            text += `📚 *Estudos:* ${studies || 0}\n`;
+            if (monthlyGoal > 0) {
+                text += `🎯 *Meta:* ${progress.toFixed(0)}% concluída (${remaining.toFixed(1)}h restantes)\n`;
+            }
+        } else {
+            text += `${participated ? '✅ Participei no ministério' : '❌ Não participei'}\n`;
+            text += `📚 *Estudos:* ${studies || 0}\n`;
+        }
+
+        text += `\n_Gerado por TerritoryPro_`;
+
+        const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(url, '_blank');
+    };
+
+
     const handleSave = async () => {
         if (!user) return;
         setIsSaving(true);
