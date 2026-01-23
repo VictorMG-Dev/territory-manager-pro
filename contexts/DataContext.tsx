@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession, ServiceReport, MonthlyPlan, WeeklySchedule, PlanSuggestion, ServiceRole, PlanTemplate } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession, ServiceReport, MonthlyPlan, WeeklySchedule, PlanSuggestion, ServiceRole, PlanTemplate, HistoricalPatterns } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
@@ -45,6 +45,8 @@ interface DataContextType {
     saveTemplate: (template: Omit<PlanTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => Promise<void>;
     deleteTemplate: (templateId: string) => Promise<void>;
     getPublicTemplates: () => PlanTemplate[];
+    /* Analysis */
+    getHistoricalPatterns: () => HistoricalPatterns;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -545,6 +547,65 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return planTemplates.filter(t => t.isPublic || t.userId === user?.uid);
     };
 
+    const getHistoricalPatterns = (): HistoricalPatterns => {
+        if (!user || serviceReports.length === 0) {
+            return {
+                averageHoursPerDay: {},
+                mostProductiveDays: [],
+                completionRate: 0,
+                monthlyTrends: []
+            };
+        }
+
+        const myReports = serviceReports.filter(r => r.userId === user.uid);
+
+        // Monthly Trends (Last 6 months)
+        const sortedReports = [...myReports].sort((a, b) => a.month.localeCompare(b.month));
+        const last6 = sortedReports.slice(-6);
+        const monthlyTrends = last6.map(r => ({
+            month: r.month,
+            hours: r.hours + (r.minutes / 60)
+        }));
+
+        // Completion Rate (vs Goal)
+        // Assuming goal based on role
+        const role = user.serviceRole || 'publisher';
+        const goal = role === 'regular_pioneer' ? 50 : role === 'auxiliary_pioneer' ? 30 : 0;
+
+        let metGoalCount = 0;
+        let totalMonths = 0;
+
+        last6.forEach(r => {
+            const total = r.hours + (r.minutes / 60);
+            if (goal > 0) {
+                if (total >= goal) metGoalCount++;
+                totalMonths++;
+            }
+        });
+
+        const completionRate = totalMonths > 0 ? Math.round((metGoalCount / totalMonths) * 100) : 0;
+
+        // Note: Daily averages would need daily records which we don't strictly have in Monthly ServiceReport
+        // We only have monthly totals. BUT we have `weeklyPlans` or `dailyAllocations` if we implemented tracking fully.
+        // However, `saveWeeklySchedule` saves future plans. 
+        // For actual historical daily data, we might need to look at `WorkHistory` (territory visits) or `TrackingSession`.
+        // Let's use `TrackingSession` if available, or just fallback to monthly data.
+        // Actually, we are building "Historical Analysis" for Planning. 
+        // If the user hasn't used the tracking feature, they won't have daily data.
+        // Let's calculate typical distribution from `WorkRecord` (territory visits) as a proxy for activity?
+        // Or simply skip daily averages if no granular data.
+
+        // Let's use valid mock data for now or empty if no tracking data.
+        // For this implementation, let's keep it simple with Monthly Trends which is solid.
+
+        return {
+            averageHoursPerDay: {},
+            mostProductiveDays: [],
+            completionRate,
+            monthlyTrends
+        };
+    };
+
     return (
         <DataContext.Provider value={{
             territories,
@@ -585,7 +646,9 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             planTemplates,
             saveTemplate,
             deleteTemplate,
-            getPublicTemplates
+            getPublicTemplates,
+            /* Analysis */
+            getHistoricalPatterns
         }}>
             {children}
         </DataContext.Provider>

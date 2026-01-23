@@ -12,6 +12,7 @@ import { ServiceRole, ServiceReport } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 import WeeklyPlanner from '../components/WeeklyPlanner';
+import HistoricalInsights from '../components/HistoricalInsights';
 
 const ServiceReportPage = () => {
     const { user } = useAuth();
@@ -36,7 +37,7 @@ const ServiceReportPage = () => {
     const [dayStudies, setDayStudies] = useState('');
     const [dayNotes, setDayNotes] = useState('');
     // View State
-    const [activeView, setActiveView] = useState<'registro' | 'planejamento'>('registro');
+    const [activeView, setActiveView] = useState<'registro' | 'planejamento' | 'analise'>('registro');
 
     // Derived
     const currentrole: ServiceRole = user?.serviceRole || 'publisher';
@@ -644,8 +645,8 @@ const ServiceReportPage = () => {
                     <button
                         onClick={() => setActiveView('registro')}
                         className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'registro'
-                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         📝 Registro
@@ -653,8 +654,8 @@ const ServiceReportPage = () => {
                     <button
                         onClick={() => setActiveView('planejamento')}
                         className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'planejamento'
-                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
-                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
                             }`}
                     >
                         📅 Planejamento

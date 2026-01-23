@@ -241,3 +241,10 @@ export interface PlanTemplate {
   updatedAt: string;
 }
 
+export interface HistoricalPatterns {
+  averageHoursPerDay: Record<string, number>;
+  mostProductiveDays: string[];
+  completionRate: number;
+  monthlyTrends: Array<{ month: string; hours: number }>;
+}
+
