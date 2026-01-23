@@ -11,6 +11,7 @@ import { ptBR } from 'date-fns/locale';
 import { ServiceRole, ServiceReport } from '../types';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
+import WeeklyPlanner from '../components/WeeklyPlanner';
 
 const ServiceReportPage = () => {
     const { user } = useAuth();
@@ -34,6 +35,8 @@ const ServiceReportPage = () => {
     const [dayMinutes, setDayMinutes] = useState('');
     const [dayStudies, setDayStudies] = useState('');
     const [dayNotes, setDayNotes] = useState('');
+    // View State
+    const [activeView, setActiveView] = useState<'registro' | 'planejamento'>('registro');
 
     // Derived
     const currentrole: ServiceRole = user?.serviceRole || 'publisher';
@@ -635,18 +638,39 @@ const ServiceReportPage = () => {
             </div>
 
             {/* Main Content */}
-            {currentrole === 'publisher' ? renderPublisherView() : renderPioneerView()}
+            <div className="mb-6">
+                {/* Tab Navigation */}
+                <div className="flex gap-2 bg-gray-100 dark:bg-slate-800 p-1.5 rounded-2xl mb-6">
+                    <button
+                        onClick={() => setActiveView('registro')}
+                        className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'registro'
+                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        📝 Registro
+                    </button>
+                    <button
+                        onClick={() => setActiveView('planejamento')}
+                        className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${activeView === 'planejamento'
+                                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-white shadow-sm'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                            }`}
+                    >
+                        📅 Planejamento
+                    </button>
+                </div>
 
-            {/* Save Button */}
-            <div className="fixed bottom-6 right-6 z-40">
-                <button
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-full font-bold shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50 disabled:scale-100"
-                >
-                    {isSaving ? <Loader2 className="animate-spin" size={24} /> : <Save size={24} />}
-                    <span className="text-lg">Salvar Relatório</span>
-                </button>
+                {/* Content based on active view */}
+                {activeView === 'registro' ? (
+                    currentrole === 'publisher' ? renderPublisherView() : renderPioneerView()
+                ) : (
+                    <WeeklyPlanner
+                        currentDate={currentDate}
+                        monthlyGoal={monthlyGoal}
+                        currentHours={currentHours}
+                    />
+                )}
             </div>
 
             {/* Daily Modal */}

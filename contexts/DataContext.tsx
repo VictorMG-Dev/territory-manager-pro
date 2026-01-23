@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession, ServiceReport } from '../types';
+import { Territory, TerritoryStatus, WorkRecord, WeeklyPlan, DailyAllocation, TerritoryGroup, CongregationMember, TrackingSession, ServiceReport, MonthlyPlan, WeeklySchedule, PlanSuggestion, ServiceRole, PlanTemplate } from '../types';
 import { calculateStatus } from '../utils/helpers';
 import { v4 as uuidv4 } from 'uuid';
 import { api } from '../services/api';
@@ -32,6 +32,19 @@ interface DataContextType {
     /* Service Reports */
     serviceReports: ServiceReport[];
     saveServiceReport: (report: Omit<ServiceReport, 'id' | 'updatedAt'>) => Promise<void>;
+    /* Monthly Planning */
+    monthlyPlans: MonthlyPlan[];
+    saveMonthlyPlan: (plan: Omit<MonthlyPlan, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+    updateMonthlyPlan: (id: string, updates: Partial<MonthlyPlan>) => Promise<void>;
+    deleteMonthlyPlan: (id: string) => Promise<void>;
+    getMonthlyPlan: (month: string) => MonthlyPlan | undefined;
+    saveWeeklySchedule: (schedule: Omit<WeeklySchedule, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+    getPlanSuggestions: (targetHours: number, serviceRole: ServiceRole) => PlanSuggestion[];
+    /* Plan Templates */
+    planTemplates: PlanTemplate[];
+    saveTemplate: (template: Omit<PlanTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => Promise<void>;
+    deleteTemplate: (templateId: string) => Promise<void>;
+    getPublicTemplates: () => PlanTemplate[];
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -52,6 +65,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [groups, setGroups] = useState<TerritoryGroup[]>([]);
     const [members, setMembers] = useState<CongregationMember[]>([]);
     const [serviceReports, setServiceReports] = useState<ServiceReport[]>([]);
+    const [monthlyPlans, setMonthlyPlans] = useState<MonthlyPlan[]>([]);
+    const [planTemplates, setPlanTemplates] = useState<PlanTemplate[]>([]);
 
     useEffect(() => {
         if (user) {
@@ -68,10 +83,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 api.get('/weekly-plans'),
                 api.get('/weekly-plans'),
                 api.get('/congregations/members'),
-                api.get('/service-reports')
+                api.get('/service-reports'),
+                api.get('/monthly-plans'),
+                api.get('/plan-templates')
             ]);
 
-            const [tResult, hResult, gResult, pResult, mResult, rResult] = results;
+            const [tResult, hResult, gResult, pResult, mResult, rResult, mpResult, tpResult] = results;
 
             if (tResult.status === 'fulfilled') {
                 setTerritories(tResult.value);
@@ -110,6 +127,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 console.error('Failed to load reports:', rResult.reason);
             }
 
+            if (mpResult.status === 'fulfilled') {
+                setMonthlyPlans(mpResult.value);
+            } else {
+                console.error('Failed to load monthly plans:', mpResult.reason);
+            }
+
+            if (tpResult.status === 'fulfilled') {
+                setPlanTemplates(tpResult.value);
+            } else {
+                console.error('Failed to load templates:', tpResult.reason);
+            }
 
         } catch (error) {
             console.error('Erro crítico ao carregar dados:', error);
@@ -320,6 +348,203 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    /* MONTHLY PLANNING FUNCTIONS */
+    const saveMonthlyPlan = async (planData: Omit<MonthlyPlan, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const newPlan: MonthlyPlan = {
+            ...planData,
+            id,
+            createdAt: now,
+            updatedAt: now
+        };
+
+        try {
+            await api.post('/monthly-plans', newPlan);
+            setMonthlyPlans(prev => {
+                const filtered = prev.filter(p => p.month !== planData.month);
+                return [...filtered, newPlan];
+            });
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const updateMonthlyPlan = async (id: string, updates: Partial<MonthlyPlan>) => {
+        try {
+            const now = new Date().toISOString();
+            await api.put(`/monthly-plans/${id}`, { ...updates, updatedAt: now });
+            setMonthlyPlans(prev => prev.map(p =>
+                p.id === id ? { ...p, ...updates, updatedAt: now } : p
+            ));
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const deleteMonthlyPlan = async (id: string) => {
+        try {
+            await api.delete(`/monthly-plans/${id}`);
+            setMonthlyPlans(prev => prev.filter(p => p.id !== id));
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const getMonthlyPlan = (month: string) => {
+        return monthlyPlans.find(p => p.month === month);
+    };
+
+    const saveWeeklySchedule = async (scheduleData: Omit<WeeklySchedule, 'id' | 'createdAt' | 'updatedAt'>) => {
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const newSchedule: WeeklySchedule = {
+            ...scheduleData,
+            id,
+            createdAt: now,
+            updatedAt: now
+        };
+
+        try {
+            await api.post('/weekly-schedules', newSchedule);
+            // Update the monthly plan with the new week
+            const plan = monthlyPlans.find(p => p.id === scheduleData.planId);
+            if (plan) {
+                const updatedWeeks = [...plan.weeks.filter(w => w.weekNumber !== scheduleData.weekNumber), newSchedule];
+                const totalPlannedHours = updatedWeeks.reduce((sum, w) => sum + w.totalPlannedHours, 0);
+                const projectedCompletion = plan.targetHours > 0 ? (totalPlannedHours / plan.targetHours) * 100 : 0;
+
+                await updateMonthlyPlan(plan.id, {
+                    weeks: updatedWeeks,
+                    totalPlannedHours,
+                    projectedCompletion
+                });
+            }
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const getPlanSuggestions = (targetHours: number, serviceRole: ServiceRole): PlanSuggestion[] => {
+        const suggestions: PlanSuggestion[] = [];
+
+        // Balanced - same hours every day
+        const dailyHours = targetHours / 7;
+        suggestions.push({
+            type: 'balanced',
+            name: 'Equilibrado',
+            description: 'Mesma quantidade de horas todos os dias da semana',
+            distribution: {
+                monday: dailyHours,
+                tuesday: dailyHours,
+                wednesday: dailyHours,
+                thursday: dailyHours,
+                friday: dailyHours,
+                saturday: dailyHours,
+                sunday: dailyHours
+            },
+            totalHours: targetHours
+        });
+
+        // Weekends - more hours on Saturday and Sunday
+        const weekdayHours = targetHours * 0.15;
+        const weekendHours = targetHours * 0.275;
+        suggestions.push({
+            type: 'weekends',
+            name: 'Fins de Semana',
+            description: 'Mais horas nos sábados e domingos',
+            distribution: {
+                monday: weekdayHours,
+                tuesday: weekdayHours,
+                wednesday: weekdayHours,
+                thursday: weekdayHours,
+                friday: weekdayHours,
+                saturday: weekendHours,
+                sunday: weekendHours
+            },
+            totalHours: targetHours
+        });
+
+        // Weekdays - more hours Monday to Friday
+        const weekdayHoursAlt = targetHours * 0.18;
+        const weekendHoursAlt = targetHours * 0.1;
+        suggestions.push({
+            type: 'weekdays',
+            name: 'Dias Úteis',
+            description: 'Mais horas de segunda a sexta-feira',
+            distribution: {
+                monday: weekdayHoursAlt,
+                tuesday: weekdayHoursAlt,
+                wednesday: weekdayHoursAlt,
+                thursday: weekdayHoursAlt,
+                friday: weekdayHoursAlt,
+                saturday: weekendHoursAlt,
+                sunday: weekendHoursAlt
+            },
+            totalHours: targetHours
+        });
+
+        // Front-loaded - more hours at the beginning of the week
+        suggestions.push({
+            type: 'frontloaded',
+            name: 'Intensivo Inicial',
+            description: 'Mais horas no início da semana',
+            distribution: {
+                monday: targetHours * 0.25,
+                tuesday: targetHours * 0.20,
+                wednesday: targetHours * 0.18,
+                thursday: targetHours * 0.15,
+                friday: targetHours * 0.12,
+                saturday: targetHours * 0.06,
+                sunday: targetHours * 0.04
+            },
+            totalHours: targetHours
+        });
+
+        return suggestions;
+    };
+
+    /* TEMPLATE MANAGEMENT FUNCTIONS */
+    const saveTemplate = async (templateData: Omit<PlanTemplate, 'id' | 'createdAt' | 'updatedAt' | 'usageCount'>) => {
+        if (!user) return;
+
+        const id = uuidv4();
+        const now = new Date().toISOString();
+        const newTemplate: PlanTemplate = {
+            ...templateData,
+            id,
+            usageCount: 0,
+            createdAt: now,
+            updatedAt: now
+        };
+
+        try {
+            await api.post('/plan-templates', newTemplate);
+            setPlanTemplates(prev => [...prev, newTemplate]);
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const deleteTemplate = async (templateId: string) => {
+        try {
+            await api.delete(`/plan-templates/${templateId}`);
+            setPlanTemplates(prev => prev.filter(t => t.id !== templateId));
+        } catch (error) {
+            console.error(error);
+            throw error;
+        }
+    };
+
+    const getPublicTemplates = () => {
+        return planTemplates.filter(t => t.isPublic || t.userId === user?.uid);
+    };
+
     return (
         <DataContext.Provider value={{
             territories,
@@ -347,7 +572,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             getTrackingSessionDetails,
             /* Service Reports */
             serviceReports,
-            saveServiceReport
+            saveServiceReport,
+            /* Monthly Planning */
+            monthlyPlans,
+            saveMonthlyPlan,
+            updateMonthlyPlan,
+            deleteMonthlyPlan,
+            getMonthlyPlan,
+            saveWeeklySchedule,
+            getPlanSuggestions,
+            /* Plan Templates */
+            planTemplates,
+            saveTemplate,
+            deleteTemplate,
+            getPublicTemplates
         }}>
             {children}
         </DataContext.Provider>

@@ -6,6 +6,13 @@ import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react
 import {
   LayoutDashboard,
   Map as MapIcon,
+  // ... (omitting irrelevant imports for brevity in context, but keeping file structure valid if I were rewriting whole file. Since I am replacing chunks, I will target specific lines)
+
+  // ACTUALLY, I need to be careful with replace_file_content.
+  // I will split this into two replacements if needed or one large block if contiguous.
+  // App.tsx imports are at top. Sidebar is further down.
+  // I will use multi_replace.
+
   Layers,
   FileText,
   User,
@@ -39,6 +46,7 @@ import Tracking from './pages/Tracking';
 import TrackingHistory from './pages/TrackingHistory';
 import TrackingAdmin from './pages/TrackingAdmin';
 import ChatBot from './components/ChatBot';
+import LoadingScreen from './components/LoadingScreen';
 import { usePermissions } from './hooks/usePermissions';
 
 const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolean) => void }) => {
@@ -98,12 +106,12 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
         />
       )}
 
-      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border-r border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none z-50 transform transition-all duration-300 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 w-64 bg-white dark:bg-slate-900 border-r border-slate-300 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none z-50 transform transition-all duration-300 ease-out lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="flex flex-col h-full">
-          <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-transparent">
+          <div className="p-6 flex flex-col items-center gap-4 border-b border-slate-200 dark:border-slate-700/50 bg-slate-50/50 dark:bg-slate-800/30">
             <div className="relative group">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity duration-500"></div>
-              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 group-hover:scale-105 transition-transform duration-500 ease-out border border-white/20">
+              <div className="relative w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/30 dark:shadow-blue-500/20 group-hover:scale-105 transition-transform duration-500 ease-out border border-white/20 dark:border-white/10">
                 <Layers className="text-white transition-transform duration-500 group-hover:rotate-12" size={32} />
               </div>
             </div>
@@ -139,7 +147,7 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                     <div className={`overflow-hidden transition-all duration-300 ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="pl-4 space-y-1 py-1 relative">
                         {/* Connecting line for submenus */}
-                        <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-800"></div>
+                        <div className="absolute left-6 top-0 bottom-0 w-px bg-slate-200 dark:bg-slate-700"></div>
 
                         {item.children.map((child: any) => {
                           const isChildActive = location.pathname === child.path;
@@ -149,8 +157,8 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
                               to={child.path}
                               onClick={() => setIsOpen(false)}
                               className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-200 text-sm group relative z-10 ${isChildActive
-                                ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm border border-slate-200 dark:border-slate-700'
-                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                                ? 'bg-white dark:bg-slate-800/80 text-blue-600 dark:text-blue-400 font-semibold shadow-sm border border-slate-200 dark:border-slate-700/50'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-slate-200'
                                 }`}
                             >
                               <div className={`transition-transform duration-300 ${isChildActive ? 'scale-110' : 'group-hover:scale-110'}`}>
@@ -186,26 +194,26 @@ const Sidebar = ({ isOpen, setIsOpen }: { isOpen: boolean, setIsOpen: (v: boolea
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800/50 bg-slate-50 dark:bg-slate-900/50">
-            <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-300 group hover:border-blue-200 dark:hover:border-slate-600">
+          <div className="p-4 border-t border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/30">
+            <div className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 shadow-sm dark:shadow-none transition-all duration-300 group hover:border-blue-200 dark:hover:border-blue-500/30">
               <div className="relative">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-800 overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-700 overflow-hidden shadow-sm group-hover:scale-105 transition-transform duration-300">
                   {user?.photoURL ? (
                     <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
                     user?.name?.substring(0, 2).toUpperCase() || 'US'
                   )}
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-800 shadow-sm"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-700 shadow-sm"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-800 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{user?.name}</p>
+                <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{user?.name}</p>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-medium">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={logout}
-              className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-slate-600 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all duration-200 font-medium text-sm group"
+              className="flex items-center gap-3 px-4 py-2.5 w-full text-left text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all duration-200 font-medium text-sm group"
             >
               <LogOut size={18} strokeWidth={2} className="group-hover:stroke-rose-600 dark:group-hover:stroke-rose-400 transition-colors" />
               <span>Sair do Sistema</span>
@@ -255,7 +263,7 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
 
 const ProtectedRoute = ({ children }: { children?: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Carregando...</div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" />;
   return <Layout>{children}</Layout>;
 };
@@ -264,7 +272,7 @@ const RoleProtectedRoute = ({ children, requiredPermission }: { children?: React
   const { user, loading } = useAuth();
   const { canAccess } = usePermissions();
 
-  if (loading) return <div>Carregando...</div>;
+  if (loading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" />;
 
   if (!canAccess(requiredPermission as any)) {

@@ -160,3 +160,84 @@ export interface TrackingSession {
   points?: TrackingPoint[];
   createdAt: string;
 }
+
+// Weekly and Monthly Planning Types
+export interface PlannedDay {
+  hours: number;
+  minutes: number;
+  notes?: string;
+  isFlexible: boolean; // If can be adjusted/redistributed
+}
+
+export interface WeeklySchedule {
+  id: string;
+  userId: string;
+  planId: string; // Reference to MonthlyPlan
+  month: string; // YYYY-MM
+  weekNumber: number; // 1-5 (week of the month)
+  days: {
+    monday?: PlannedDay;
+    tuesday?: PlannedDay;
+    wednesday?: PlannedDay;
+    thursday?: PlannedDay;
+    friday?: PlannedDay;
+    saturday?: PlannedDay;
+    sunday?: PlannedDay;
+  };
+  totalPlannedHours: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MonthlyPlan {
+  id: string;
+  userId: string;
+  month: string; // YYYY-MM
+  targetHours: number; // Monthly goal
+  weeks: WeeklySchedule[];
+  totalPlannedHours: number;
+  projectedCompletion: number; // Estimated percentage
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type PlanSuggestionType = 'balanced' | 'frontloaded' | 'backloaded' | 'weekends' | 'weekdays' | 'custom';
+
+export interface PlanSuggestion {
+  type: PlanSuggestionType;
+  name: string;
+  description: string;
+  distribution: {
+    monday: number;
+    tuesday: number;
+    wednesday: number;
+    thursday: number;
+    friday: number;
+    saturday: number;
+    sunday: number;
+  };
+  totalHours: number;
+}
+
+export interface PlanTemplate {
+  id: string;
+  userId: string;
+  name: string;
+  description: string;
+  serviceRole: ServiceRole;
+  targetHours: number;
+  distribution: {
+    monday: number;
+    tuesday: number;
+    wednesday: number;
+    thursday: number;
+    friday: number;
+    saturday: number;
+    sunday: number;
+  };
+  isPublic: boolean;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
