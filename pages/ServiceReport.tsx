@@ -9,7 +9,7 @@ import { useData } from '../contexts/DataContext';
 import { format, subMonths, addMonths, startOfMonth, endOfMonth, isSameMonth, eachDayOfInterval, getDate, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ServiceRole, ServiceReport } from '../types';
-import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+import { PieChart, Pie, Cell } from 'recharts';
 import toast from 'react-hot-toast';
 import WeeklyPlanner from '../components/WeeklyPlanner';
 import HistoricalInsights from '../components/HistoricalInsights';
@@ -51,11 +51,11 @@ const ServiceReportPage = () => {
         // Load existing report for this month
         const report = serviceReports.find(r => r.userId === user?.uid && r.month === monthKey);
         if (report) {
-            setHours(report.hours.toString());
-            setMinutes(report.minutes.toString());
-            setStudies(report.studies.toString());
-            setParticipated(report.participated);
-            setIsCampaign(report.isCampaign);
+            setHours((report.hours ?? '').toString());
+            setMinutes((report.minutes ?? '').toString());
+            setStudies((report.bibleStudies ?? '').toString());
+            setParticipated(!!report.participated);
+            setIsCampaign(!!report.isCampaign);
             setDailyRecords(report.dailyRecords || {});
         } else {
             // Reset form
@@ -156,9 +156,9 @@ const ServiceReportPage = () => {
         setSelectedDay(day);
         const record = dailyRecords[day];
         if (record) {
-            setDayHours(record.hours.toString());
-            setDayMinutes(record.minutes.toString());
-            setDayStudies(record.studies.toString());
+            setDayHours((record.hours ?? '').toString());
+            setDayMinutes((record.minutes ?? '').toString());
+            setDayStudies((record.studies ?? '').toString());
             setDayNotes(record.notes || '');
         } else {
             setDayHours('');
@@ -648,7 +648,7 @@ const ServiceReportPage = () => {
                                 )}
                             </p>
                         </div>
-                        <div className="h-28 w-28 min-w-[7rem] flex items-center justify-center relative">
+                        <div className="h-28 w-28 min-w-[7rem] flex items-center justify-center relative" style={{ minHeight: '112px', minWidth: '112px' }}>
                             <PieChart width={112} height={112}>
                                 <Pie
                                     data={[{ value: currentHours || 0.001 }, { value: remaining || 0.001 }]}

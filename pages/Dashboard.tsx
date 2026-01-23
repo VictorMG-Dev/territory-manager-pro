@@ -227,8 +227,8 @@ const Dashboard = () => {
               Distribuição da Cobertura
             </h3>
           </div>
-          <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-80 w-full" style={{ minWidth: 0 }}>
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
               <BarChart data={statsData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   {statsData.map((entry, index) => (

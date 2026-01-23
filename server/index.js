@@ -1076,7 +1076,7 @@ app.get('/api/service-reports', authenticateToken, async (req, res) => {
             month: r.month,
             hours: r.hours,
             minutes: r.minutes,
-            studies: r.bible_studies,
+            bibleStudies: r.bible_studies,
             participated: r.participated,
             isCampaign: r.is_campaign,
             dailyRecords: r.daily_records || {}
