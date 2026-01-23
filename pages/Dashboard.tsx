@@ -82,9 +82,7 @@ const StatsCard = ({ title, value, icon: Icon, variant, delay = 0 }: any) => {
         <div className={`p-3 rounded-2xl bg-gradient-to-br ${currentStyle.gradient} text-white shadow-lg ${currentStyle.shadow} group-hover:scale-110 transition-transform duration-300`}>
           <Icon size={24} strokeWidth={2.5} />
         </div>
-        <span className={`text-xs font-bold px-2 py-1 rounded-full ${currentStyle.light}`}>
-          +2.5%
-        </span>
+
       </div>
       <div>
         <h3 className="text-slate-500 dark:text-slate-400 text-sm font-medium mb-1">{title}</h3>
@@ -204,7 +202,7 @@ const Dashboard = () => {
         <button
           onClick={handleGenerateReport}
           disabled={generating}
-          className="bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:opacity-90 transition-all shadow-lg hover:shadow-slate-500/25 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg hover:shadow-blue-500/25 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
         >
           {generating ? <Loader2 size={18} className="animate-spin" /> : <TrendingUp size={18} />}
           {generating ? 'Exportando...' : 'Exportar Relatório'}
