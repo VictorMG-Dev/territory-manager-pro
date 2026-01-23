@@ -673,12 +673,12 @@ const ServiceReportPage = () => {
                     </div>
 
                     {/* Days Remaining Indicator */}
-                    {monthlyGoal > 0 && remaining > 0 && (
+                    {monthlyGoal > 0 && (
                         <div className="bg-gray-50 dark:bg-slate-800 p-4 rounded-xl">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-gray-600 dark:text-gray-400">Média necessária/dia:</span>
                                 <span className="font-bold text-gray-900 dark:text-white">
-                                    {(remaining / Math.max(1, new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate() - new Date().getDate())).toFixed(1)}h
+                                    {(monthlyGoal / new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()).toFixed(1)}h
                                 </span>
                             </div>
                         </div>
