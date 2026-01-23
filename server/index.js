@@ -162,6 +162,89 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+app.post('/api/auth/google', async (req, res) => {
+    try {
+        const { access_token } = req.body;
+        if (!access_token) return res.status(400).json({ message: 'Token obrigatório' });
+
+        const { data: { user: googleUser }, error } = await supabase.auth.getUser(access_token);
+        if (error || !googleUser) return res.status(401).json({ message: 'Token inválido' });
+
+        // Check if user exists in our custom table
+        const { data: existingUsers } = await supabase.from('users').select('*').eq('email', googleUser.email);
+
+        let user;
+        let isNew = false;
+
+        if (existingUsers && existingUsers.length > 0) {
+            user = existingUsers[0];
+            // Update photo if not present?
+            if (!user.photo_url && googleUser.user_metadata.avatar_url) {
+                await supabase.from('users').update({ photo_url: googleUser.user_metadata.avatar_url }).eq('uid', user.uid);
+                user.photo_url = googleUser.user_metadata.avatar_url;
+            }
+        } else {
+            // Create new user
+            isNew = true;
+            // Use Supabase identifier as UID or create new? 
+            // Better to use a consistent UUID to avoid conflicts if they register manually later.
+            // But if email is unique, they can't register manually anyway.
+            // Let's use googleUser.id (which is a UUID from Supabase Auth)
+            const newUid = googleUser.id;
+
+            const newUser = {
+                uid: newUid,
+                name: googleUser.user_metadata.full_name || googleUser.email.split('@')[0],
+                email: googleUser.email,
+                password: await bcrypt.hash(Math.random().toString(36) + newUid, 10), // Random complex password
+                photo_url: googleUser.user_metadata.avatar_url,
+                role: 'publisher', // Default role
+                congregation_id: null
+            };
+
+            const { error: insertError } = await supabase.from('users').insert(newUser);
+            if (insertError) {
+                console.error('Erro ao criar usuário Google:', insertError);
+                return res.status(500).json({ message: 'Erro ao criar usuário via Google' });
+            }
+            user = newUser;
+        }
+
+        // Generate Token
+        const token = jwt.sign({
+            uid: user.uid,
+            email: user.email,
+            role: user.role,
+            congregationId: user.congregation_id
+        }, process.env.JWT_SECRET || 'yoursecret');
+
+        // Look up congregation name if needed
+        let congregationName = null;
+        if (user.congregation_id) {
+            const { data: cong } = await supabase.from('congregations').select('name').eq('id', user.congregation_id).single();
+            if (cong) congregationName = cong.name;
+        }
+
+        res.json({
+            token,
+            user: {
+                uid: user.uid,
+                name: user.name,
+                email: user.email,
+                photoURL: user.photo_url,
+                congregationId: user.congregation_id,
+                congregationName,
+                role: user.role,
+                serviceRole: user.service_role
+            }
+        });
+
+    } catch (error) {
+        console.error('Google Login Error:', error);
+        res.status(500).json({ message: 'Erro ao processar login com Google' });
+    }
+});
+
 app.put('/api/auth/profile', authenticateToken, async (req, res) => {
     try {
         const { name, photoURL, email, password, serviceRole } = req.body;

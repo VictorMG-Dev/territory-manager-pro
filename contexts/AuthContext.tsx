@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
+import { supabase } from '../services/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export interface User {
@@ -18,6 +19,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     login: (email: string, password: string) => Promise<void>;
+    googleLogin: () => Promise<void>;
     register: (name: string, email: string, password: string, congregationData?: { name?: string; description?: string; inviteCode?: string }) => Promise<void>;
     logout: () => void;
     updateProfile: (data: Partial<User>) => Promise<void>;
@@ -36,7 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Check for active session
+        // Check for active session from custom auth
         const session = localStorage.getItem('territory_session');
         if (session) {
             try {
@@ -48,6 +50,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             }
         }
         setLoading(false);
+
+        // Listen for Supabase Auth changes (Google Login)
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                const currentToken = localStorage.getItem('territory_token');
+                // Only sync if we don't have a valid custom token or if we want to ensure sync
+                // For simplicity, checking if we are not "logged in" in our custom system, or if the user is different?
+                // Let's just do it if no user is set or no token.
+                if (!localStorage.getItem('territory_token')) {
+                    setLoading(true);
+                    try {
+                        const response = await api.post('/auth/google', { access_token: session.access_token });
+
+                        setUser(response.user);
+                        localStorage.setItem('territory_session', JSON.stringify(response.user));
+                        localStorage.setItem('territory_token', response.token);
+
+                        toast.success(`Bem-vindo pelo Google, ${response.user.name}!`);
+                    } catch (error: any) {
+                        console.error('Google Auth Error:', error);
+                        toast.error(error.message || 'Erro ao autenticar com Google');
+                        await supabase.auth.signOut(); // Force sign out if backend rejected
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            }
+        });
+
+        return () => {
+            authListener.subscription.unsubscribe();
+        };
     }, []);
 
     const login = async (email: string, password: string) => {
@@ -65,6 +99,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             toast.error(error.message || 'Erro ao realizar login');
             throw error;
         } finally {
+            setLoading(false);
+        }
+    };
+
+    const googleLogin = async () => {
+        setLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + '/login',
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent',
+                    },
+                }
+            });
+            if (error) throw error;
+        } catch (error: any) {
+            console.error(error);
+            toast.error('Erro ao conectar com Google');
             setLoading(false);
         }
     };
@@ -91,10 +146,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const logout = () => {
+    const logout = async () => {
         setUser(null);
         localStorage.removeItem('territory_session');
         localStorage.removeItem('territory_token');
+        await supabase.auth.signOut();
         toast.success('Você saiu do sistema.');
     };
 
@@ -138,7 +194,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const congregation = await api.post('/congregations', { name, description });
 
             // Update user with congregation info and new token
-            const updatedUser = { ...user, congregationId: congregation.id, congregationName: name, role: 'elder' };
+            const updatedUser = { ...user, congregationId: congregation.id, congregationName: name, role: 'elder' as const };
             setUser(updatedUser);
             localStorage.setItem('territory_session', JSON.stringify(updatedUser));
 
@@ -261,7 +317,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation }}>
+        <AuthContext.Provider value={{ user, loading, login, googleLogin, register, logout, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation }}>
             {children}
         </AuthContext.Provider>
     );
@@ -274,3 +330,4 @@ export const useAuth = () => {
     }
     return context;
 };
+
