@@ -97,6 +97,19 @@ export interface Congregation {
   createdBy: string;
   createdAt: any;
   memberCount?: number;
+  announcements?: Announcement[];
+}
+
+export type AnnouncementPriority = 'low' | 'normal' | 'high';
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  date: string;
+  priority: AnnouncementPriority;
+  createdBy: string;
+  authorName: string;
 }
 
 export interface CongregationMember {

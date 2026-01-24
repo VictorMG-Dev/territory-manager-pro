@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
 import toast from 'react-hot-toast';
-import { Congregation, CongregationMember, Role, ServiceRole } from '../types';
+import { Congregation, CongregationMember, Role, ServiceRole, Announcement, AnnouncementPriority } from '../types';
 
 const Profile = () => {
   const { user, updateProfile, updatePassword, createCongregation, joinCongregation, deleteCongregation, leaveCongregation, switchCongregation } = useAuth();
@@ -71,6 +71,21 @@ const Profile = () => {
   // New Features State
   const [searchTerm, setSearchTerm] = useState('');
   const [showAnnouncements, setShowAnnouncements] = useState(true);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([
+    {
+      id: '1',
+      title: 'Reunião para o Serviço de Campo',
+      content: 'Sábado às 09:00 - Grupo 1 (Local: Salão do Reino)',
+      date: new Date().toISOString(),
+      priority: 'normal',
+      createdBy: 'system',
+      authorName: 'Admin'
+    }
+  ]);
+  const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
+  const [newAnnouncementTitle, setNewAnnouncementTitle] = useState('');
+  const [newAnnouncementContent, setNewAnnouncementContent] = useState('');
+  const [newAnnouncementPriority, setNewAnnouncementPriority] = useState<AnnouncementPriority>('normal');
 
   // Profile Redesign State
   const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'ministry' | 'congregation'>('overview');
@@ -442,6 +457,30 @@ const Profile = () => {
     } finally {
       setIsLeavingCong(false);
     }
+  };
+
+  const handleCreateAnnouncement = () => {
+    if (!newAnnouncementTitle.trim() || !newAnnouncementContent.trim()) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+
+    const newAnnouncement: Announcement = {
+      id: Date.now().toString(),
+      title: newAnnouncementTitle,
+      content: newAnnouncementContent,
+      date: new Date().toISOString(),
+      priority: newAnnouncementPriority,
+      createdBy: user?.uid || '',
+      authorName: user?.name || 'Admin'
+    };
+
+    setAnnouncements([newAnnouncement, ...announcements]);
+    setNewAnnouncementTitle('');
+    setNewAnnouncementContent('');
+    setNewAnnouncementPriority('normal');
+    setShowAnnouncementModal(false);
+    toast.success('Anúncio criado com sucesso!');
   };
 
   const handleSwitchCongregation = async () => {
@@ -821,255 +860,290 @@ const Profile = () => {
           )}
 
           {/* TAB: CONGREGATION */}
-{
-    activeTab === 'congregation' && (
-        <div className="space-y-8 animate-in slide-in-from-right duration-500 fade-in">
-            {congregation ? (
-                <>
+          {
+            activeTab === 'congregation' && (
+              <div className="space-y-8 animate-in slide-in-from-right duration-500 fade-in">
+                {congregation ? (
+                  <>
                     {/* Premium Header Card */}
                     <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white shadow-2xl border border-white/10 p-8 sm:p-10 group">
-                        {/* Background decoration */}
-                        <div className="absolute top-0 right-0 p-12 opacity-5 transform group-hover:scale-110 transition-transform duration-700">
-                            <Building2 size={300} />
-                        </div>
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
+                      {/* Background decoration */}
+                      <div className="absolute top-0 right-0 p-12 opacity-5 transform group-hover:scale-110 transition-transform duration-700">
+                        <Building2 size={300} />
+                      </div>
+                      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
 
-                        <div className="relative z-10">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                                <div>
-                                    <div className="flex items-center gap-3 mb-2">
-                                        <span className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
-                                            Congregação Verificada
-                                        </span>
-                                        <span className="text-slate-400 text-sm flex items-center gap-1">
-                                            <Users size={14} /> {members.length} membros
-                                        </span>
-                                    </div>
-                                    <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
-                                        {congregation.name}
-                                    </h2>
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/code"
-                                            onClick={() => {
-                                                navigator.clipboard.writeText(congregation.code);
-                                                setCopiedCode(true);
-                                                setTimeout(() => setCopiedCode(false), 2000);
-                                                toast.success('Código copiado!');
-                                            }}
-                                        >
-                                            <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">ID</div>
-                                            <code className="font-mono text-lg font-bold text-blue-200">{congregation.code}</code>
-                                            {copiedCode ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-slate-400 group-hover/code:text-white transition-colors" />}
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Quick Actions */}
-                                <div className="flex gap-3">
-                                    {congregation.createdBy === user?.uid && (
-                                        <button
-                                            onClick={() => setShowDeleteCongModal(true)}
-                                            className="p-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
-                                            title="Configurações da Congregação"
-                                        >
-                                            <AlertTriangle size={20} />
-                                        </button>
-                                    )}
-                                    <button
-                                        onClick={() => setShowLeaveModal(true)}
-                                        className="p-3 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
-                                        title="Sair da Congregação"
-                                    >
-                                        <LogOut size={20} />
-                                    </button>
-                                </div>
+                      <div className="relative z-10">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                          <div>
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
+                                Congregação Verificada
+                              </span>
+                              <span className="text-slate-400 text-sm flex items-center gap-1">
+                                <Users size={14} /> {members.length} membros
+                              </span>
                             </div>
+                            <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+                              {congregation.name}
+                            </h2>
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/code"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(congregation.code);
+                                  setCopiedCode(true);
+                                  setTimeout(() => setCopiedCode(false), 2000);
+                                  toast.success('Código copiado!');
+                                }}
+                              >
+                                <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">ID</div>
+                                <code className="font-mono text-lg font-bold text-blue-200">{congregation.code}</code>
+                                {copiedCode ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-slate-400 group-hover/code:text-white transition-colors" />}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Quick Actions */}
+                          <div className="flex gap-3">
+                            {congregation.createdBy === user?.uid && (
+                              <button
+                                onClick={() => setShowDeleteCongModal(true)}
+                                className="p-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
+                                title="Configurações da Congregação"
+                              >
+                                <AlertTriangle size={20} />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => setShowLeaveModal(true)}
+                              className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
+                              title="Sair da Congregação"
+                            >
+                              <LogOut size={20} />
+                            </button>
+                          </div>
                         </div>
+                      </div>
                     </div>
 
                     {/* Statistics Row */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-blue-500/30 transition-all">
-                            <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <Users size={28} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total de Membros</p>
-                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{members.length}</h4>
-                            </div>
+                      <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-blue-500/30 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Users size={28} />
                         </div>
-                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-emerald-500/30 transition-all">
-                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <Building2 size={28} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Territórios Ativos</p>
-                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">12</h4>
-                            </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total de Membros</p>
+                          <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{members.length}</h4>
                         </div>
-                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-amber-500/30 transition-all">
-                            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                                <Calendar size={28} />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Relatórios (Mês)</p>
-                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">8</h4>
-                            </div>
+                      </div>
+                      <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-emerald-500/30 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Building2 size={28} />
                         </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Territórios Ativos</p>
+                          <h4 className="text-2xl font-bold text-gray-900 dark:text-white">12</h4>
+                        </div>
+                      </div>
+                      <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-amber-500/30 transition-all">
+                        <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                          <Calendar size={28} />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Relatórios (Mês)</p>
+                          <h4 className="text-2xl font-bold text-gray-900 dark:text-white">8</h4>
+                        </div>
+                      </div>
                     </div>
 
                     {/* Announcements Section */}
                     <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 p-8 rounded-[2rem] border border-amber-100 dark:border-amber-900/30 relative overflow-hidden">
-                        <div className="flex items-center justify-between mb-6 relative z-10">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
-                                    <Megaphone size={20} />
-                                </div>
-                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Quadro de Avisos</h3>
-                            </div>
-                            <button
-                                onClick={() => setShowAnnouncements(!showAnnouncements)}
-                                className="text-amber-600 font-medium text-sm hover:underline"
-                            >
-                                {showAnnouncements ? 'Ocultar' : 'Mostrar'}
-                            </button>
+                      <div className="flex items-center justify-between mb-6 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
+                            <Megaphone size={20} />
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 dark:text-white">Quadro de Anúncios</h3>
                         </div>
+                        <div className="flex items-center gap-4">
+                          {(user?.role === 'admin' || user?.role === 'elder') && (
+                            <button
+                              onClick={() => setShowAnnouncementModal(true)}
+                              className="text-amber-600 dark:text-amber-400 font-bold text-sm bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg shadow-sm hover:bg-amber-50 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                            >
+                              <Plus size={14} /> Novo
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setShowAnnouncements(!showAnnouncements)}
+                            className="text-amber-600 font-medium text-sm hover:underline"
+                          >
+                            {showAnnouncements ? 'Ocultar' : 'Mostrar'}
+                          </button>
+                        </div>
+                      </div>
 
-                        {showAnnouncements && (
-                            <div className="space-y-4 relative z-10 animate-in slide-in-from-top-4 duration-300">
-                                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-100 dark:border-amber-900/20 shadow-sm flex gap-4">
-                                    <div className="w-1 bg-amber-500 rounded-full h-full shrink-0"></div>
-                                    <div>
-                                        <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1">Reunião para o Serviço de Campo</h4>
-                                        <p className="text-xs text-gray-600 dark:text-gray-400">Sábado às 09:00 - Grupo 1 (Local: Salão do Reino)</p>
-                                    </div>
-                                </div>
+                      {showAnnouncements && (
+                        <div className="space-y-4 relative z-10 animate-in slide-in-from-top-4 duration-300">
+                          {announcements.length === 0 ? (
+                            <div className="text-center py-6 text-amber-800/60 dark:text-amber-200/60 text-sm">
+                              Nenhum anúncio no momento.
                             </div>
-                        )}
+                          ) : (
+                            announcements.map((announcement) => (
+                              <div key={announcement.id} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-100 dark:border-amber-900/20 shadow-sm flex gap-4">
+                                <div className={`w-1 rounded-full h-full shrink-0 ${announcement.priority === 'high' ? 'bg-red-500' : announcement.priority === 'low' ? 'bg-blue-500' : 'bg-amber-500'
+                                  }`}></div>
+                                <div className="flex-1">
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h4 className="font-bold text-gray-900 dark:text-white text-sm">{announcement.title}</h4>
+                                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${announcement.priority === 'high' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
+                                      announcement.priority === 'low' ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' :
+                                        'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400'
+                                      }`}>
+                                      {announcement.priority === 'normal' ? 'Normal' : announcement.priority === 'high' ? 'Importante' : 'Info'}
+                                    </span>
+                                  </div>
+                                  <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{announcement.content}</p>
+                                  <div className="mt-2 flex items-center justify-between text-[10px] text-gray-400">
+                                    <span>{new Date(announcement.date).toLocaleDateString()}</span>
+                                    <span>Por: {announcement.authorName}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Members Section */}
                     <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Membros</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie as permissões da congregação</p>
-                            </div>
-
-                            {/* Search Bar */}
-                            <div className="relative">
-                                <input
-                                    type="text"
-                                    placeholder="Buscar membro..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 rounded-xl outline-none text-sm transition-all w-full sm:w-64"
-                                />
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                            </div>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 dark:text-white">Membros</h3>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie as permissões da congregação</p>
                         </div>
 
-                        <div className="space-y-3">
-                            {members
-                                .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
-                                .map((member) => (
-                                    <div key={member.uid} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-gray-100 dark:hover:border-slate-800 transition-all">
-                                        <div className="flex items-center gap-4">
-                                            <div className="relative">
-                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shadow-inner">
-                                                    {member.name.charAt(0).toUpperCase()}
-                                                </div>
-                                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center ${member.role === 'admin' ? 'bg-amber-500 text-white' :
-                                                        member.role === 'elder' ? 'bg-indigo-500 text-white' :
-                                                            member.role === 'servant' ? 'bg-emerald-500 text-white' : 'bg-gray-400 text-white'
-                                                    }`}>
-                                                    {member.role === 'admin' ? <Star size={10} fill="currentColor" /> :
-                                                        member.role === 'elder' ? <Shield size={10} fill="currentColor" /> :
-                                                            member.role === 'servant' ? <CheckCircle2 size={10} /> : <User size={10} />}
-                                                </div>
-                                            </div>
+                        {/* Search Bar */}
+                        <div className="relative">
+                          <input
+                            type="text"
+                            placeholder="Buscar membro..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 rounded-xl outline-none text-sm transition-all w-full sm:w-64"
+                          />
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                        </div>
+                      </div>
 
-                                            <div>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold text-gray-900 dark:text-white">{member.name}</span>
-                                                    {member.uid === user?.uid && <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full">VOCÊ</span>}
-                                                </div>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleLabels[member.role || 'publisher']}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
-                                            {member.uid !== user?.uid && canManageRole(member.role) && (
-                                                <button
-                                                    onClick={() => {
-                                                        setEditingMember(member);
-                                                        setSelectedRole(member.role || 'publisher');
-                                                    }}
-                                                    className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all"
-                                                    title="Alterar Cargo"
-                                                >
-                                                    <BadgeCheck size={18} />
-                                                </button>
-                                            )}
-
-                                            {member.uid !== user?.uid && canRemoveMember(member.role) && (
-                                                <button
-                                                    onClick={() => setRemovingMember(member)}
-                                                    className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
-                                                    title="Remover Membro"
-                                                >
-                                                    <UserMinus size={18} />
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-
-                            {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
-                                <div className="text-center py-10">
-                                    <div className="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
-                                        <Search size={24} />
-                                    </div>
-                                    <p className="text-gray-500 font-medium">Nenhum membro encontrado</p>
+                      <div className="space-y-3">
+                        {members
+                          .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                          .map((member) => (
+                            <div key={member.uid} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-gray-100 dark:hover:border-slate-800 transition-all">
+                              <div className="flex items-center gap-4">
+                                <div className="relative">
+                                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                                    {(member.photoURL || member.photo_url) ? (
+                                      <img src={member.photoURL || member.photo_url} alt={member.name} className="w-full h-full object-cover rounded-2xl" />
+                                    ) : (
+                                      member.name.charAt(0).toUpperCase()
+                                    )}
+                                  </div>
+                                  <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center ${member.role === 'admin' ? 'bg-amber-500 text-white' :
+                                    member.role === 'elder' ? 'bg-indigo-500 text-white' :
+                                      member.role === 'servant' ? 'bg-emerald-500 text-white' : 'bg-gray-400 text-white'
+                                    }`}>
+                                    {member.role === 'admin' ? <Star size={10} fill="currentColor" /> :
+                                      member.role === 'elder' ? <Shield size={10} fill="currentColor" /> :
+                                        member.role === 'servant' ? <CheckCircle2 size={10} /> : <User size={10} />}
+                                  </div>
                                 </div>
-                            )}
-                        </div>
+
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="font-bold text-gray-900 dark:text-white">{member.name}</span>
+                                    {member.uid === user?.uid && <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full">VOCÊ</span>}
+                                  </div>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleLabels[member.role || 'publisher']}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                                {member.uid !== user?.uid && canManageRole(member.role) && (
+                                  <button
+                                    onClick={() => {
+                                      setEditingMember(member);
+                                      setSelectedRole(member.role || 'publisher');
+                                    }}
+                                    className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all"
+                                    title="Alterar Cargo"
+                                  >
+                                    <BadgeCheck size={18} />
+                                  </button>
+                                )}
+
+                                {member.uid !== user?.uid && canRemoveMember(member.role) && (
+                                  <button
+                                    onClick={() => setRemovingMember(member)}
+                                    className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                                    title="Remover Membro"
+                                  >
+                                    <UserMinus size={18} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+
+                        {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                          <div className="text-center py-10">
+                            <div className="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
+                              <Search size={24} />
+                            </div>
+                            <p className="text-gray-500 font-medium">Nenhum membro encontrado</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                </>
-            ) : (
-                <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[3rem] border border-gray-100 dark:border-slate-800 shadow-xl relative overflow-hidden">
+                  </>
+                ) : (
+                  <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[3rem] border border-gray-100 dark:border-slate-800 shadow-xl relative overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
                     <div className="relative z-10 max-w-md mx-auto px-4">
-                        <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-8 transform rotate-3">
-                            <Building2 size={48} className="text-indigo-600 dark:text-indigo-400" />
-                        </div>
-                        <h4 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Nenhuma Congregação</h4>
-                        <p className="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
-                            Junte-se a uma congregação existente para colaborar nos territórios ou crie uma nova para começar a gerenciar.
-                        </p>
+                      <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-8 transform rotate-3">
+                        <Building2 size={48} className="text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <h4 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Nenhuma Congregação</h4>
+                      <p className="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
+                        Junte-se a uma congregação existente para colaborar nos territórios ou crie uma nova para começar a gerenciar.
+                      </p>
 
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <button
-                                onClick={() => setShowCreateModal(true)}
-                                className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95"
-                            >
-                                <Plus size={18} /> Criar Nova
-                            </button>
-                            <button
-                                onClick={() => setShowJoinModal(true)}
-                                className="px-8 py-4 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 dark:border-slate-700 rounded-2xl font-bold text-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
-                            >
-                                <UserPlus size={18} /> Entrar com Código
-                            </button>
-                        </div>
+                      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button
+                          onClick={() => setShowCreateModal(true)}
+                          className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95"
+                        >
+                          <Plus size={18} /> Criar Nova
+                        </button>
+                        <button
+                          onClick={() => setShowJoinModal(true)}
+                          className="px-8 py-4 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 dark:border-slate-700 rounded-2xl font-bold text-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
+                        >
+                          <UserPlus size={18} /> Entrar com Código
+                        </button>
+                      </div>
                     </div>
-                </div>
-            )}
-        </div>
-    )
-}
+                  </div>
+                )}
+              </div>
+            )
+          }
 
         </div>
 
@@ -1078,10 +1152,19 @@ const Profile = () => {
           editingMember && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Alterar Cargo</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  Defina o cargo de <span className="font-bold text-gray-900 dark:text-white">{editingMember.name}</span>
-                </p>
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-2xl shadow-inner mb-4 overflow-hidden border-4 border-white dark:border-slate-800">
+                    {(editingMember.photoURL || editingMember.photo_url) ? (
+                      <img src={editingMember.photoURL || editingMember.photo_url} alt={editingMember.name} className="w-full h-full object-cover" />
+                    ) : (
+                      editingMember.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center">Alterar Cargo</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+                    {editingMember.name}
+                  </p>
+                </div>
 
                 <div className="space-y-2">
                   {getAvailableRoles().map(([roleKey, label]) => (
@@ -1217,16 +1300,19 @@ const Profile = () => {
           removingMember && (
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-                    <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+                <div className="flex flex-col items-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 flex items-center justify-center font-bold text-xl shadow-inner mb-3 overflow-hidden border-4 border-white dark:border-slate-800">
+                    {(removingMember.photoURL || removingMember.photo_url) ? (
+                      <img src={removingMember.photoURL || removingMember.photo_url} alt={removingMember.name} className="w-full h-full object-cover" />
+                    ) : (
+                      removingMember.name.charAt(0).toUpperCase()
+                    )}
                   </div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Remover Membro</h3>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-1">Remover Membro</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 text-center max-w-[250px]">
+                    Tem certeza que deseja remover <span className="font-bold text-gray-900 dark:text-white">{removingMember.name}</span>?
+                  </p>
                 </div>
-
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  Tem certeza que deseja remover <span className="font-bold text-gray-900 dark:text-white">{removingMember.name}</span> da congregação?
-                </p>
 
                 <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
                   <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
@@ -1324,8 +1410,8 @@ const Profile = () => {
             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
               <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                    <LogOut className="text-amber-600 dark:text-amber-400" size={24} />
+                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                    <LogOut className="text-red-600 dark:text-red-400" size={24} />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 dark:text-white">Sair da Congregação</h3>
                 </div>
@@ -1345,7 +1431,7 @@ const Profile = () => {
                   <button
                     onClick={handleLeaveCongregation}
                     disabled={isLeavingCong}
-                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {isLeavingCong ? (
                       <>
@@ -1375,35 +1461,103 @@ const Profile = () => {
                   Digite o código de convite da nova congregação. Você sairá automaticamente da congregação atual.
                 </p>
                 <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={switchCode}
+                    onChange={(e) => setSwitchCode(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
+                    placeholder="XXXXXXXX"
+                    maxLength={8}
+                  />
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowSwitchModal(false)}
+                      disabled={isSwitchingCong}
+                      className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      onClick={handleSwitchCongregation}
+                      disabled={isSwitchingCong || !switchCode.trim()}
+                      className="flex-1 px-4 py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    >
+                      {isSwitchingCong ? <Loader2 className="animate-spin" size={18} /> : 'Trocar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Create Announcement Modal */}
+        {
+          showAnnouncementModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl animate-in fade-in duration-300">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                    <Megaphone className="text-amber-600 dark:text-amber-400" size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Novo Anúncio</h3>
+                </div>
+
+                <div className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Título</label>
                     <input
                       type="text"
-                      value={switchCode}
-                      onChange={(e) => setSwitchCode(e.target.value.toUpperCase())}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
-                      placeholder="XXXXXXXX"
-                      maxLength={8}
+                      value={newAnnouncementTitle}
+                      onChange={(e) => setNewAnnouncementTitle(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-amber-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium"
+                      placeholder="Título do anúncio"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Prioridade</label>
+                    <div className="flex gap-2">
+                      {(['low', 'normal', 'high'] as AnnouncementPriority[]).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setNewAnnouncementPriority(p)}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border-2 transition-all ${newAnnouncementPriority === p
+                            ? p === 'high' ? 'bg-red-50 dark:bg-red-900/20 border-red-500 text-red-600 dark:text-red-400'
+                              : p === 'low' ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-500 text-blue-600 dark:text-blue-400'
+                                : 'bg-amber-50 dark:bg-amber-900/20 border-amber-500 text-amber-600 dark:text-amber-400'
+                            : 'bg-gray-50 dark:bg-slate-800 border-transparent text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-700'
+                            }`}
+                        >
+                          {p === 'normal' ? 'Normal' : p === 'high' ? 'Alta' : 'Baixa'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Conteúdo</label>
+                    <textarea
+                      value={newAnnouncementContent}
+                      onChange={(e) => setNewAnnouncementContent(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-amber-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-amber-100 dark:focus:ring-amber-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium resize-none"
+                      rows={4}
+                      placeholder="Digite o conteúdo do anúncio..."
                     />
                   </div>
                 </div>
+
                 <div className="flex gap-3 mt-8">
                   <button
-                    onClick={() => {
-                      setShowSwitchModal(false);
-                      setSwitchCode('');
-                    }}
-                    disabled={isSwitchingCong}
-                    className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
+                    onClick={() => setShowAnnouncementModal(false)}
+                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
                   >
                     Cancelar
                   </button>
                   <button
-                    onClick={handleSwitchCongregation}
-                    disabled={isSwitchingCong || !switchCode.trim()}
-                    className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    onClick={handleCreateAnnouncement}
+                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20"
                   >
-                    {isSwitchingCong ? <Loader2 className="animate-spin" size={20} /> : 'Trocar'}
+                    <Megaphone size={18} />
+                    Publicar
                   </button>
                 </div>
               </div>
