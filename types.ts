@@ -110,6 +110,8 @@ export interface Announcement {
   priority: AnnouncementPriority;
   createdBy: string;
   authorName: string;
+  expirationDate?: string;
+  scheduledFor?: string;
 }
 
 export interface CongregationMember {
