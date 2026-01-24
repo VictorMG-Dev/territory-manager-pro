@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, BadgeCheck, UserMinus, AlertTriangle, BookOpen, Clock, Star, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, ChevronRight, BadgeCheck, UserMinus, AlertTriangle, BookOpen, Clock, Star, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
@@ -67,16 +67,46 @@ const Profile = () => {
   const [switchCode, setSwitchCode] = useState('');
   const [isSwitchingCong, setIsSwitchingCong] = useState(false);
 
+  // Profile Redesign State
+  const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'ministry' | 'congregation'>('overview');
+
+  const recentActivity = [
+    { id: 1, type: 'report', title: 'Relatório Mensal Enviado', date: 'Há 2 dias', icon: CheckCircle2, color: 'text-emerald-500 bg-emerald-50' },
+    { id: 2, type: 'territory', title: 'Território Comercial Concluído', date: 'Há 5 dias', icon: Building2, color: 'text-blue-500 bg-blue-50' },
+    { id: 3, type: 'role', title: 'Designado Servo Ministerial', date: 'Há 1 mês', icon: Shield, color: 'text-amber-500 bg-amber-50' },
+  ];
+
+  const calculateProfileCompletion = () => {
+    let score = 0;
+    let total = 6; // Name, Email, Photo, Banner, Role, Congregation
+
+    if (user?.name) score++;
+    if (user?.email) score++;
+    if (user?.photoURL) score++;
+    if (user?.banner && !user.banner.startsWith('bg-')) score++; // Custom banner counts
+    if (user?.serviceRole) score++;
+    if (user?.congregationId) score++;
+
+    return Math.round((score / total) * 100);
+  };
+
+  const completionPercentage = calculateProfileCompletion();
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const bannerPresets = [
-    { name: 'Índigo Real', class: 'bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600' },
-    { name: 'Esmeralda Vital', class: 'bg-gradient-to-r from-emerald-500 via-teal-600 to-cyan-600' },
-    { name: 'Pôr do Sol', class: 'bg-gradient-to-r from-orange-500 via-rose-500 to-purple-600' },
-    { name: 'Noite Estelar', class: 'bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950' },
-    { name: 'Oceano Profundo', class: 'bg-gradient-to-r from-blue-700 via-blue-800 to-slate-900' },
+    { name: 'Aurora Borealis', class: 'bg-gradient-to-br from-emerald-400 via-cyan-500 to-indigo-600' },
+    { name: 'Sunset Mesh', class: 'bg-gradient-to-tr from-orange-400 via-rose-500 to-purple-600' },
+    { name: 'Deep Space', class: 'bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-900' },
+    { name: 'Oceanic Drift', class: 'bg-gradient-to-r from-blue-600 via-teal-500 to-emerald-500' },
+    { name: 'Midnight Neon', class: 'bg-gradient-to-br from-fuchsia-600 via-purple-700 to-indigo-800' },
+    { name: 'Desert Sand', class: 'bg-gradient-to-tr from-amber-200 via-orange-300 to-rose-400' },
+    { name: 'Glassy Frost', class: 'bg-gradient-to-br from-blue-100 via-indigo-200 to-blue-300' },
+    { name: 'Modern Dark', class: 'bg-slate-900' },
   ];
+
+  const [bannerEditorTab, setBannerEditorTab] = useState<'presets' | 'upload'>('presets');
 
   useEffect(() => {
     if (user?.congregationId) {
@@ -127,21 +157,49 @@ const Profile = () => {
     }
   };
 
+  const compressImage = (base64Str: string, maxWidth = 1200, maxHeight = 1200, quality = 0.7): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 15 * 1024 * 1024) {
-        toast.error('Imagem muito grande. Máximo 15MB.');
-        return;
-      }
-
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const result = reader.result as string;
         try {
-          await updateProfile({ photoURL: result });
+          const originalResult = reader.result as string;
+          // Most profile photos don't need to be huge
+          const compressedResult = await compressImage(originalResult, 800, 800, 0.8);
+          await updateProfile({ photoURL: compressedResult });
           toast.success('Foto atualizada!');
         } catch (error) {
+          console.error('Erro ao processar foto:', error);
           toast.error('Erro ao salvar foto.');
         }
       };
@@ -152,19 +210,17 @@ const Profile = () => {
   const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 15 * 1024 * 1024) {
-        toast.error('Imagem muito grande. Máximo 15MB.');
-        return;
-      }
-
       const reader = new FileReader();
       reader.onloadend = async () => {
-        const result = reader.result as string;
-        setBanner(result);
         try {
-          await updateProfile({ banner: result });
+          const originalResult = reader.result as string;
+          // Banners can be wider
+          const compressedResult = await compressImage(originalResult, 1600, 900, 0.7);
+          setBanner(compressedResult);
+          await updateProfile({ banner: compressedResult });
           toast.success('Banner personalizado atualizado!');
         } catch (error) {
+          console.error('Erro ao processar banner:', error);
           toast.error('Erro ao salvar banner.');
         }
       };
@@ -405,21 +461,27 @@ const Profile = () => {
   return (
     <div className="max-w-7xl mx-auto animate-in fade-in duration-500 pb-20">
       {/* Premium Banner */}
-      <div
-        className={`relative h-64 rounded-[2.5rem] shadow-xl overflow-hidden mb-[-120px] mx-4 md:mx-8 group transition-all duration-500 ${!banner.startsWith('data:') && !banner.startsWith('http') ? banner : ''}`}
-        style={banner.startsWith('data:') || banner.startsWith('http') ? { backgroundImage: `url(${banner})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
-      >
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 rounded-full bg-white/10 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
+      <div className="relative h-80 w-full overflow-hidden group">
+        <div
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+          style={{ backgroundImage: banner.startsWith('data:') || banner.startsWith('http') ? `url(${banner})` : undefined }}
+        >
+          {(!banner.startsWith('data:') && !banner.startsWith('http')) && (
+            <div className={`w-full h-full ${banner}`} />
+          )}
+        </div>
+
+        {/* Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-t from-gray-50 via-transparent to-black/30 dark:from-slate-950 dark:via-transparent dark:to-black/50" />
+        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
 
         {/* Edit Banner Button */}
         <button
           onClick={() => setShowBannerEditor(!showBannerEditor)}
-          className="absolute top-6 right-6 p-3 bg-white/20 backdrop-blur-md text-white rounded-2xl border border-white/30 opacity-0 group-hover:opacity-100 transition-all hover:bg-white/40 flex items-center gap-2 font-bold text-sm shadow-lg"
+          className="absolute top-6 right-6 p-3 bg-black/20 backdrop-blur-md text-white rounded-2xl border border-white/20 opacity-0 group-hover:opacity-100 transition-all hover:bg-black/40 flex items-center gap-2 font-bold text-sm shadow-lg transform translate-y-[-10px] group-hover:translate-y-0 duration-300"
         >
           <Camera size={18} />
-          Personalizar Banner
+          <span className="hidden sm:inline">Personalizar Banner</span>
         </button>
 
         {showBannerEditor && (
@@ -464,97 +526,124 @@ const Profile = () => {
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 md:px-8 pt-8">
-        {/* Left Column: Identity & Preferences */}
-        <div className="lg:col-span-4 space-y-6 pt-16 lg:pt-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 px-4 md:px-8 relative z-10 -mt-24">
+        {/* Left Column: Identity & Menu */}
+        <div className="lg:col-span-4 space-y-6">
           {/* Identity Card */}
-          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-xl border border-gray-100 dark:border-slate-800 text-center relative z-10 flex flex-col items-center group">
-            <div className="relative -mt-24 mb-6">
-              <div className="w-32 h-32 rounded-full bg-white dark:bg-slate-900 p-1.5 shadow-2xl">
-                <div className="w-full h-full rounded-full bg-blue-100 dark:bg-blue-900 overflow-hidden relative">
-                  {user?.photoURL ? (
-                    <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-blue-600 dark:text-blue-400">
-                      {user?.name?.substring(0, 2).toUpperCase() || 'AU'}
+          <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 shadow-xl border border-white/20 dark:border-slate-800 text-center relative overflow-hidden backdrop-blur-xl bg-opacity-90 dark:bg-opacity-90">
+            {/* Completion Ring */}
+            <div className="relative mb-6 inline-block">
+              <svg className="w-40 h-40 transform -rotate-90">
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="70"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  className="text-gray-100 dark:text-slate-800"
+                />
+                <circle
+                  cx="80"
+                  cy="80"
+                  r="70"
+                  stroke="currentColor"
+                  strokeWidth="8"
+                  fill="transparent"
+                  strokeDasharray={440}
+                  strokeDashoffset={440 - (440 * completionPercentage) / 100}
+                  className="text-indigo-500 transition-all duration-1000 ease-out"
+                  strokeLinecap="round"
+                />
+              </svg>
+
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-32 h-32 rounded-full bg-white dark:bg-slate-900 p-1.5 shadow-inner">
+                  <div className="w-full h-full rounded-full bg-blue-100 dark:bg-blue-900 overflow-hidden relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+                    {user?.photoURL ? (
+                      <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-blue-600 dark:text-blue-400">
+                        {user?.name?.substring(0, 2).toUpperCase() || 'AU'}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Camera className="text-white" size={24} />
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-1 right-1 p-2.5 bg-blue-600 text-white rounded-full border-4 border-white dark:border-slate-800 shadow-lg hover:bg-blue-700 transition-all cursor-pointer hover:scale-110 active:scale-95"
-                title="Alterar foto"
-              >
-                <Camera size={16} />
-              </button>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 bg-white dark:bg-slate-800 px-3 py-1 rounded-full shadow-lg border border-gray-100 dark:border-gray-700 text-xs font-bold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                {completionPercentage}% Completo
+              </div>
             </div>
 
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">{user?.name}</h2>
-            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6 flex items-center justify-center gap-1.5 bg-gray-50 dark:bg-slate-800/50 py-1 px-3 rounded-full">
+            <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-6 flex items-center justify-center gap-1.5 ">
               <Mail size={14} /> {user?.email}
             </p>
 
-            <div className={`px-6 py-2.5 rounded-2xl font-bold text-xs uppercase tracking-wider mb-8 flex items-center gap-2 ${roleColors[user?.role || 'publisher']} bg-opacity-10 border border-current border-opacity-20`}>
-              <Shield size={16} />
+            <div className={`inline-flex px-4 py-2 rounded-xl font-bold text-xs uppercase tracking-wider mb-8 items-center gap-2 ${roleColors[user?.role || 'publisher']} bg-opacity-10 border border-current border-opacity-20`}>
+              <Shield size={14} />
               {roleLabels[user?.role || 'publisher']}
             </div>
 
-            {/* Personal Stats Mockup */}
-            <div className="grid grid-cols-3 gap-2 w-full pt-6 border-t border-gray-100 dark:border-slate-800">
-              <div>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">12</p>
-                <p className="text-[10px] uppercase font-bold text-gray-400">Meses</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">850</p>
-                <p className="text-[10px] uppercase font-bold text-gray-400">Horas</p>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-gray-900 dark:text-white">Active</p>
-                <p className="text-[10px] uppercase font-bold text-gray-400">Status</p>
-              </div>
+            {/* Navigation Menu */}
+            <div className="space-y-2 text-left pt-6 border-t border-gray-100 dark:border-slate-800">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-medium'}`}
+              >
+                <span className="flex items-center gap-3"><span className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm"><User size={16} /></span> Visão Geral</span>
+                {activeTab === 'overview' && <ChevronRight size={16} />}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-medium'}`}
+              >
+                <span className="flex items-center gap-3"><span className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm"><Lock size={16} /></span> Conta e Segurança</span>
+                {activeTab === 'settings' && <ChevronRight size={16} />}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('ministry')}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${activeTab === 'ministry' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-medium'}`}
+              >
+                <span className="flex items-center gap-3"><span className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm"><BookOpen size={16} /></span> Ministério</span>
+                {activeTab === 'ministry' && <ChevronRight size={16} />}
+              </button>
+
+              <button
+                onClick={() => setActiveTab('congregation')}
+                className={`w-full flex items-center justify-between p-3 rounded-xl transition-all ${activeTab === 'congregation' ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 font-bold shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 font-medium'}`}
+              >
+                <span className="flex items-center gap-3"><span className="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm"><Building2 size={16} /></span> Congregação</span>
+                {activeTab === 'congregation' && <ChevronRight size={16} />}
+              </button>
             </div>
           </div>
 
-          {/* Preferences Card */}
-          <div className="bg-white dark:bg-slate-900 p-6 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative z-0">
-            <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-6 ml-2">Configurações</h4>
+          {/* Theme & Notifications Card */}
+          <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-lg">
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 rounded-xl">
-                    <Bell size={18} />
-                  </div>
-                  <span className="text-sm font-bold text-gray-700 dark:text-white">Notificações</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
+                  <Moon size={18} /> Modo Escuro
                 </div>
-                <button
-                  onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                  className={`w-11 h-6 rounded-full relative transition-all ${notificationsEnabled ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${notificationsEnabled ? 'right-1' : 'left-1'}`} />
+                <button onClick={toggleTheme} className={`w-12 h-6 rounded-full relative transition-colors ${theme === 'dark' ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-slate-700'}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${theme === 'dark' ? 'translate-x-7' : 'translate-x-1'}`} />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-slate-800/50 rounded-2xl transition-colors">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 rounded-xl">
-                    {theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
-                  </div>
-                  <span className="text-sm font-bold text-gray-700 dark:text-white">Modo Escuro</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300 font-medium">
+                  <Bell size={18} /> Notificações
                 </div>
-                <button
-                  onClick={toggleTheme}
-                  className={`w-11 h-6 rounded-full relative transition-all ${theme === 'dark' ? 'bg-blue-600' : 'bg-gray-200 dark:bg-slate-700'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${theme === 'dark' ? 'right-1' : 'left-1'}`} />
+                <button onClick={() => setNotificationsEnabled(!notificationsEnabled)} className={`w-12 h-6 rounded-full relative transition-colors ${notificationsEnabled ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-slate-700'}`}>
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${notificationsEnabled ? 'translate-x-7' : 'translate-x-1'}`} />
                 </button>
               </div>
             </div>
@@ -562,610 +651,686 @@ const Profile = () => {
         </div>
 
         {/* Right Column: Forms & Data */}
-        <div className="lg:col-span-8 space-y-6 pt-0 lg:pt-14">
+        <div className="lg:col-span-8 space-y-6">
 
-          {/* Edit Profile */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-6 opacity-5">
-              <User size={120} />
-            </div>
+          {/* TAB: OVERVIEW */}
+          {activeTab === 'overview' && (
+            <div className="space-y-6 animate-in slide-in-from-right duration-500 fade-in">
+              {/* Welcome Banner */}
+              <div className="bg-gradient-to-r from-indigo-600 to-violet-600 rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-4 opacity-10">
+                  <Star size={150} />
+                </div>
+                <div className="relative z-10">
+                  <h2 className="text-3xl font-bold mb-2">Bem vindo de volta, {user?.name?.split(' ')[0]}!</h2>
+                  <p className="text-indigo-100 mb-6 max-w-md">Seu perfil está {completionPercentage}% completo. Mantenha seus dados atualizados para aproveitar ao máximo.</p>
 
-            <div className="flex items-center gap-4 mb-8 relative">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center">
-                <User size={24} />
+                  <div className="flex flex-wrap gap-3">
+                    <button onClick={() => setActiveTab('ministry')} className="px-5 py-2.5 bg-white/20 backdrop-blur-md rounded-xl font-bold text-sm hover:bg-white/30 transition-all border border-white/20 flex items-center gap-2">
+                      <BookOpen size={16} /> Ver Ministério
+                    </button>
+                    {!user?.congregationId && (
+                      <button onClick={() => setActiveTab('congregation')} className="px-5 py-2.5 bg-white text-indigo-600 rounded-xl font-bold text-sm hover:bg-indigo-50 transition-all flex items-center gap-2 shadow-lg">
+                        <Building2 size={16} /> Encontrar Congregação
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados da Conta</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Mantenha suas informações atualizadas</p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nome Completo</label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Endereço de E-mail</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
-                />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-xs font-bold text-gray-400 uppercase ml-1">Alterar Senha</label>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="password"
-                    placeholder="Deixe em branco para manter a atual"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full pl-12 pr-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
-                  />
+              {/* Recent Activity */}
+              <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <Clock size={20} className="text-gray-400" />
+                  Atividade Recente
+                </h3>
+                <div className="space-y-6">
+                  {recentActivity.map((activity, index) => (
+                    <div key={activity.id} className="flex gap-4 items-start relative pb-6 last:pb-0">
+                      {index !== recentActivity.length - 1 && (
+                        <div className="absolute left-[19px] top-10 bottom-0 w-0.5 bg-gray-100 dark:bg-slate-800"></div>
+                      )}
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 z-10 ${activity.color} bg-opacity-20`}>
+                        <activity.icon size={18} className={activity.color.split(' ')[0]} />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 dark:text-white text-sm">{activity.title}</h4>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{activity.date}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
+          )}
 
-            <div className="mt-8 flex justify-end">
-              <button
-                onClick={handleUpdateProfile}
-                disabled={isSaving}
-                className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 flex items-center gap-2"
-              >
-                {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
-                <span>Salvar Alterações</span>
-              </button>
-            </div>
-          </div>
+          {/* TAB: SETTINGS (Edit Profile) */}
+          {activeTab === 'settings' && (
 
-          {/* Ministry Data */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
-            <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center">
-                <BookOpen size={24} />
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-6 opacity-5">
+                <User size={120} />
               </div>
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados de Ministério</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Defina seu papel para ajustar as metas</p>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Papel de Campo</label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {[
-                  { id: 'publisher', label: 'Publicador', icon: User, goal: 'Sem meta' },
-                  { id: 'auxiliary_pioneer', label: 'P. Auxiliar', icon: Clock, goal: '30h / 15h' },
-                  { id: 'regular_pioneer', label: 'P. Regular', icon: Star, goal: '50h / 600h' }
-                ].map((role) => (
-                  <button
-                    key={role.id}
-                    onClick={() => handleServiceRoleChange(role.id as ServiceRole)}
-                    className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${serviceRole === role.id
-                      ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 shadow-md shadow-indigo-500/10'
-                      : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500 dark:text-slate-400'
-                      }`}
-                  >
-                    {serviceRole === role.id && (
-                      <div className="absolute top-2 right-2 text-indigo-600 animate-in zoom-in spin-in-90 duration-300">
-                        <CheckCircle2 size={16} />
-                      </div>
-                    )}
-                    <role.icon size={28} className={serviceRole === role.id ? 'text-indigo-600' : 'text-slate-400'} />
-                    <span className="font-bold text-sm">{role.label}</span>
-                    <span className="text-[10px] font-medium opacity-70">{role.goal}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Congregation Management */}
-          <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
-                  <Building2 size={24} />
+              <div className="flex items-center gap-4 mb-8 relative">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center">
+                  <User size={24} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Congregação</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie sua afiliação e membros</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados da Conta</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Mantenha suas informações atualizadas</p>
                 </div>
               </div>
-              {!congregation && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowCreateModal(true)}
-                    className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
-                  >
-                    <Plus size={16} /> Criar
-                  </button>
-                  <button
-                    onClick={() => setShowJoinModal(true)}
-                    className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
-                  >
-                    <UserPlus size={16} /> Entrar
-                  </button>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Nome Completo</label>
+                  <input
+                    type="text"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Endereço de E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-xs font-bold text-gray-400 uppercase ml-1">Alterar Senha</label>
+                  <div className="relative">
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <input
+                      type="password"
+                      placeholder="Deixe em branco para manter a atual"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full pl-12 pr-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 transition-all outline-none font-medium text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end">
+                <button
+                  onClick={handleUpdateProfile}
+                  disabled={isSaving}
+                  className="px-8 py-3.5 bg-indigo-600 text-white rounded-2xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-500/30 transition-all disabled:opacity-70 flex items-center gap-2"
+                >
+                  {isSaving ? <Loader2 className="animate-spin" size={20} /> : <Save size={20} />}
+                  <span>Salvar Alterações</span>
+                </button>
+              </div>
+            </div>
+
+          )}
+
+          {/* TAB: MINISTRY */}
+          {activeTab === 'ministry' && (
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm relative overflow-hidden animate-in slide-in-from-right duration-500 fade-in">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-900/30 text-amber-600 flex items-center justify-center">
+                  <BookOpen size={24} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Dados de Ministério</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">Defina seu papel para ajustar as metas</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Papel de Campo</label>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {[
+                    { id: 'publisher', label: 'Publicador', icon: User, goal: 'Sem meta' },
+                    { id: 'auxiliary_pioneer', label: 'P. Auxiliar', icon: Clock, goal: '30h / 15h' },
+                    { id: 'regular_pioneer', label: 'P. Regular', icon: Star, goal: '50h / 600h' }
+                  ].map((role) => (
+                    <button
+                      key={role.id}
+                      onClick={() => handleServiceRoleChange(role.id as ServiceRole)}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all ${serviceRole === role.id
+                        ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 shadow-md shadow-indigo-500/10'
+                        : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-500 dark:text-slate-400'
+                        }`}
+                    >
+                      {serviceRole === role.id && (
+                        <div className="absolute top-2 right-2 text-indigo-600 animate-in zoom-in spin-in-90 duration-300">
+                          <CheckCircle2 size={16} />
+                        </div>
+                      )}
+                      <role.icon size={28} className={serviceRole === role.id ? 'text-indigo-600' : 'text-slate-400'} />
+                      <span className="font-bold text-sm">{role.label}</span>
+                      <span className="text-[10px] font-medium opacity-70">{role.goal}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          )}
+
+          {/* TAB: CONGREGATION */}
+          {activeTab === 'congregation' && (
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm animate-in slide-in-from-right duration-500 fade-in">
+
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
+                    <Building2 size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Congregação</h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie sua afiliação e membros</p>
+                  </div>
+                </div>
+                {!congregation && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowCreateModal(true)}
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
+                    >
+                      <Plus size={16} /> Criar
+                    </button>
+                    <button
+                      onClick={() => setShowJoinModal(true)}
+                      className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
+                    >
+                      <UserPlus size={16} /> Entrar
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {congregation ? (
+                <div className="space-y-6">
+                  <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{congregation.name}</h4>
+                        {congregation.description && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{congregation.description}</p>
+                        )}
+                        <div className="flex items-center gap-4 text-sm mt-4">
+                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm">
+                            <Users size={14} />
+                            <span className="font-bold">{congregation.memberCount || members.length} membros</span>
+                          </div>
+                        </div>
+                      </div>
+                      {user?.role === 'elder' && (
+                        <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl text-xs font-bold border border-amber-200 dark:border-amber-800 flex flex-col items-center gap-1">
+                          <Shield size={16} />
+                          ADMIN
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Código de Convite</label>
+                    <div className="flex gap-2">
+                      <div className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-100 font-mono text-xl font-bold tracking-widest text-center border-dashed border-2">
+                        {congregation.inviteCode}
+                      </div>
+                      <button
+                        onClick={copyInviteCode}
+                        className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
+                      >
+                        {copiedCode ? <Check size={24} /> : <Copy size={24} />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-1">Compartilhe este código com o equipamento de anciãos.</p>
+                  </div>
+
+                  {members.length > 0 && (
+                    <div className="space-y-4 pt-4">
+                      <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center justify-between">
+                        <span>Lista de Membros</span>
+                        <span className="bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">{members.length}</span>
+                      </label>
+                      <div className="space-y-2 max-h-96 overflow-y-auto pr-1 customize-scrollbar">
+                        {members.map((member) => (
+                          <div key={member.uid} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
+                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 overflow-hidden shadow-sm">
+                              {member.photoURL ? (
+                                <img src={member.photoURL} alt={member.name} className="w-full h-full object-cover" />
+                              ) : (
+                                member.name.substring(0, 2).toUpperCase()
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-gray-900 dark:text-white text-base truncate flex items-center gap-2">
+                                {member.name}
+                                {member.uid === user?.uid && <span className="bg-gray-100 dark:bg-slate-700 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">VOCÊ</span>}
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${roleColors[member.role || 'publisher'].replace('bg-', 'border-').replace('text-', 'text-')}`}>
+                                  {roleLabels[member.role || 'publisher']}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {member.uid !== user?.uid && canManageRole(member.role) && (
+                                <button
+                                  onClick={() => {
+                                    setEditingMember(member);
+                                    setSelectedRole(member.role || 'publisher');
+                                  }}
+                                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
+                                  title="Alterar Cargo"
+                                >
+                                  <BadgeCheck size={20} />
+                                </button>
+                              )}
+
+                              {member.uid !== user?.uid && canRemoveMember(member.role) && (
+                                <button
+                                  onClick={() => setRemovingMember(member)}
+                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
+                                  title="Remover Membro"
+                                >
+                                  <UserMinus size={20} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Congregation Management Buttons */}
+                  <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-800 space-y-3">
+                    {/* Admin: Delete Congregation */}
+                    {congregation.createdBy === user?.uid && (
+                      <button
+                        onClick={() => setShowDeleteCongModal(true)}
+                        className="w-full px-4 py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-900/30"
+                      >
+                        <AlertTriangle size={18} />
+                        Excluir Congregação Permanentemente
+                      </button>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <button
+                        onClick={() => setShowLeaveModal(true)}
+                        className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
+                      >
+                        <LogOut size={18} />
+                        Sair
+                      </button>
+                      <button
+                        onClick={() => setShowSwitchModal(true)}
+                        className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"
+                      >
+                        <UserPlus size={18} />
+                        Trocar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-16 bg-gray-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
+                  <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mx-auto mb-6 text-gray-300">
+                    <Building2 size={40} />
+                  </div>
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma Congregação</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">
+                    Junte-se a uma congregação existente ou crie uma nova para começar a gerenciar territórios.
+                  </p>
                 </div>
               )}
             </div>
+          )}
+        </div>
 
-            {congregation ? (
-              <div className="space-y-6">
-                <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{congregation.name}</h4>
-                      {congregation.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{congregation.description}</p>
-                      )}
-                      <div className="flex items-center gap-4 text-sm mt-4">
-                        <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm">
-                          <Users size={14} />
-                          <span className="font-bold">{congregation.memberCount || members.length} membros</span>
-                        </div>
-                      </div>
-                    </div>
-                    {user?.role === 'elder' && (
-                      <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl text-xs font-bold border border-amber-200 dark:border-amber-800 flex flex-col items-center gap-1">
-                        <Shield size={16} />
-                        ADMIN
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Código de Convite</label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-100 font-mono text-xl font-bold tracking-widest text-center border-dashed border-2">
-                      {congregation.inviteCode}
-                    </div>
-                    <button
-                      onClick={copyInviteCode}
-                      className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
-                    >
-                      {copiedCode ? <Check size={24} /> : <Copy size={24} />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 ml-1">Compartilhe este código com o equipamento de anciãos.</p>
-                </div>
-
-                {members.length > 0 && (
-                  <div className="space-y-4 pt-4">
-                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center justify-between">
-                      <span>Lista de Membros</span>
-                      <span className="bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">{members.length}</span>
-                    </label>
-                    <div className="space-y-2 max-h-96 overflow-y-auto pr-1 customize-scrollbar">
-                      {members.map((member) => (
-                        <div key={member.uid} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
-                          <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 overflow-hidden shadow-sm">
-                            {member.photoURL ? (
-                              <img src={member.photoURL} alt={member.name} className="w-full h-full object-cover" />
-                            ) : (
-                              member.name.substring(0, 2).toUpperCase()
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-bold text-gray-900 dark:text-white text-base truncate flex items-center gap-2">
-                              {member.name}
-                              {member.uid === user?.uid && <span className="bg-gray-100 dark:bg-slate-700 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">VOCÊ</span>}
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${roleColors[member.role || 'publisher'].replace('bg-', 'border-').replace('text-', 'text-')}`}>
-                                {roleLabels[member.role || 'publisher']}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {member.uid !== user?.uid && canManageRole(member.role) && (
-                              <button
-                                onClick={() => {
-                                  setEditingMember(member);
-                                  setSelectedRole(member.role || 'publisher');
-                                }}
-                                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
-                                title="Alterar Cargo"
-                              >
-                                <BadgeCheck size={20} />
-                              </button>
-                            )}
-
-                            {member.uid !== user?.uid && canRemoveMember(member.role) && (
-                              <button
-                                onClick={() => setRemovingMember(member)}
-                                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                                title="Remover Membro"
-                              >
-                                <UserMinus size={20} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Congregation Management Buttons */}
-                <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-800 space-y-3">
-                  {/* Admin: Delete Congregation */}
-                  {congregation.createdBy === user?.uid && (
-                    <button
-                      onClick={() => setShowDeleteCongModal(true)}
-                      className="w-full px-4 py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-900/30"
-                    >
-                      <AlertTriangle size={18} />
-                      Excluir Congregação Permanentemente
-                    </button>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <button
-                      onClick={() => setShowLeaveModal(true)}
-                      className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
-                    >
-                      <LogOut size={18} />
-                      Sair
-                    </button>
-                    <button
-                      onClick={() => setShowSwitchModal(true)}
-                      className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"
-                    >
-                      <UserPlus size={18} />
-                      Trocar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-16 bg-gray-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
-                <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mx-auto mb-6 text-gray-300">
-                  <Building2 size={40} />
-                </div>
-                <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma Congregação</h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">
-                  Junte-se a uma congregação existente ou crie uma nova para começar a gerenciar territórios.
+        {/* Role Editor Modal */}
+        {
+          editingMember && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Alterar Cargo</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+                  Defina o cargo de <span className="font-bold text-gray-900 dark:text-white">{editingMember.name}</span>
                 </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
 
-      {/* Role Editor Modal */}
-      {editingMember && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Alterar Cargo</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Defina o cargo de <span className="font-bold text-gray-900 dark:text-white">{editingMember.name}</span>
-            </p>
+                <div className="space-y-2">
+                  {getAvailableRoles().map(([roleKey, label]) => (
+                    <button
+                      key={roleKey}
+                      onClick={() => setSelectedRole(roleKey as Role)}
+                      className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${selectedRole === roleKey
+                        ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
+                        : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700'
+                        }`}
+                    >
+                      <span className={`font-bold ${selectedRole === roleKey ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-slate-300'}`}>
+                        {label}
+                      </span>
+                      {selectedRole === roleKey && <Check size={18} className="text-blue-600 dark:text-blue-400" />}
+                    </button>
+                  ))}
+                </div>
 
-            <div className="space-y-2">
-              {getAvailableRoles().map(([roleKey, label]) => (
-                <button
-                  key={roleKey}
-                  onClick={() => setSelectedRole(roleKey as Role)}
-                  className={`w-full p-4 rounded-xl border-2 text-left transition-all flex items-center justify-between ${selectedRole === roleKey
-                    ? 'border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                    : 'border-transparent bg-gray-50 dark:bg-slate-800 hover:bg-gray-100 dark:hover:bg-slate-700'
-                    }`}
-                >
-                  <span className={`font-bold ${selectedRole === roleKey ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-slate-300'}`}>
-                    {label}
-                  </span>
-                  {selectedRole === roleKey && <Check size={18} className="text-blue-600 dark:text-blue-400" />}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setEditingMember(null)}
-                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all font-sm"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleUpdateRole}
-                disabled={isUpdatingRole}
-                className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isUpdatingRole ? <Loader2 className="animate-spin" size={18} /> : 'Salvar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Create Congregation Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Criar Congregação</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Nome</label>
-                <input
-                  type="text"
-                  value={newCongName}
-                  onChange={(e) => setNewCongName(e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium"
-                  placeholder="Nome da congregação"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Descrição (Opcional)</label>
-                <textarea
-                  value={newCongDesc}
-                  onChange={(e) => setNewCongDesc(e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium resize-none"
-                  rows={3}
-                  placeholder="Informações adicionais"
-                />
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => setEditingMember(null)}
+                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all font-sm"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleUpdateRole}
+                    disabled={isUpdatingRole}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isUpdatingRole ? <Loader2 className="animate-spin" size={18} /> : 'Salvar'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowCreateModal(false)}
-                disabled={isLoadingCong}
-                className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreateCongregation}
-                disabled={isLoadingCong || !newCongName.trim()}
-                className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoadingCong ? <Loader2 className="animate-spin" size={20} /> : 'Criar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )
+        }
 
-      {/* Join Congregation Modal */}
-      {showJoinModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Entrar na Congregação</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
-                <input
-                  type="text"
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
-                  placeholder="XXXXXXXX"
-                  maxLength={8}
-                />
+        {/* Create Congregation Modal */}
+        {
+          showCreateModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Criar Congregação</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Nome</label>
+                    <input
+                      type="text"
+                      value={newCongName}
+                      onChange={(e) => setNewCongName(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium"
+                      placeholder="Nome da congregação"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Descrição (Opcional)</label>
+                    <textarea
+                      value={newCongDesc}
+                      onChange={(e) => setNewCongDesc(e.target.value)}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-medium resize-none"
+                      rows={3}
+                      placeholder="Informações adicionais"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => setShowCreateModal(false)}
+                    disabled={isLoadingCong}
+                    className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleCreateCongregation}
+                    disabled={isLoadingCong || !newCongName.trim()}
+                    className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLoadingCong ? <Loader2 className="animate-spin" size={20} /> : 'Criar'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowJoinModal(false)}
-                disabled={isLoadingCong}
-                className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleJoinCongregation}
-                disabled={isLoadingCong || !joinCode.trim()}
-                className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLoadingCong ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          )
+        }
 
-      {/* Remove Member Confirmation Modal */}
-      {removingMember && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Remover Membro</h3>
-            </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Tem certeza que deseja remover <span className="font-bold text-gray-900 dark:text-white">{removingMember.name}</span> da congregação?
-            </p>
-
-            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
-              <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
-                ⚠️ Esta ação irá remover o membro da congregação e redefinir seu cargo para "Publicador". O membro precisará de um novo convite para retornar.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setRemovingMember(null)}
-                disabled={isRemovingMember}
-                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleRemoveMember}
-                disabled={isRemovingMember}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isRemovingMember ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Removendo...
-                  </>
-                ) : (
-                  <>
-                    <UserMinus size={18} />
-                    Remover
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Congregation Modal */}
-      {showDeleteCongModal && congregation && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
-                <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Excluir Congregação</h3>
-            </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Tem certeza que deseja excluir a congregação <span className="font-bold text-gray-900 dark:text-white">{congregation.name}</span>?
-            </p>
-
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
-              <p className="text-xs text-red-800 dark:text-red-300 font-medium">
-                ⚠️ Esta ação é <strong>IRREVERSÍVEL</strong>. Todos os {members.length} membros serão removidos e perderão acesso aos territórios da congregação.
-              </p>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowDeleteCongModal(false)}
-                disabled={isDeletingCong}
-                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeleteCongregation}
-                disabled={isDeletingCong}
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isDeletingCong ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Excluindo...
-                  </>
-                ) : (
-                  <>
-                    <AlertTriangle size={18} />
-                    Excluir
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Leave Congregation Modal */}
-      {showLeaveModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
-                <LogOut className="text-amber-600 dark:text-amber-400" size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">Sair da Congregação</h3>
-            </div>
-
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-              Tem certeza que deseja sair da congregação? Você perderá acesso aos territórios e precisará de um novo convite para retornar.
-            </p>
-
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowLeaveModal(false)}
-                disabled={isLeavingCong}
-                className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleLeaveCongregation}
-                disabled={isLeavingCong}
-                className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isLeavingCong ? (
-                  <>
-                    <Loader2 className="animate-spin" size={18} />
-                    Saindo...
-                  </>
-                ) : (
-                  <>
-                    <LogOut size={18} />
-                    Sair
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Switch Congregation Modal */}
-      {showSwitchModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Trocar de Congregação</h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              Digite o código de convite da nova congregação. Você sairá automaticamente da congregação atual.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
-                <input
-                  type="text"
-                  value={switchCode}
-                  onChange={(e) => setSwitchCode(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
-                  placeholder="XXXXXXXX"
-                  maxLength={8}
-                />
+        {/* Join Congregation Modal */}
+        {
+          showJoinModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Entrar na Congregação</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
+                    <input
+                      type="text"
+                      value={joinCode}
+                      onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
+                      placeholder="XXXXXXXX"
+                      maxLength={8}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => setShowJoinModal(false)}
+                    disabled={isLoadingCong}
+                    className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleJoinCongregation}
+                    disabled={isLoadingCong || !joinCode.trim()}
+                    className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLoadingCong ? <Loader2 className="animate-spin" size={20} /> : 'Entrar'}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => {
-                  setShowSwitchModal(false);
-                  setSwitchCode('');
-                }}
-                disabled={isSwitchingCong}
-                className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleSwitchCongregation}
-                disabled={isSwitchingCong || !switchCode.trim()}
-                className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isSwitchingCong ? <Loader2 className="animate-spin" size={20} /> : 'Trocar'}
-              </button>
+          )
+        }
+
+
+
+        {/* Remove Member Confirmation Modal */}
+        {
+          removingMember && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                    <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Remover Membro</h3>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Tem certeza que deseja remover <span className="font-bold text-gray-900 dark:text-white">{removingMember.name}</span> da congregação?
+                </p>
+
+                <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
+                  <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                    ⚠️ Esta ação irá remover o membro da congregação e redefinir seu cargo para "Publicador". O membro precisará de um novo convite para retornar.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setRemovingMember(null)}
+                    disabled={isRemovingMember}
+                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleRemoveMember}
+                    disabled={isRemovingMember}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isRemovingMember ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Removendo...
+                      </>
+                    ) : (
+                      <>
+                        <UserMinus size={18} />
+                        Remover
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+          )
+        }
+
+        {/* Delete Congregation Modal */}
+        {
+          showDeleteCongModal && congregation && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                    <AlertTriangle className="text-red-600 dark:text-red-400" size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Excluir Congregação</h3>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Tem certeza que deseja excluir a congregação <span className="font-bold text-gray-900 dark:text-white">{congregation.name}</span>?
+                </p>
+
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-6">
+                  <p className="text-xs text-red-800 dark:text-red-300 font-medium">
+                    ⚠️ Esta ação é <strong>IRREVERSÍVEL</strong>. Todos os {members.length} membros serão removidos e perderão acesso aos territórios da congregação.
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteCongModal(false)}
+                    disabled={isDeletingCong}
+                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleDeleteCongregation}
+                    disabled={isDeletingCong}
+                    className="flex-1 px-4 py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isDeletingCong ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Excluindo...
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle size={18} />
+                        Excluir
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Leave Congregation Modal */}
+        {
+          showLeaveModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-full">
+                    <LogOut className="text-amber-600 dark:text-amber-400" size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Sair da Congregação</h3>
+                </div>
+
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Tem certeza que deseja sair da congregação? Você perderá acesso aos territórios e precisará de um novo convite para retornar.
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowLeaveModal(false)}
+                    disabled={isLeavingCong}
+                    className="flex-1 px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleLeaveCongregation}
+                    disabled={isLeavingCong}
+                    className="flex-1 px-4 py-3 bg-amber-600 text-white rounded-xl font-bold hover:bg-amber-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isLeavingCong ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Saindo...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut size={18} />
+                        Sair
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Switch Congregation Modal */}
+        {
+          showSwitchModal && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-md w-full border border-gray-100 dark:border-slate-800 shadow-2xl">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Trocar de Congregação</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Digite o código de convite da nova congregação. Você sairá automaticamente da congregação atual.
+                </p>
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 mb-1 block">Código de Convite</label>
+                    <input
+                      type="text"
+                      value={switchCode}
+                      onChange={(e) => setSwitchCode(e.target.value.toUpperCase())}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-transparent dark:border-slate-800 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 focus:ring-4 focus:ring-blue-100 dark:focus:ring-blue-900/30 text-gray-900 dark:text-slate-100 outline-none transition-all font-mono text-lg font-bold tracking-wider text-center uppercase"
+                      placeholder="XXXXXXXX"
+                      maxLength={8}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-3 mt-8">
+                  <button
+                    onClick={() => {
+                      setShowSwitchModal(false);
+                      setSwitchCode('');
+                    }}
+                    disabled={isSwitchingCong}
+                    className="flex-1 px-6 py-3.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-2xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleSwitchCongregation}
+                    disabled={isSwitchingCong || !switchCode.trim()}
+                    className="flex-1 px-6 py-3.5 bg-blue-600 text-white rounded-2xl font-bold hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isSwitchingCong ? <Loader2 className="animate-spin" size={20} /> : 'Trocar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      </div >
+      );
 };
 
-export default Profile;
+      export default Profile;
