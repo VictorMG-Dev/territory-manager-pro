@@ -133,17 +133,29 @@ const PremiumStatCard = ({ title, value, icon: Icon, color, delay, trend }: any)
   );
 };
 
-const QuickAction = ({ icon: Icon, label, onClick, color = 'indigo' }: any) => (
-  <button
-    onClick={onClick}
-    className="flex flex-col items-center justify-center gap-3 p-4 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 group h-full w-full"
-  >
-    <div className={`p-3 rounded-2xl bg-${color}-50 dark:bg-${color}-900/20 text-${color}-600 dark:text-${color}-400 group-hover:scale-110 transition-transform`}>
-      <Icon size={28} />
-    </div>
-    <span className="font-bold text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">{label}</span>
-  </button>
-);
+const QuickAction = ({ icon: Icon, label, onClick, color = 'blue' }: any) => {
+  const colors = {
+    blue: { bg: 'bg-blue-50 dark:bg-blue-900/20', text: 'text-blue-600 dark:text-blue-400' },
+    emerald: { bg: 'bg-emerald-50 dark:bg-emerald-900/20', text: 'text-emerald-600 dark:text-emerald-400' },
+    amber: { bg: 'bg-amber-50 dark:bg-amber-900/20', text: 'text-amber-600 dark:text-amber-400' },
+    purple: { bg: 'bg-purple-50 dark:bg-purple-900/20', text: 'text-purple-600 dark:text-purple-400' },
+    indigo: { bg: 'bg-indigo-50 dark:bg-indigo-900/20', text: 'text-indigo-600 dark:text-indigo-400' },
+  };
+
+  const current = colors[color as keyof typeof colors] || colors.blue;
+
+  return (
+    <button
+      onClick={onClick}
+      className="flex flex-col items-center justify-center gap-3 p-4 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 group h-full w-full shadow-sm hover:shadow"
+    >
+      <div className={`p-3 rounded-2xl ${current.bg} ${current.text} group-hover:scale-110 transition-transform shadow-sm`}>
+        <Icon size={28} />
+      </div>
+      <span className="font-bold text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">{label}</span>
+    </button>
+  );
+};
 
 const Dashboard = () => {
   const { territories, getHistory, user } = useData();
