@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   Users,
   Layers,
@@ -6,7 +6,15 @@ import {
   AlertTriangle,
   TrendingUp,
   Clock,
-  ChevronRight
+  ChevronRight,
+  FileText,
+  Plus,
+  Search,
+  Map,
+  MoreHorizontal,
+  ArrowUpRight,
+  Zap,
+  LayoutDashboard
 } from 'lucide-react';
 import {
   BarChart,
@@ -18,7 +26,7 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { TerritoryStatus } from '../types';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -28,10 +36,12 @@ import autoTable from 'jspdf-autotable';
 import toast from 'react-hot-toast';
 import { Loader2 } from 'lucide-react';
 
-const CountUp = ({ end, duration = 1500 }: { end: number; duration?: number }) => {
-  const [count, setCount] = React.useState(0);
+// --- Helper Components ---
 
-  React.useEffect(() => {
+const CountUp = ({ end, duration = 1500 }: { end: number; duration?: number }) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
     let startTime: number | null = null;
     const step = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -47,55 +57,98 @@ const CountUp = ({ end, duration = 1500 }: { end: number; duration?: number }) =
   return <>{count}</>;
 };
 
-const StatsCard = ({ title, value, icon: Icon, variant, delay = 0 }: any) => {
-  const styles = {
-    blue: {
-      gradient: "from-blue-600 to-blue-700",
-      light: "bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400",
-      shadow: "shadow-blue-500/20"
-    },
-    green: {
-      gradient: "from-emerald-600 to-emerald-700",
-      light: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-      shadow: "shadow-emerald-500/20"
-    },
-    yellow: {
-      gradient: "from-amber-500 to-amber-600",
-      light: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
-      shadow: "shadow-amber-500/20"
-    },
-    red: {
-      gradient: "from-rose-600 to-rose-700",
-      light: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400",
-      shadow: "shadow-rose-500/20"
-    },
-  };
+const WelcomeHeader = ({ user }: { user: any }) => {
+  const [greeting, setGreeting] = useState('');
 
-  const currentStyle = styles[variant as keyof typeof styles] || styles.blue;
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Bom dia');
+    else if (hour < 18) setGreeting('Boa tarde');
+    else setGreeting('Boa noite');
+  }, []);
 
   return (
-    <div
-      className="bg-white dark:bg-slate-900/50 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-premium hover:shadow-premium-hover transition-all duration-300 group hover:-translate-y-1 animate-fade-in-up md:backdrop-blur-xl"
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-2xl bg-gradient-to-br ${currentStyle.gradient} text-white shadow-lg ${currentStyle.shadow} group-hover:scale-110 transition-transform duration-300`}>
-          <Icon size={24} strokeWidth={2.5} />
-        </div>
-
-      </div>
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 animate-in slide-in-from-top duration-700">
       <div>
-        <h3 className="text-slate-600 dark:text-slate-400 text-sm font-bold mb-1">{title}</h3>
-        <p className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-          <CountUp end={value} />
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
+          {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">{user?.name?.split(' ')[0] || 'Publicador'}</span>
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
+          <Calendar size={16} />
+          {format(new Date(), "EEEE, d 'de' MMMM", { locale: ptBR })}
         </p>
       </div>
     </div>
   );
 };
 
+const PremiumStatCard = ({ title, value, icon: Icon, color, delay, trend }: any) => {
+  const colors = {
+    blue: "from-blue-500 to-indigo-600 shadow-blue-500/20",
+    emerald: "from-emerald-500 to-teal-600 shadow-emerald-500/20",
+    amber: "from-amber-500 to-orange-600 shadow-amber-500/20",
+    rose: "from-rose-500 to-pink-600 shadow-rose-500/20"
+  };
+
+  const bgColors = {
+    blue: "bg-blue-50 dark:bg-blue-900/10 text-blue-600 dark:text-blue-400",
+    emerald: "bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400",
+    amber: "bg-amber-50 dark:bg-amber-900/10 text-amber-600 dark:text-amber-400",
+    rose: "bg-rose-50 dark:bg-rose-900/10 text-rose-600 dark:text-rose-400"
+  };
+
+  const selectedColor = colors[color as keyof typeof colors] || colors.blue;
+  const selectedBg = bgColors[color as keyof typeof bgColors] || bgColors.blue;
+
+  return (
+    <div
+      className="bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-slate-100 dark:border-slate-800 p-6 rounded-[2rem] hover:shadow-xl hover:-translate-y-1 transition-all duration-300 relative overflow-hidden group"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <div className={`absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity duration-300 transform group-hover:scale-125`}>
+        <Icon size={80} />
+      </div>
+
+      <div className="relative z-10 flex flex-col justify-between h-full">
+        <div className="flex justify-between items-start mb-4">
+          <div className={`p-3.5 rounded-2xl bg-gradient-to-br ${selectedColor} text-white shadow-lg`}>
+            <Icon size={24} strokeWidth={2.5} />
+          </div>
+          {trend && (
+            <span className="flex items-center gap-1 text-xs font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-1 rounded-full">
+              <ArrowUpRight size={12} />
+              {trend}
+            </span>
+          )}
+        </div>
+
+        <div>
+          <p className="text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">{title}</p>
+          <h3 className="text-4xl font-bold text-slate-900 dark:text-white">
+            <CountUp end={value} />
+          </h3>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuickAction = ({ icon: Icon, label, onClick, color = 'indigo' }: any) => (
+  <button
+    onClick={onClick}
+    className="flex flex-col items-center justify-center gap-3 p-4 rounded-3xl bg-white dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 group h-full w-full"
+  >
+    <div className={`p-3 rounded-2xl bg-${color}-50 dark:bg-${color}-900/20 text-${color}-600 dark:text-${color}-400 group-hover:scale-110 transition-transform`}>
+      <Icon size={28} />
+    </div>
+    <span className="font-bold text-sm text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">{label}</span>
+  </button>
+);
+
 const Dashboard = () => {
-  const { territories, getHistory } = useData();
+  const { territories, getHistory, user } = useData();
+  const navigate = useNavigate();
+  const [generating, setGenerating] = useState(false);
 
   const stats = useMemo(() => {
     const total = territories.length;
@@ -122,15 +175,13 @@ const Dashboard = () => {
         user: h.publisherName,
         date: h.date,
         parsedDate: new Date(h.date),
-        action: 'Trabalho realizado',
+        action: 'Relatório enviado',
         status: t.status
       }));
     });
 
     return allActivity.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime()).slice(0, 5);
   }, [territories, getHistory]);
-
-  const [generating, setGenerating] = React.useState(false);
 
   const handleGenerateReport = async () => {
     try {
@@ -189,82 +240,106 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 max-w-[1600px] mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fade-in-up">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Dashboard
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1 font-medium">
-            Visão geral do progresso e atividades recentes.
-          </p>
+    <div className="space-y-8 max-w-[1600px] mx-auto p-4 md:p-6 lg:p-8 animate-in fade-in duration-500">
+      <WelcomeHeader user={user} />
+
+      {/* Bento Grid Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+        {/* Stats Cards Row */}
+        <div className="col-span-1 md:col-span-2 lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <PremiumStatCard
+            title="Total Cadastrado"
+            value={stats.total}
+            icon={Layers}
+            color="blue"
+            delay={100}
+          // trend="+2 este mês"
+          />
+          <PremiumStatCard
+            title="Em Dia"
+            value={stats.green}
+            icon={Users}
+            color="emerald"
+            delay={200}
+          // trend="Ótimo" 
+          />
+          <PremiumStatCard
+            title="Atenção"
+            value={stats.yellow}
+            icon={Calendar}
+            color="amber"
+            delay={300}
+          />
+          <PremiumStatCard
+            title="Atrasado"
+            value={stats.red}
+            icon={AlertTriangle}
+            color="rose"
+            delay={400}
+          />
         </div>
-        <button
-          onClick={handleGenerateReport}
-          disabled={generating}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-600/30 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
-        >
-          {generating ? <Loader2 size={18} className="animate-spin" /> : <TrendingUp size={18} />}
-          {generating ? 'Exportando...' : 'Exportar Relatório'}
-        </button>
-      </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatsCard title="Total Cadastrado" value={stats.total} icon={Layers} variant="blue" delay={0} />
-        <StatsCard title="Em Dia" value={stats.green} icon={Users} variant="green" delay={100} />
-        <StatsCard title="Atenção Necessária" value={stats.yellow} icon={Calendar} variant="yellow" delay={200} />
-        <StatsCard title="Atrasado" value={stats.red} icon={AlertTriangle} variant="red" delay={300} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Gráfico */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium dark:shadow-none animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+        {/* Main Chart Section */}
+        <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-8 shadow-sm flex flex-col justify-between min-h-[400px]">
           <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <div className="p-2 bg-purple-100 dark:bg-purple-500/10 rounded-lg text-purple-600 dark:text-purple-400">
-                <TrendingUp size={20} />
-              </div>
-              Distribuição da Cobertura
-            </h3>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <TrendingUp className="text-blue-600" size={24} />
+                Cobertura do Território
+              </h3>
+              <p className="text-slate-500 text-sm mt-1">Visão geral do status de todos os territórios</p>
+            </div>
+
+            <button
+              onClick={handleGenerateReport}
+              disabled={generating}
+              className="px-5 py-2.5 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-all flex items-center gap-2 disabled:opacity-50"
+            >
+              {generating ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+              <span>Exportar PDF</span>
+            </button>
           </div>
-          <div className="h-80 w-full" style={{ minWidth: 0 }}>
-            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+
+          <div className="flex-1 w-full min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
               <BarChart data={statsData} margin={{ top: 20, right: 0, left: -20, bottom: 0 }}>
                 <defs>
                   {statsData.map((entry, index) => (
                     <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={entry.gradient[0]} stopOpacity={0.9} />
-                      <stop offset="100%" stopColor={entry.gradient[1]} stopOpacity={0.6} />
+                      <stop offset="0%" stopColor={entry.gradient[0]} stopOpacity={0.8} />
+                      <stop offset="100%" stopColor={entry.gradient[1]} stopOpacity={0.3} />
                     </linearGradient>
                   ))}
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700" opacity={0.5} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" className="dark:stroke-slate-700/50" />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748b', fontSize: 12, fontWeight: 600 }}
+                  tick={{ fill: '#94A3B8', fontSize: 12, fontWeight: 600 }}
                   dy={10}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: '#64748b', fontSize: 12 }}
+                  tick={{ fill: '#94A3B8', fontSize: 12 }}
                 />
                 <Tooltip
-                  cursor={{ fill: '#f1f5f9', opacity: 0.5 }}
+                  cursor={{ fill: 'transparent' }}
                   contentStyle={{
                     borderRadius: '16px',
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-                    backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                    border: 'none',
+                    boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     padding: '12px 20px',
+                    color: '#1E293B'
                   }}
-                  itemStyle={{ fontWeight: 600, color: '#0f172a' }}
+                  itemStyle={{ color: '#1E293B', fontWeight: 600 }}
                 />
-                <Bar dataKey="value" radius={[8, 8, 0, 0]} barSize={60} animationDuration={1500} animationBegin={500}>
+                <Bar dataKey="value" radius={[12, 12, 0, 0]} barSize={60} animationDuration={2000}>
                   {statsData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                    <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} style={{ filter: `drop-shadow(0 4px 6px ${entry.color}30)` }} />
                   ))}
                 </Bar>
               </BarChart>
@@ -272,64 +347,68 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Atividade Recente */}
-        <div className="bg-white dark:bg-slate-900/50 p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-premium dark:shadow-none flex flex-col animate-fade-in-up" style={{ animationDelay: '500ms' }}>
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-2">
-            <div className="p-2 bg-blue-100 dark:bg-blue-500/10 rounded-lg text-blue-600 dark:text-blue-400">
-              <Clock size={20} />
-            </div>
-            Atividade Recente
-          </h3>
-          <div className="flex-1 space-y-4">
-            {recentActivity.length > 0 ? (
-              recentActivity.map((activity, index) => (
-                <div
-                  key={activity.id}
-                  className="flex items-center gap-4 p-4 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all cursor-default group border border-transparent hover:border-slate-100 dark:hover:border-slate-700 hover:shadow-sm"
-                  style={{ animationDelay: `${600 + (index * 100)}ms` }}
-                >
-                  <div className={`
-                    w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-xs shrink-0
-                    ${activity.status === TerritoryStatus.GREEN ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ''}
-                    ${activity.status === TerritoryStatus.YELLOW ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : ''}
-                    ${activity.status === TerritoryStatus.RED ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : ''}
-                  `}>
-                    {activity.territoryCode}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate group-hover:text-blue-600 transition-colors">
-                      {activity.territory}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-1 font-medium">
-                      <span className="truncate max-w-[120px]">{activity.user}</span>
-                      <span className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-600"></span>
-                      <span>{formatDistanceToNow(activity.parsedDate, { addSuffix: true, locale: ptBR })}</span>
-                    </p>
-                  </div>
-                  <ChevronRight size={18} className="text-slate-300 dark:text-slate-600 group-hover:text-blue-500 transition-colors opacity-0 group-hover:opacity-100 transform group-hover:translate-x-1" />
-                </div>
-              ))
-            ) : (
-              <div className="text-center py-10">
-                <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Clock size={24} className="text-slate-300" />
-                </div>
-                <p className="text-sm text-gray-400">Nenhuma atividade recente.</p>
-              </div>
-            )}
+        {/* Right Side Column (Activity & Actions) */}
+        <div className="col-span-1 md:col-span-2 lg:col-span-1 space-y-6">
+
+          {/* Quick Actions Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <QuickAction icon={Plus} label="Novo" color="blue" onClick={() => navigate('/territories/new')} />
+            <QuickAction icon={Zap} label="Relatório" color="amber" onClick={() => navigate('/service-report')} />
+            <QuickAction icon={Search} label="Buscar" color="emerald" onClick={() => navigate('/territories')} />
+            <QuickAction icon={Map} label="Mapa" color="purple" onClick={() => navigate('/map')} />
           </div>
-          <Link
-            to="/territories"
-            className="mt-8 py-3.5 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 text-center text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-600 transition-all active:scale-95 border border-slate-100 dark:border-transparent"
-          >
-            Ver todos os territórios
-          </Link>
+
+          {/* Activity Feed */}
+          <div className="bg-white dark:bg-slate-900/60 backdrop-blur-xl border border-slate-100 dark:border-slate-800 rounded-[2.5rem] p-6 shadow-sm flex flex-col h-full max-h-[500px]">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+              <Clock size={20} className="text-slate-400" />
+              Atividade Recente
+            </h3>
+
+            <div className="space-y-4 overflow-y-auto pr-2 custom-scrollbar flex-1">
+              {recentActivity.length > 0 ? (
+                recentActivity.map((activity, index) => (
+                  <div key={activity.id} className="group flex gap-4 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50 p-3 rounded-2xl -mx-2">
+                    <div className={`
+                        w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-[10px] shrink-0 shadow-sm
+                        ${activity.status === TerritoryStatus.GREEN ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : ''}
+                        ${activity.status === TerritoryStatus.YELLOW ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' : ''}
+                        ${activity.status === TerritoryStatus.RED ? 'bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400' : ''}
+                      `}>
+                      {activity.territoryCode}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{activity.territory}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{activity.user}</p>
+                    </div>
+                    <div className="text-[10px] font-bold text-slate-400 whitespace-nowrap">
+                      {formatDistanceToNow(activity.parsedDate, { locale: ptBR, addSuffix: false }).replace('cerca de ', '')}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-12 text-slate-400">
+                  <Clock size={48} className="mx-auto mb-4 opacity-20" />
+                  <p className="text-sm">Nenhuma atividade recente</p>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 mt-auto">
+              <Link
+                to="/territories"
+                className="flex items-center justify-center gap-2 text-sm font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors py-2"
+              >
+                Ver Histórico Completo <ArrowUpRight size={14} />
+              </Link>
+            </div>
+          </div>
+
         </div>
+
       </div>
     </div>
   );
 };
-
-
 
 export default Dashboard;
