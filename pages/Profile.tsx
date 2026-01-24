@@ -1,6 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, ChevronRight, BadgeCheck, UserMinus, AlertTriangle, BookOpen, Clock, Star, CheckCircle2 } from 'lucide-react';
+import { User, Mail, Shield, Bell, Moon, Sun, Camera, Save, Lock, Loader2, Users, Copy, Check, Building2, Plus, UserPlus, LogOut, ChevronDown, ChevronRight, BadgeCheck, UserMinus, AlertTriangle, BookOpen, Clock, Star, CheckCircle2, Search, Filter, Megaphone, Calendar } from 'lucide-react';
+
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { api } from '../services/api';
@@ -66,6 +67,10 @@ const Profile = () => {
   const [showSwitchModal, setShowSwitchModal] = useState(false);
   const [switchCode, setSwitchCode] = useState('');
   const [isSwitchingCong, setIsSwitchingCong] = useState(false);
+
+  // New Features State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAnnouncements, setShowAnnouncements] = useState(true);
 
   // Profile Redesign State
   const [activeTab, setActiveTab] = useState<'overview' | 'settings' | 'ministry' | 'congregation'>('overview');
@@ -816,180 +821,256 @@ const Profile = () => {
           )}
 
           {/* TAB: CONGREGATION */}
-          {activeTab === 'congregation' && (
-            <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm animate-in slide-in-from-right duration-500 fade-in">
+{
+    activeTab === 'congregation' && (
+        <div className="space-y-8 animate-in slide-in-from-right duration-500 fade-in">
+            {congregation ? (
+                <>
+                    {/* Premium Header Card */}
+                    <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white shadow-2xl border border-white/10 p-8 sm:p-10 group">
+                        {/* Background decoration */}
+                        <div className="absolute top-0 right-0 p-12 opacity-5 transform group-hover:scale-110 transition-transform duration-700">
+                            <Building2 size={300} />
+                        </div>
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
 
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 flex items-center justify-center">
-                    <Building2 size={24} />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">Congregação</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie sua afiliação e membros</p>
-                  </div>
-                </div>
-                {!congregation && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowCreateModal(true)}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-all flex items-center gap-2 shadow-lg shadow-blue-500/20"
-                    >
-                      <Plus size={16} /> Criar
-                    </button>
-                    <button
-                      onClick={() => setShowJoinModal(true)}
-                      className="px-5 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center gap-2"
-                    >
-                      <UserPlus size={16} /> Entrar
-                    </button>
-                  </div>
-                )}
-              </div>
+                        <div className="relative z-10">
+                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                                <div>
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <span className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold uppercase tracking-wider backdrop-blur-md">
+                                            Congregação Verificada
+                                        </span>
+                                        <span className="text-slate-400 text-sm flex items-center gap-1">
+                                            <Users size={14} /> {members.length} membros
+                                        </span>
+                                    </div>
+                                    <h2 className="text-3xl sm:text-4xl font-bold mb-4 tracking-tight">
+                                        {congregation.name}
+                                    </h2>
+                                    <div className="flex items-center gap-4">
+                                        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 hover:bg-white/10 transition-colors cursor-pointer group/code"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(congregation.code);
+                                                setCopiedCode(true);
+                                                setTimeout(() => setCopiedCode(false), 2000);
+                                                toast.success('Código copiado!');
+                                            }}
+                                        >
+                                            <div className="text-xs text-slate-400 font-medium uppercase tracking-wider">ID</div>
+                                            <code className="font-mono text-lg font-bold text-blue-200">{congregation.code}</code>
+                                            {copiedCode ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} className="text-slate-400 group-hover/code:text-white transition-colors" />}
+                                        </div>
+                                    </div>
+                                </div>
 
-              {congregation ? (
-                <div className="space-y-6">
-                  <div className="p-6 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 rounded-3xl border border-emerald-100 dark:border-emerald-800/30">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">{congregation.name}</h4>
-                        {congregation.description && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{congregation.description}</p>
+                                {/* Quick Actions */}
+                                <div className="flex gap-3">
+                                    {congregation.createdBy === user?.uid && (
+                                        <button
+                                            onClick={() => setShowDeleteCongModal(true)}
+                                            className="p-3 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
+                                            title="Configurações da Congregação"
+                                        >
+                                            <AlertTriangle size={20} />
+                                        </button>
+                                    )}
+                                    <button
+                                        onClick={() => setShowLeaveModal(true)}
+                                        className="p-3 bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 rounded-2xl transition-all shadow-lg backdrop-blur-sm"
+                                        title="Sair da Congregação"
+                                    >
+                                        <LogOut size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Statistics Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-blue-500/30 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <Users size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total de Membros</p>
+                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">{members.length}</h4>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-emerald-500/30 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <Building2 size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Territórios Ativos</p>
+                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">12</h4>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-slate-900 p-6 rounded-[2rem] border border-gray-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group hover:border-amber-500/30 transition-all">
+                            <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                                <Calendar size={28} />
+                            </div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Relatórios (Mês)</p>
+                                <h4 className="text-2xl font-bold text-gray-900 dark:text-white">8</h4>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Announcements Section */}
+                    <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 p-8 rounded-[2rem] border border-amber-100 dark:border-amber-900/30 relative overflow-hidden">
+                        <div className="flex items-center justify-between mb-6 relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-xl text-amber-600 dark:text-amber-400">
+                                    <Megaphone size={20} />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Quadro de Avisos</h3>
+                            </div>
+                            <button
+                                onClick={() => setShowAnnouncements(!showAnnouncements)}
+                                className="text-amber-600 font-medium text-sm hover:underline"
+                            >
+                                {showAnnouncements ? 'Ocultar' : 'Mostrar'}
+                            </button>
+                        </div>
+
+                        {showAnnouncements && (
+                            <div className="space-y-4 relative z-10 animate-in slide-in-from-top-4 duration-300">
+                                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-amber-100 dark:border-amber-900/20 shadow-sm flex gap-4">
+                                    <div className="w-1 bg-amber-500 rounded-full h-full shrink-0"></div>
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 dark:text-white text-sm mb-1">Reunião para o Serviço de Campo</h4>
+                                        <p className="text-xs text-gray-600 dark:text-gray-400">Sábado às 09:00 - Grupo 1 (Local: Salão do Reino)</p>
+                                    </div>
+                                </div>
+                            </div>
                         )}
-                        <div className="flex items-center gap-4 text-sm mt-4">
-                          <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-900 px-3 py-1.5 rounded-full shadow-sm">
-                            <Users size={14} />
-                            <span className="font-bold">{congregation.memberCount || members.length} membros</span>
-                          </div>
+                    </div>
+
+                    {/* Members Section */}
+                    <div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-gray-100 dark:border-slate-800 shadow-sm">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                            <div>
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">Membros</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Gerencie as permissões da congregação</p>
+                            </div>
+
+                            {/* Search Bar */}
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Buscar membro..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-slate-800 border border-transparent dark:border-slate-700 focus:border-blue-500 focus:bg-white dark:focus:bg-slate-800 rounded-xl outline-none text-sm transition-all w-full sm:w-64"
+                                />
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                            </div>
                         </div>
-                      </div>
-                      {user?.role === 'elder' && (
-                        <div className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-4 py-2 rounded-xl text-xs font-bold border border-amber-200 dark:border-amber-800 flex flex-col items-center gap-1">
-                          <Shield size={16} />
-                          ADMIN
+
+                        <div className="space-y-3">
+                            {members
+                                .filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                .map((member) => (
+                                    <div key={member.uid} className="group flex items-center justify-between p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-800/50 border border-transparent hover:border-gray-100 dark:hover:border-slate-800 transition-all">
+                                        <div className="flex items-center gap-4">
+                                            <div className="relative">
+                                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-lg shadow-inner">
+                                                    {member.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center ${member.role === 'admin' ? 'bg-amber-500 text-white' :
+                                                        member.role === 'elder' ? 'bg-indigo-500 text-white' :
+                                                            member.role === 'servant' ? 'bg-emerald-500 text-white' : 'bg-gray-400 text-white'
+                                                    }`}>
+                                                    {member.role === 'admin' ? <Star size={10} fill="currentColor" /> :
+                                                        member.role === 'elder' ? <Shield size={10} fill="currentColor" /> :
+                                                            member.role === 'servant' ? <CheckCircle2 size={10} /> : <User size={10} />}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold text-gray-900 dark:text-white">{member.name}</span>
+                                                    {member.uid === user?.uid && <span className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full">VOCÊ</span>}
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{roleLabels[member.role || 'publisher']}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all transform translate-x-4 group-hover:translate-x-0">
+                                            {member.uid !== user?.uid && canManageRole(member.role) && (
+                                                <button
+                                                    onClick={() => {
+                                                        setEditingMember(member);
+                                                        setSelectedRole(member.role || 'publisher');
+                                                    }}
+                                                    className="p-2.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-all"
+                                                    title="Alterar Cargo"
+                                                >
+                                                    <BadgeCheck size={18} />
+                                                </button>
+                                            )}
+
+                                            {member.uid !== user?.uid && canRemoveMember(member.role) && (
+                                                <button
+                                                    onClick={() => setRemovingMember(member)}
+                                                    className="p-2.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all"
+                                                    title="Remover Membro"
+                                                >
+                                                    <UserMinus size={18} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+
+                            {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+                                <div className="text-center py-10">
+                                    <div className="w-16 h-16 bg-gray-50 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-3 text-gray-400">
+                                        <Search size={24} />
+                                    </div>
+                                    <p className="text-gray-500 font-medium">Nenhum membro encontrado</p>
+                                </div>
+                            )}
                         </div>
-                      )}
                     </div>
-                  </div>
+                </>
+            ) : (
+                <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[3rem] border border-gray-100 dark:border-slate-800 shadow-xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
+                    <div className="relative z-10 max-w-md mx-auto px-4">
+                        <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/30 rounded-3xl flex items-center justify-center shadow-lg mx-auto mb-8 transform rotate-3">
+                            <Building2 size={48} className="text-indigo-600 dark:text-indigo-400" />
+                        </div>
+                        <h4 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Nenhuma Congregação</h4>
+                        <p className="text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
+                            Junte-se a uma congregação existente para colaborar nos territórios ou crie uma nova para começar a gerenciar.
+                        </p>
 
-                  <div className="space-y-3">
-                    <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1">Código de Convite</label>
-                    <div className="flex gap-2">
-                      <div className="flex-1 px-5 py-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-800 text-gray-900 dark:text-slate-100 font-mono text-xl font-bold tracking-widest text-center border-dashed border-2">
-                        {congregation.inviteCode}
-                      </div>
-                      <button
-                        onClick={copyInviteCode}
-                        className="px-6 py-4 bg-emerald-600 text-white rounded-2xl font-bold hover:bg-emerald-700 transition-all flex items-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95"
-                      >
-                        {copiedCode ? <Check size={24} /> : <Copy size={24} />}
-                      </button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <button
+                                onClick={() => setShowCreateModal(true)}
+                                className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-sm hover:bg-indigo-700 transition-all flex items-center justify-center gap-2 shadow-xl shadow-indigo-500/20 hover:scale-105 active:scale-95"
+                            >
+                                <Plus size={18} /> Criar Nova
+                            </button>
+                            <button
+                                onClick={() => setShowJoinModal(true)}
+                                className="px-8 py-4 bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border-2 border-indigo-100 dark:border-slate-700 rounded-2xl font-bold text-sm hover:bg-indigo-50 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
+                            >
+                                <UserPlus size={18} /> Entrar com Código
+                            </button>
+                        </div>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 ml-1">Compartilhe este código com o equipamento de anciãos.</p>
-                  </div>
-
-                  {members.length > 0 && (
-                    <div className="space-y-4 pt-4">
-                      <label className="text-xs font-bold text-gray-400 dark:text-slate-500 uppercase tracking-widest ml-1 flex items-center justify-between">
-                        <span>Lista de Membros</span>
-                        <span className="bg-gray-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[10px]">{members.length}</span>
-                      </label>
-                      <div className="space-y-2 max-h-96 overflow-y-auto pr-1 customize-scrollbar">
-                        {members.map((member) => (
-                          <div key={member.uid} className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-800 group hover:border-blue-200 dark:hover:border-blue-800 transition-all hover:bg-white dark:hover:bg-slate-800 hover:shadow-md">
-                            <div className="w-12 h-12 rounded-2xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-sm font-bold text-blue-600 dark:text-blue-400 overflow-hidden shadow-sm">
-                              {member.photoURL ? (
-                                <img src={member.photoURL} alt={member.name} className="w-full h-full object-cover" />
-                              ) : (
-                                member.name.substring(0, 2).toUpperCase()
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-bold text-gray-900 dark:text-white text-base truncate flex items-center gap-2">
-                                {member.name}
-                                {member.uid === user?.uid && <span className="bg-gray-100 dark:bg-slate-700 text-gray-500 text-[10px] px-2 py-0.5 rounded-full">VOCÊ</span>}
-                              </div>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${roleColors[member.role || 'publisher'].replace('bg-', 'border-').replace('text-', 'text-')}`}>
-                                  {roleLabels[member.role || 'publisher']}
-                                </span>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {member.uid !== user?.uid && canManageRole(member.role) && (
-                                <button
-                                  onClick={() => {
-                                    setEditingMember(member);
-                                    setSelectedRole(member.role || 'publisher');
-                                  }}
-                                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-xl transition-colors"
-                                  title="Alterar Cargo"
-                                >
-                                  <BadgeCheck size={20} />
-                                </button>
-                              )}
-
-                              {member.uid !== user?.uid && canRemoveMember(member.role) && (
-                                <button
-                                  onClick={() => setRemovingMember(member)}
-                                  className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors"
-                                  title="Remover Membro"
-                                >
-                                  <UserMinus size={20} />
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Congregation Management Buttons */}
-                  <div className="mt-8 pt-8 border-t border-gray-100 dark:border-slate-800 space-y-3">
-                    {/* Admin: Delete Congregation */}
-                    {congregation.createdBy === user?.uid && (
-                      <button
-                        onClick={() => setShowDeleteCongModal(true)}
-                        className="w-full px-4 py-4 bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 rounded-2xl font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-all flex items-center justify-center gap-2 border border-red-200 dark:border-red-900/30"
-                      >
-                        <AlertTriangle size={18} />
-                        Excluir Congregação Permanentemente
-                      </button>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <button
-                        onClick={() => setShowLeaveModal(true)}
-                        className="px-4 py-3 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-all flex items-center justify-center gap-2"
-                      >
-                        <LogOut size={18} />
-                        Sair
-                      </button>
-                      <button
-                        onClick={() => setShowSwitchModal(true)}
-                        className="px-4 py-3 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-all flex items-center justify-center gap-2"
-                      >
-                        <UserPlus size={18} />
-                        Trocar
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-16 bg-gray-50 dark:bg-slate-800/30 rounded-3xl border-2 border-dashed border-gray-200 dark:border-slate-800">
-                  <div className="w-20 h-20 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center shadow-sm mx-auto mb-6 text-gray-300">
-                    <Building2 size={40} />
-                  </div>
-                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Nenhuma Congregação</h4>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 max-w-xs mx-auto">
-                    Junte-se a uma congregação existente ou crie uma nova para começar a gerenciar territórios.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
+            )}
+        </div>
+    )
+}
+
         </div>
 
         {/* Role Editor Modal */}
