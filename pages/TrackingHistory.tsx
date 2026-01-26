@@ -247,6 +247,7 @@ const TrackingHistory = () => {
                             <div className="relative h-[60vh] w-full bg-gray-100">
                                 {selectedSession.points && selectedSession.points.length > 0 ? (
                                     <MapContainer
+                                        key={selectedSession.id}
                                         center={[selectedSession.points[0].latitude, selectedSession.points[0].longitude]}
                                         zoom={15}
                                         style={{ height: '100%', width: '100%' }}
