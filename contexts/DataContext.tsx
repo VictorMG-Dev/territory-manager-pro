@@ -94,7 +94,17 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const [tResult, hResult, gResult, pResult, mResult, rResult, mpResult, tpResult] = results;
 
             if (tResult.status === 'fulfilled') {
-                setTerritories(tResult.value);
+                const refreshedTerritories = tResult.value.map((t: Territory) => {
+                    const lastDate = t.lastWorkedDate ? new Date(t.lastWorkedDate) : null;
+                    // Recalculate status locally to ensure it's up to date with current time
+                    const { status, days } = calculateStatus(lastDate);
+                    return {
+                        ...t,
+                        status,
+                        daysSinceWork: days
+                    };
+                });
+                setTerritories(refreshedTerritories);
             } else {
                 console.error('Failed to load territories:', tResult.reason);
                 // toast.error('Erro ao carregar territórios');
