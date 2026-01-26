@@ -59,6 +59,7 @@ const Tracking = () => {
     const watchIdRef = useRef<number | null>(null);
     const pathRef = useRef<[number, number][]>([]);
     const lastPosRef = useRef<[number, number] | null>(null);
+    const pointsRef = useRef<any[]>([]);
 
     // Timer effect
     useEffect(() => {
@@ -96,6 +97,7 @@ const Tracking = () => {
             (pos) => {
                 const { latitude, longitude, accuracy } = pos.coords;
                 const newPos: [number, number] = [latitude, longitude];
+                const timestamp = new Date().toISOString();
 
                 // Update current position UI
                 setCurrentPosition(newPos);
@@ -103,6 +105,7 @@ const Tracking = () => {
                 // Add to path if valid
                 if (accuracy < 50) { // Only accurate points
                     const lastPos = lastPosRef.current;
+                    const pointData = { latitude, longitude, accuracy, timestamp };
 
                     if (lastPos) {
                         const dist = calculateDistance(lastPos[0], lastPos[1], latitude, longitude);
@@ -112,12 +115,14 @@ const Tracking = () => {
                             setPath(pathRef.current);
                             setDistance(d => d + dist);
                             lastPosRef.current = newPos;
+                            pointsRef.current.push(pointData);
                         }
                     } else {
                         // First point
                         pathRef.current = [newPos];
                         setPath([newPos]);
                         lastPosRef.current = newPos;
+                        pointsRef.current.push(pointData);
                     }
                 }
             },
@@ -168,7 +173,6 @@ const Tracking = () => {
 
                 // We need to match the Omit<TrackingSession, ...> expected by registerTrackingSession
                 // sessionData needs to align with backend expectations.
-                // Simplified payload for now:
                 await registerTrackingSession({
                     userId: user?.uid!,
                     congregationId: user?.congregationId!,
@@ -176,7 +180,7 @@ const Tracking = () => {
                     endTime: new Date().toISOString(),
                     durationSeconds: elapsedTime,
                     distanceMeters: distance * 1000,
-                    points: [] // We might need to handle points separately or adjust interface
+                    points: pointsRef.current
                 });
 
                 toast.success("Ministério salvo com sucesso!");
@@ -187,6 +191,7 @@ const Tracking = () => {
                 setPath([]);
                 pathRef.current = [];
                 lastPosRef.current = null;
+                pointsRef.current = [];
                 setStartTime(null);
             } catch (error: any) {
                 console.error(error);
